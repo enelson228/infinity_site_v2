@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}Projects{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Page Header -->
+    <header class="page-header">
+        <div class="section-label">Homelab Services</div>
+        <h1 class="page-title">Projects</h1>
+        <p class="page-description">Monitor and access your homelab services and infrastructure.</p>
+    </header>
+
+    <!-- View Controls -->
+    <div class="view-controls">
+        <div class="view-toggle">
+            <button class="view-toggle-btn active" data-view="grid" aria-label="Grid view">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="14" width="7" height="7"></rect>
+                    <rect x="3" y="14" width="7" height="7"></rect>
+                </svg>
+                Grid
+            </button>
+            <button class="view-toggle-btn" data-view="list" aria-label="List view">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="8" y1="6" x2="21" y2="6"></line>
+                    <line x1="8" y1="12" x2="21" y2="12"></line>
+                    <line x1="8" y1="18" x2="21" y2="18"></line>
+                    <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                    <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                    <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                </svg>
+                List
+            </button>
+        </div>
+    </div>
+
+    <!-- Grid View -->
+    <div class="projects-grid active" id="projects-grid">
+        <!-- Projects loaded via JS -->
+    </div>
+
+    <!-- List View -->
+    <div class="projects-list" id="projects-list">
+        <div class="list-header">
+            <span>Name</span>
+            <span>Status</span>
+            <span>Updated</span>
+            <span>Action</span>
+        </div>
+        <div id="projects-list-body">
+            <!-- Projects loaded via JS -->
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/projects.js') }}"></script>
+{% endblock %}

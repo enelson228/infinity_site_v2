@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}Uplink Cache{% endblock %}
+
+{% block content %}
+<div class="container uplink-container">
+    <!-- Page Header -->
+    <header class="page-header">
+        <div class="section-label">Secure Document Repository</div>
+        <h1 class="page-title">Uplink Cache</h1>
+        <p class="page-description">Upload and download files securely through the UNSC network.</p>
+        <button class="logout-btn" id="logout-btn" style="margin-top: var(--spacing-md);">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 4px;">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                <polyline points="16 17 21 12 16 7"></polyline>
+                <line x1="21" y1="12" x2="9" y2="12"></line>
+            </svg>
+            Logout
+        </button>
+    </header>
+
+    <!-- UPLINK Section (Upload) -->
+    <section class="uplink-section upload">
+        <div class="section-header">
+            <div class="section-title">
+                <div class="section-title-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                </div>
+                <h3>UPLINK</h3>
+            </div>
+        </div>
+
+        <div class="drop-zone" id="drop-zone">
+            <div class="drop-zone-icon">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="17 8 12 3 7 8"></polyline>
+                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+            </div>
+            <p class="drop-zone-text">Drag and drop files here to upload</p>
+            <p class="drop-zone-hint">or <span id="browse-trigger">browse files</span></p>
+        </div>
+
+        <input type="file" id="file-input" multiple>
+
+        <div class="upload-progress" id="upload-progress">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+            <p class="progress-text" id="progress-text">Uploading...</p>
+        </div>
+    </section>
+
+    <!-- DOWNLINK Section (Download) -->
+    <section class="uplink-section download">
+        <div class="section-header">
+            <div class="section-title">
+                <div class="section-title-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                </div>
+                <h3>DOWNLINK</h3>
+            </div>
+        </div>
+
+        <div class="file-list" id="file-list">
+            <div class="empty-state" id="empty-state">
+                <div class="empty-state-icon">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                    </svg>
+                </div>
+                <p>No files uploaded yet</p>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/uplink.js') }}"></script>
+{% endblock %}

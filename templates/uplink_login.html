@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Uplink Login{% endblock %}
+
+{% block content %}
+<div class="login-container">
+    <div class="login-box">
+        <div class="login-header">
+            <div class="section-label">Authentication Required</div>
+            <h2>Uplink Cache</h2>
+            <p>Enter access credentials to continue</p>
+        </div>
+
+        <form id="login-form">
+            <div class="form-group">
+                <label class="form-label" for="password">Access Code</label>
+                <input
+                    type="password"
+                    id="password"
+                    class="form-input"
+                    placeholder="Enter password"
+                    autocomplete="current-password"
+                    required
+                >
+            </div>
+
+            <p class="login-error" id="login-error">Invalid access code. Try again.</p>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+                Authenticate
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('login-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const password = document.getElementById('password').value;
+    const errorEl = document.getElementById('login-error');
+
+    try {
+        const response = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password })
+        });
+
+        if (response.ok) {
+            window.location.href = '/uplink';
+        } else {
+            errorEl.classList.add('visible');
+            document.getElementById('password').value = '';
+            document.getElementById('password').focus();
+        }
+    } catch (error) {
+        errorEl.textContent = 'Connection error. Please try again.';
+        errorEl.classList.add('visible');
+    }
+});
+
+// Clear error on input
+document.getElementById('password').addEventListener('input', () => {
+    document.getElementById('login-error').classList.remove('visible');
+});
+</script>
+{% endblock %}

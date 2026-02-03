@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero">
+    <div class="hero-background"></div>
+    <div class="hero-grid"></div>
+
+    <div class="hero-content">
+        <div class="hero-badge">UNSC Network Terminal</div>
+        <h1 class="hero-title">INFINITY</h1>
+        <p class="hero-subtitle">Homelab Command Center</p>
+
+        <div class="hero-actions">
+            <a href="{{ url_for('projects') }}" class="btn btn-primary">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="14" width="7" height="7"></rect>
+                    <rect x="3" y="14" width="7" height="7"></rect>
+                </svg>
+                View Projects
+            </a>
+            <a href="{{ url_for('uplink') }}" class="btn btn-secondary">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="17 8 12 3 7 8"></polyline>
+                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                Uplink Cache
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Status Section -->
+<section class="container" style="padding: var(--spacing-3xl) 0;">
+    <div class="section-label">System Status</div>
+
+    <div class="status-grid">
+        <div class="status-panel">
+            <div class="panel-header">
+                <span class="panel-title">Network Status</span>
+                <div class="panel-indicator"></div>
+            </div>
+            <div class="panel-value">OPERATIONAL</div>
+            <div class="panel-label">All systems nominal</div>
+        </div>
+
+        <div class="status-panel">
+            <div class="panel-header">
+                <span class="panel-title">Active Services</span>
+                <div class="panel-indicator"></div>
+            </div>
+            <div class="panel-value" id="active-services">--</div>
+            <div class="panel-label">Running projects</div>
+        </div>
+
+        <div class="status-panel">
+            <div class="panel-header">
+                <span class="panel-title">Uplink Cache</span>
+                <div class="panel-indicator"></div>
+            </div>
+            <div class="panel-value">SECURE</div>
+            <div class="panel-label">Document repository active</div>
+        </div>
+    </div>
+
+    <!-- Quick Links -->
+    <div class="section-label" style="margin-top: var(--spacing-3xl);">Quick Access</div>
+
+    <div class="quick-links">
+        <a href="{{ url_for('projects') }}" class="quick-link">
+            <div class="quick-link-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                    <line x1="8" y1="21" x2="16" y2="21"></line>
+                    <line x1="12" y1="17" x2="12" y2="21"></line>
+                </svg>
+            </div>
+            <span class="quick-link-text">Projects Dashboard</span>
+        </a>
+
+        <a href="{{ url_for('uplink') }}" class="quick-link">
+            <div class="quick-link-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                </svg>
+            </div>
+            <span class="quick-link-text">Document Uplink</span>
+        </a>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Fetch project count for status panel
+    fetch('/api/projects')
+        .then(res => res.json())
+        .then(data => {
+            const onlineCount = data.projects.filter(p => p.status === 'online').length;
+            document.getElementById('active-services').textContent = onlineCount;
+        })
+        .catch(() => {
+            document.getElementById('active-services').textContent = '0';
+        });
+</script>
+{% endblock %}

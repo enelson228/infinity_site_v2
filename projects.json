@@ -1,0 +1,58 @@
+{
+  "projects": [
+    {
+      "id": "plex",
+      "name": "Plex Media Server",
+      "description": "Home media streaming and organization",
+      "status": "online",
+      "url": "http://plex.local:32400",
+      "icon": "film",
+      "updated": "2024-02-01"
+    },
+    {
+      "id": "pihole",
+      "name": "Pi-hole",
+      "description": "Network-wide ad blocking and DNS",
+      "status": "online",
+      "url": "http://pihole.local/admin",
+      "icon": "shield",
+      "updated": "2024-01-28"
+    },
+    {
+      "id": "homeassistant",
+      "name": "Home Assistant",
+      "description": "Smart home automation hub",
+      "status": "online",
+      "url": "http://homeassistant.local:8123",
+      "icon": "home",
+      "updated": "2024-02-03"
+    },
+    {
+      "id": "portainer",
+      "name": "Portainer",
+      "description": "Docker container management",
+      "status": "maintenance",
+      "url": "http://portainer.local:9000",
+      "icon": "box",
+      "updated": "2024-01-15"
+    },
+    {
+      "id": "grafana",
+      "name": "Grafana",
+      "description": "Metrics visualization and monitoring",
+      "status": "offline",
+      "url": "http://grafana.local:3000",
+      "icon": "activity",
+      "updated": "2024-01-20"
+    },
+    {
+      "id": "nextcloud",
+      "name": "Nextcloud",
+      "description": "Self-hosted cloud storage and collaboration",
+      "status": "online",
+      "url": "http://nextcloud.local",
+      "icon": "cloud",
+      "updated": "2024-02-02"
+    }
+  ]
+}
