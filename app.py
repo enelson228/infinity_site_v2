@@ -1,6 +1,8 @@
 import os
 import json
 import uuid
+import time
+import psutil
 from datetime import datetime, timedelta
 from functools import wraps
 
@@ -196,6 +198,57 @@ def api_delete(file_id):
     save_metadata(metadata)
 
     return jsonify({'success': True})
+
+
+@app.route('/telemetry')
+def telemetry():
+    return render_template('telemetry.html')
+
+
+@app.route('/api/telemetry')
+def api_telemetry():
+    cpu_percent = psutil.cpu_percent(interval=None)
+    cpu_freq = psutil.cpu_freq()
+    ram = psutil.virtual_memory()
+    disk = psutil.disk_usage('/')
+    net = psutil.net_io_counters()
+    uptime_seconds = int(time.time() - psutil.boot_time())
+    load_avg = psutil.getloadavg()
+
+    return jsonify({
+        'cpu': {
+            'percent': round(cpu_percent, 1),
+            'cores_logical': psutil.cpu_count(logical=True),
+            'cores_physical': psutil.cpu_count(logical=False),
+            'freq_current': round(cpu_freq.current, 0) if cpu_freq else None,
+            'freq_max': round(cpu_freq.max, 0) if cpu_freq else None,
+        },
+        'ram': {
+            'total': ram.total,
+            'used': ram.used,
+            'available': ram.available,
+            'percent': round(ram.percent, 1),
+        },
+        'disk': {
+            'total': disk.total,
+            'used': disk.used,
+            'free': disk.free,
+            'percent': round(disk.percent, 1),
+        },
+        'network': {
+            'bytes_sent': net.bytes_sent,
+            'bytes_recv': net.bytes_recv,
+            'packets_sent': net.packets_sent,
+            'packets_recv': net.packets_recv,
+        },
+        'uptime_seconds': uptime_seconds,
+        'load_avg': {
+            'one': round(load_avg[0], 2),
+            'five': round(load_avg[1], 2),
+            'fifteen': round(load_avg[2], 2),
+        },
+        'timestamp': time.time(),
+    })
 
 
 if __name__ == '__main__':

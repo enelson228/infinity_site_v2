@@ -6,6 +6,7 @@ Personal website and homelab dashboard running at [mjolnirarmory.com](https://mj
 
 - **Home** — Landing page
 - **Projects** — Homelab services dashboard (Plex, Pi-hole, Home Assistant, etc.)
+- **Telemetry** — Live system metrics dashboard (CPU, RAM, disk, network, load avg) with Halo Reach military HUD aesthetic — glowing amber/cyan readouts and animated progress bars
 - **Uplink Cache** — Password-protected file upload/download portal (100MB max per file)
 
 ## Stack

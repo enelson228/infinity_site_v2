@@ -1,0 +1,236 @@
+{% extends "base.html" %}
+
+{% block title %}Telemetry{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="section-label">System Diagnostics</div>
+        <h1 class="page-title">Telemetry</h1>
+        <p class="page-description">Live VPS hardware metrics. Data refreshes every 5 seconds via onboard sensor array.</p>
+    </div>
+
+    <!-- Telemetry Meta Strip -->
+    <div class="telemetry-meta">
+        <span class="telemetry-node">NODE: INFINITY-VPS-01</span>
+        <span class="telemetry-live-wrap">
+            <span class="telemetry-live-dot"></span>
+            <span class="telemetry-live-label">LIVE</span>
+            <span class="telemetry-last-update" id="last-update">—</span>
+        </span>
+    </div>
+
+    <!-- Error Banner -->
+    <div class="telemetry-error-banner" id="error-banner">
+        <span class="telemetry-error-icon">&#9888;</span>
+        <span id="error-message">SENSOR FEED INTERRUPTED — RETRYING...</span>
+    </div>
+
+    <!-- Main Layout -->
+    <div class="telemetry-layout">
+
+        <!-- Metric Grid (left column) -->
+        <div class="metric-grid">
+
+            <!-- CPU Card -->
+            <div class="metric-card" id="card-cpu">
+                <div class="panel-header">
+                    <span class="panel-title">CPU</span>
+                    <span class="panel-indicator"></span>
+                </div>
+                <div class="metric-value-row">
+                    <span class="metric-big-value" id="cpu-percent">—</span>
+                    <span class="metric-big-unit">%</span>
+                </div>
+                <div class="metric-bar-wrap">
+                    <div class="metric-bar" id="cpu-bar">
+                        <div class="metric-bar-fill" id="cpu-bar-fill"></div>
+                    </div>
+                </div>
+                <div class="metric-details">
+                    <div class="metric-detail-row">
+                        <span class="metric-detail-label">CORES</span>
+                        <span class="metric-detail-value" id="cpu-cores">—</span>
+                    </div>
+                    <div class="metric-detail-row">
+                        <span class="metric-detail-label">FREQ</span>
+                        <span class="metric-detail-value" id="cpu-freq">—</span>
+                    </div>
+                    <div class="metric-detail-row">
+                        <span class="metric-detail-label">MAX FREQ</span>
+                        <span class="metric-detail-value" id="cpu-freq-max">—</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RAM Card -->
+            <div class="metric-card" id="card-ram">
+                <div class="panel-header">
+                    <span class="panel-title">RAM</span>
+                    <span class="panel-indicator"></span>
+                </div>
+                <div class="metric-value-row">
+                    <span class="metric-big-value" id="ram-percent">—</span>
+                    <span class="metric-big-unit">%</span>
+                </div>
+                <div class="metric-bar-wrap">
+                    <div class="metric-bar" id="ram-bar">
+                        <div class="metric-bar-fill" id="ram-bar-fill"></div>
+                    </div>
+                </div>
+                <div class="metric-details">
+                    <div class="metric-detail-row">
+                        <span class="metric-detail-label">USED</span>
+                        <span class="metric-detail-value" id="ram-used">—</span>
+                    </div>
+                    <div class="metric-detail-row">
+                        <span class="metric-detail-label">AVAILABLE</span>
+                        <span class="metric-detail-value" id="ram-available">—</span>
+                    </div>
+                    <div class="metric-detail-row">
+                        <span class="metric-detail-label">TOTAL</span>
+                        <span class="metric-detail-value" id="ram-total">—</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Disk Card -->
+            <div class="metric-card" id="card-disk">
+                <div class="panel-header">
+                    <span class="panel-title">Disk ( / )</span>
+                    <span class="panel-indicator"></span>
+                </div>
+                <div class="metric-value-row">
+                    <span class="metric-big-value" id="disk-percent">—</span>
+                    <span class="metric-big-unit">%</span>
+                </div>
+                <div class="metric-bar-wrap">
+                    <div class="metric-bar" id="disk-bar">
+                        <div class="metric-bar-fill" id="disk-bar-fill"></div>
+                    </div>
+                </div>
+                <div class="metric-details">
+                    <div class="metric-detail-row">
+                        <span class="metric-detail-label">USED</span>
+                        <span class="metric-detail-value" id="disk-used">—</span>
+                    </div>
+                    <div class="metric-detail-row">
+                        <span class="metric-detail-label">FREE</span>
+                        <span class="metric-detail-value" id="disk-free">—</span>
+                    </div>
+                    <div class="metric-detail-row">
+                        <span class="metric-detail-label">TOTAL</span>
+                        <span class="metric-detail-value" id="disk-total">—</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Network Card -->
+            <div class="metric-card" id="card-network">
+                <div class="panel-header">
+                    <span class="panel-title">Network</span>
+                    <span class="panel-indicator"></span>
+                </div>
+                <div class="network-cols">
+                    <div class="network-col">
+                        <div class="network-col-label">RX</div>
+                        <div class="network-rate" id="net-rx-rate">—</div>
+                        <div class="network-total" id="net-rx-total">—</div>
+                    </div>
+                    <div class="network-col network-col-tx">
+                        <div class="network-col-label">TX</div>
+                        <div class="network-rate" id="net-tx-rate">—</div>
+                        <div class="network-total" id="net-tx-total">—</div>
+                    </div>
+                </div>
+                <div class="metric-details" style="margin-top: var(--spacing-md);">
+                    <div class="metric-detail-row">
+                        <span class="metric-detail-label">PKTS RX</span>
+                        <span class="metric-detail-value" id="net-pkts-rx">—</span>
+                    </div>
+                    <div class="metric-detail-row">
+                        <span class="metric-detail-label">PKTS TX</span>
+                        <span class="metric-detail-value" id="net-pkts-tx">—</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Card -->
+            <div class="metric-card" id="card-system">
+                <div class="panel-header">
+                    <span class="panel-title">System</span>
+                    <span class="panel-indicator"></span>
+                </div>
+                <div class="metric-detail-row" style="margin-bottom: var(--spacing-md);">
+                    <span class="metric-detail-label">UPTIME</span>
+                    <span class="metric-detail-value metric-uptime" id="sys-uptime">—</span>
+                </div>
+                <div class="metric-detail-label" style="margin-bottom: var(--spacing-sm);">LOAD AVG</div>
+                <div class="load-avg-cols">
+                    <div class="load-avg-col">
+                        <div class="load-avg-value" id="load-1">—</div>
+                        <div class="load-avg-label">1 MIN</div>
+                    </div>
+                    <div class="load-avg-col">
+                        <div class="load-avg-value" id="load-5">—</div>
+                        <div class="load-avg-label">5 MIN</div>
+                    </div>
+                    <div class="load-avg-col">
+                        <div class="load-avg-value" id="load-15">—</div>
+                        <div class="load-avg-label">15 MIN</div>
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- /metric-grid -->
+
+        <!-- AI Model Context Panel (right column) -->
+        <aside class="ai-panel">
+            <div class="ai-panel-header">
+                <span class="panel-title">AI Context</span>
+                <span class="ai-panel-dot"></span>
+            </div>
+            <div class="ai-model-name">Claude Sonnet 4.6</div>
+            <div class="ai-model-id">claude-sonnet-4-6</div>
+
+            <div class="ai-fields">
+                <div class="ai-field-row">
+                    <span class="ai-field-label">PROVIDER</span>
+                    <span class="ai-field-value">Anthropic</span>
+                </div>
+                <div class="ai-field-row">
+                    <span class="ai-field-label">MODEL ID</span>
+                    <span class="ai-field-value ai-field-mono">claude-sonnet-4-6</span>
+                </div>
+                <div class="ai-field-row">
+                    <span class="ai-field-label">TYPE</span>
+                    <span class="ai-field-value">Language Model</span>
+                </div>
+                <div class="ai-field-row">
+                    <span class="ai-field-label">CONTEXT</span>
+                    <span class="ai-field-value">200K tokens</span>
+                </div>
+                <div class="ai-field-row">
+                    <span class="ai-field-label">STATUS</span>
+                    <span class="ai-status-badge">
+                        <span class="ai-status-dot"></span>
+                        ACTIVE
+                    </span>
+                </div>
+            </div>
+
+            <div class="ai-panel-divider"></div>
+
+            <div class="ai-note">
+                This node is augmented by Claude Sonnet 4.6 for operational support, diagnostics, and intelligence tasks via the Anthropic API.
+            </div>
+        </aside>
+
+    </div><!-- /telemetry-layout -->
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/telemetry.js') }}"></script>
+{% endblock %}
