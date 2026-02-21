@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block title %}GEO{% endblock %}
+
+{% block head %}
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<!-- Leaflet MarkerCluster -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/geo.css') }}">
+{% endblock %}
+
+{% block content %}
+<script>document.body.classList.add('geo-page');</script>
+
+<div class="geo-layout">
+
+  <!-- ── Top control bar ── -->
+  <div class="geo-topbar">
+    <div class="geo-topbar-left">
+      <span class="geo-title">// GEO TACTICAL — NEW YORK METRO</span>
+      <div class="geo-badges">
+        <span class="geo-badge badge-aircraft">✈ <span id="g-aircraft-count">--</span> AIRCRAFT</span>
+        <span class="geo-badge badge-sat">◉ <span id="g-sat-count">--</span> SATELLITES</span>
+        <span class="geo-badge badge-cam">⬛ <span id="g-cam-count">0</span> CAMERAS</span>
+      </div>
+    </div>
+    <div class="geo-topbar-right">
+      <!-- Layer toggles -->
+      <div class="geo-toggles">
+        <button class="geo-toggle-btn active" id="tog-aircraft" data-layer="aircraft">FLIGHTS</button>
+        <button class="geo-toggle-btn active" id="tog-sat"      data-layer="satellites">ORBITAL</button>
+        <button class="geo-toggle-btn active" id="tog-cameras"  data-layer="cameras">CAMERAS</button>
+        <button class="geo-toggle-btn active" id="tog-zones"    data-layer="zones">ZONES</button>
+      </div>
+      <!-- Map style -->
+      <select class="geo-style-select" id="geo-style-select">
+        <option value="osm">STREET MAP</option>
+        <option value="dark">DARK TACTICAL</option>
+        <option value="satellite">SATELLITE</option>
+        <option value="topo">TOPOGRAPHIC</option>
+      </select>
+      <span class="geo-clock" id="g-clock">--:--:-- UTC</span>
+    </div>
+  </div>
+
+  <!-- ── Map container ── -->
+  <div id="geo-map"></div>
+
+  <!-- ── Bottom info bar ── -->
+  <div class="geo-infobar">
+    <div class="geo-info-item">
+      <span class="geo-info-label">CURSOR</span>
+      <span class="geo-info-value" id="g-cursor">--.---- , --.----</span>
+    </div>
+    <div class="geo-info-sep"></div>
+    <div class="geo-info-item">
+      <span class="geo-info-label">ZOOM</span>
+      <span class="geo-info-value" id="g-zoom">--</span>
+    </div>
+    <div class="geo-info-sep"></div>
+    <div class="geo-info-item geo-info-grow">
+      <span class="geo-info-value geo-ticker" id="g-ticker">GEOSPATIAL SYSTEMS ONLINE</span>
+    </div>
+    <div class="geo-info-sep"></div>
+    <div class="geo-info-item">
+      <span class="geo-info-label">REFRESH</span>
+      <span class="geo-info-value" id="g-refresh">--s</span>
+    </div>
+  </div>
+
+  <!-- ── Side detail panel (shown on feature click) ── -->
+  <div class="geo-detail-panel" id="geo-detail" style="display:none;">
+    <div class="geo-detail-header">
+      <span id="geo-detail-title">// DETAIL</span>
+      <button class="geo-detail-close" id="geo-detail-close">✕</button>
+    </div>
+    <div class="geo-detail-body" id="geo-detail-body"></div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+<!-- satellite.js for ground track propagation -->
+<script src="https://cdn.jsdelivr.net/npm/satellite.js/dist/satellite.min.js"></script>
+
+<script src="{{ url_for('static', filename='js/geo-main.js') }}"></script>
+{% endblock %}

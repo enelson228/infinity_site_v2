@@ -1,0 +1,491 @@
+/* ============================================
+   OVERWATCH — Geospatial Command Center
+   Extends the Halo Reach / UNSC aesthetic
+   ============================================ */
+
+/* ── Override base layout for full-screen globe ── */
+body.overwatch-page {
+    overflow: hidden;
+}
+
+/* Remove global scanline overlay — it conflicts with the GLSL filters */
+body.overwatch-page::before {
+    display: none;
+}
+
+body.overwatch-page main {
+    padding: 0;
+    margin-top: var(--nav-height);   /* push below fixed nav (overrides global padding-top) */
+    height: calc(100vh - var(--nav-height));
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+body.overwatch-page .footer {
+    display: none;
+}
+
+/* ── Top-level flex row: left panel | globe | right panel ── */
+.ow-layout {
+    display: flex;
+    flex-direction: row;
+    flex: 1;
+    height: calc(100vh - var(--nav-height) - 40px); /* 40px = status bar */
+    overflow: hidden;
+}
+
+/* ── Cesium Globe Container ── */
+#cesium-container {
+    flex: 1;
+    position: relative;
+    height: 100%;
+    background: #0d1117;
+}
+
+/* Loading overlay */
+.cesium-loading {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(13, 17, 23, 0.85);
+    z-index: 10;
+    pointer-events: none;
+    transition: opacity 0.6s ease;
+}
+.cesium-loading.hidden {
+    opacity: 0;
+}
+.cesium-loading-text {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--reach-amber);
+    letter-spacing: 0.2em;
+    animation: blink 1.2s step-end infinite;
+}
+
+/* Hide Cesium built-in UI chrome */
+.cesium-widget-credits            { display: none !important; }
+.cesium-viewer-toolbar            { display: none !important; }
+.cesium-viewer-animationContainer { display: none !important; }
+.cesium-viewer-timelineContainer  { display: none !important; }
+.cesium-viewer-bottom             { display: none !important; }
+.cesium-viewer-fullscreenContainer{ display: none !important; }
+
+/* ── Side Panels (shared) ── */
+.ow-panel {
+    width: 220px;
+    min-width: 220px;
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    background: rgba(20, 25, 38, 0.97);
+    display: flex;
+    flex-direction: column;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(246, 166, 35, 0.35) transparent;
+}
+.ow-panel::-webkit-scrollbar       { width: 4px; }
+.ow-panel::-webkit-scrollbar-track { background: transparent; }
+.ow-panel::-webkit-scrollbar-thumb { background: rgba(246, 166, 35, 0.35); border-radius: 2px; }
+
+.ow-panel-left  { border-right: 1px solid rgba(246, 166, 35, 0.2); }
+.ow-panel-right { border-left:  1px solid rgba(246, 166, 35, 0.2); }
+
+/* ── Sections within panels ── */
+.ow-section {
+    padding: 10px 12px;
+    border-bottom: 1px solid rgba(246, 166, 35, 0.08);
+    flex-shrink: 0;
+}
+.ow-section-grow {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+.ow-section-header {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    color: var(--reach-amber);
+    letter-spacing: 0.14em;
+    margin-bottom: 8px;
+    opacity: 0.85;
+}
+
+/* ── Filter Mode Buttons ── */
+.ow-filters {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+.ow-filter-btn {
+    background: transparent;
+    border: 1px solid rgba(246, 166, 35, 0.35);
+    color: var(--reach-amber);
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+    padding: 7px 10px;
+    text-align: left;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    position: relative;
+}
+.ow-filter-btn:hover {
+    background: rgba(246, 166, 35, 0.08);
+    border-color: rgba(246, 166, 35, 0.7);
+}
+.ow-filter-btn.active {
+    background: rgba(246, 166, 35, 0.18);
+    border-color: var(--reach-amber);
+    color: #fff;
+}
+.ow-filter-btn.active::before {
+    content: '▶ ';
+    color: var(--reach-amber);
+}
+
+/* ── Status Stat Rows ── */
+.ow-stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 3px 0;
+}
+.ow-stat-label {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    color: var(--text-secondary);
+    letter-spacing: 0.07em;
+}
+.ow-stat-value {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--reach-cyan);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+}
+
+/* ── System uplink indicators ── */
+.ow-sys-row {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-family: var(--font-mono);
+    font-size: 0.59rem;
+    color: var(--text-secondary);
+    letter-spacing: 0.06em;
+    line-height: 2;
+}
+.ow-sys-dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+.dot-green { background: #22d3ee; box-shadow: 0 0 6px #22d3ee; }
+.dot-amber { background: #f6a623; box-shadow: 0 0 6px #f6a623; animation: pulse-amber 2s ease-in-out infinite; }
+.dot-red   { background: #ef4444; box-shadow: 0 0 6px #ef4444; }
+
+@keyframes pulse-amber {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.4; }
+}
+
+/* ── Active flight detail ── */
+.ow-flight-detail {
+    flex: 1;
+    overflow-y: auto;
+}
+.ow-no-selection {
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
+    color: var(--text-secondary);
+    opacity: 0.5;
+    line-height: 1.8;
+    letter-spacing: 0.06em;
+    padding: 4px 0;
+}
+.ow-flight-row {
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    color: var(--text-primary);
+    padding: 2px 0;
+    border-bottom: 1px solid rgba(246, 166, 35, 0.05);
+}
+.ow-flight-row .fkey { color: var(--text-secondary); font-size: 0.58rem; }
+.ow-flight-row .fval { color: var(--reach-amber); }
+
+/* ── Satellite List ── */
+.ow-sat-list {
+    max-height: 180px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(34, 211, 238, 0.25) transparent;
+}
+.ow-sat-list::-webkit-scrollbar { width: 3px; }
+.ow-sat-list::-webkit-scrollbar-thumb { background: rgba(34, 211, 238, 0.25); }
+
+.ow-sat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 3px 2px;
+    border-bottom: 1px solid rgba(246, 166, 35, 0.04);
+    cursor: pointer;
+    transition: background var(--transition-fast);
+}
+.ow-sat-row:hover { background: rgba(34, 211, 238, 0.06); }
+
+.ow-sat-name {
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
+    color: var(--reach-cyan);
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 130px;
+    text-shadow: 0 0 5px rgba(34, 211, 238, 0.4);
+}
+.ow-sat-alt {
+    font-family: var(--font-mono);
+    font-size: 0.56rem;
+    color: var(--reach-amber);
+    flex-shrink: 0;
+}
+.ow-sat-group {
+    font-size: 0.5rem;
+    color: var(--text-secondary);
+    margin-right: 4px;
+}
+
+.ow-loading {
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
+    color: var(--text-secondary);
+    opacity: 0.55;
+    padding: 4px 0;
+    animation: blink 1.4s step-end infinite;
+}
+@keyframes blink { 50% { opacity: 0; } }
+
+/* ── CCTV Panels ── */
+.ow-cctv-feeds {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+.ow-cctv-panel {
+    border: 1px solid rgba(246, 166, 35, 0.3);
+    background: #000;
+}
+.ow-cctv-label {
+    font-family: var(--font-mono);
+    font-size: 0.54rem;
+    color: var(--reach-amber);
+    letter-spacing: 0.08em;
+    padding: 3px 6px;
+    background: rgba(246, 166, 35, 0.08);
+    border-bottom: 1px solid rgba(246, 166, 35, 0.2);
+}
+.ow-cctv-screen {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    background: #030303;
+}
+.ow-cctv-screen video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: none; /* shown once stream loads */
+}
+
+/* NO SIGNAL overlay */
+.ow-no-signal {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: #060606;
+    z-index: 2;
+}
+.ow-no-signal.hidden { display: none; }
+
+.ow-no-signal-text {
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
+    color: rgba(246, 166, 35, 0.7);
+    letter-spacing: 0.25em;
+    z-index: 3;
+    position: relative;
+}
+
+/* TV static noise via SVG filter */
+.ow-static {
+    position: absolute;
+    inset: 0;
+    opacity: 0.07;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    animation: static-shift 0.08s steps(1) infinite;
+}
+@keyframes static-shift {
+    0%   { transform: translate(0, 0); }
+    20%  { transform: translate(-3px, 1px); }
+    40%  { transform: translate(2px, -2px); }
+    60%  { transform: translate(-1px, 3px); }
+    80%  { transform: translate(3px, -1px); }
+    100% { transform: translate(0, 0); }
+}
+
+/* ── Alert Log ── */
+.ow-alert-log {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(246, 166, 35, 0.2) transparent;
+}
+.ow-alert-entry {
+    font-family: var(--font-mono);
+    font-size: 0.57rem;
+    line-height: 1.6;
+    padding: 1px 0;
+    border-bottom: 1px solid rgba(246, 166, 35, 0.04);
+    flex-shrink: 0;
+}
+.ow-alert-time {
+    color: var(--reach-amber);
+    margin-right: 5px;
+    opacity: 0.7;
+}
+.ow-alert-msg { color: var(--text-secondary); }
+.ow-alert-entry.alert-warn  .ow-alert-msg { color: var(--reach-amber); }
+.ow-alert-entry.alert-info  .ow-alert-msg { color: var(--reach-cyan); }
+.ow-alert-entry.alert-error .ow-alert-msg { color: #ef4444; }
+
+/* ── Bottom Status Bar ── */
+.ow-status-bar {
+    height: 40px;
+    flex-shrink: 0;
+    background: rgba(18, 22, 34, 0.98);
+    border-top: 1px solid rgba(246, 166, 35, 0.5);
+    display: flex;
+    align-items: center;
+    padding: 0 14px;
+    gap: 0;
+}
+.ow-status-item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 0 10px;
+}
+.ow-status-center {
+    flex: 1;
+    justify-content: center;
+}
+.ow-status-sep {
+    width: 1px;
+    height: 18px;
+    background: rgba(246, 166, 35, 0.2);
+}
+.ow-status-label {
+    font-family: var(--font-mono);
+    font-size: 0.55rem;
+    color: var(--text-secondary);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+.ow-status-value {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+}
+.ow-val-cyan  { color: var(--reach-cyan); }
+.ow-val-amber { color: var(--reach-amber); }
+
+#sb-clock {
+    font-size: 0.78rem;
+    letter-spacing: 0.12em;
+}
+
+/* ── Location Switcher ── */
+.ow-location-display {
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
+    color: var(--reach-cyan);
+    letter-spacing: 0.05em;
+    padding: 2px 0 6px;
+    opacity: 0.85;
+}
+.ow-location-select {
+    width: 100%;
+    background: rgba(20, 25, 38, 0.95);
+    border: 1px solid rgba(246, 166, 35, 0.35);
+    color: var(--reach-amber);
+    font-family: var(--font-mono);
+    font-size: 0.61rem;
+    padding: 5px 7px;
+    margin-bottom: 5px;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    outline: none;
+    appearance: none;
+}
+.ow-location-select option {
+    background: #141926;
+    color: var(--reach-amber);
+}
+.ow-location-custom {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 5px;
+}
+.ow-location-input {
+    width: 100%;
+    background: rgba(20, 25, 38, 0.95);
+    border: 1px solid rgba(246, 166, 35, 0.2);
+    color: var(--reach-cyan);
+    font-family: var(--font-mono);
+    font-size: 0.61rem;
+    padding: 4px 7px;
+    outline: none;
+    box-sizing: border-box;
+}
+.ow-location-input:focus {
+    border-color: rgba(246, 166, 35, 0.55);
+}
+.ow-location-input::placeholder {
+    color: rgba(148, 163, 184, 0.35);
+    font-size: 0.54rem;
+}
+.ow-location-set-btn {
+    width: 100%;
+    background: transparent;
+    border: 1px solid rgba(246, 166, 35, 0.4);
+    color: var(--reach-amber);
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.08em;
+    padding: 6px 0;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    margin-top: 2px;
+}
+.ow-location-set-btn:hover {
+    background: rgba(246, 166, 35, 0.1);
+    border-color: var(--reach-amber);
+}
