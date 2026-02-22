@@ -1,0 +1,280 @@
+{% extends "base.html" %}
+
+{% block title %}Rowboat{% endblock %}
+
+{% block content %}
+<div class="container">
+
+    <!-- Back navigation -->
+    <a href="{{ url_for('projects') }}" class="project-back-link">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="15 18 9 12 15 6"/>
+        </svg>
+        Back to Projects
+    </a>
+
+    <!-- Page Header -->
+    <div class="project-detail-header">
+        <div class="project-detail-icon">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <circle cx="12" cy="5" r="3"/>
+                <line x1="12" y1="8" x2="12" y2="22"/>
+                <path d="M5 15H2a10 10 0 0 0 20 0h-3"/>
+            </svg>
+        </div>
+        <div class="project-detail-meta">
+            <div class="section-label">External Project — Open Source</div>
+            <h1 class="page-title">Rowboat</h1>
+            <p class="page-description">
+                Open-source AI coworker that builds and maintains a persistent knowledge graph
+                from your work context, enabling grounded artifact generation and background agents.
+            </p>
+            <div class="project-detail-links">
+                <a href="http://mjolnirarmory.com:3000" target="_blank" class="btn btn-primary">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                        <polyline points="15 3 21 3 21 9"/>
+                        <line x1="10" y1="14" x2="21" y2="3"/>
+                    </svg>
+                    Launch Application
+                </a>
+                <a href="https://github.com/rowboatlabs/rowboat" target="_blank" class="btn btn-secondary">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/>
+                    </svg>
+                    GitHub Repository
+                </a>
+                <a href="https://www.rowboatlabs.com" target="_blank" class="btn btn-secondary">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="2" y1="12" x2="22" y2="12"/>
+                        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                    </svg>
+                    Official Site
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Two-column body -->
+    <div class="project-detail-body">
+
+        <!-- Main content column -->
+        <div class="project-detail-main">
+
+            <!-- Overview Section -->
+            <div class="project-detail-section">
+                <div class="project-detail-section-title">Overview</div>
+                <div class="project-detail-prose">
+                    <p>
+                        Rowboat is a local-first AI coworker that accumulates context from your work
+                        over time rather than starting fresh with each request. It maintains an
+                        Obsidian-compatible vault of plain Markdown notes with backlinks — a
+                        transparent, editable "working memory" you can inspect and edit directly.
+                    </p>
+                    <p>
+                        Unlike retrieval-augmented approaches that reconstruct context on demand,
+                        Rowboat's knowledge graph grows persistently, tracking decisions, open
+                        questions, and project threads across your email, meetings, and notes.
+                        All data remains on your machine regardless of which AI model is used.
+                    </p>
+                    <p>
+                        Built by Rowboat Labs (Y Combinator S24), the project is Apache 2.0 licensed
+                        with 8,200+ GitHub stars and active community development.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Key Features Section -->
+            <div class="project-detail-section">
+                <div class="project-detail-section-title">Core Capabilities</div>
+                <div class="feature-grid">
+                    <div class="feature-item">
+                        <div class="feature-item-title">Knowledge Graph</div>
+                        <div class="feature-item-desc">
+                            Maintains an Obsidian-compatible Markdown vault with backlinks as
+                            persistent, inspectable working memory.
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-item-title">Context Accumulation</div>
+                        <div class="feature-item-desc">
+                            Retains and compounds context over time — past decisions, open questions,
+                            and thread history — without re-ingesting each session.
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-item-title">Artifact Generation</div>
+                        <div class="feature-item-desc">
+                            Creates PDFs, email drafts, briefs, documents, and presentation slides
+                            grounded in your accumulated historical context.
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-item-title">Meeting Prep</div>
+                        <div class="feature-item-desc">
+                            Pulls past decisions, open questions, and relevant threads into cohesive
+                            briefings before each meeting.
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-item-title">Background Agents</div>
+                        <div class="feature-item-desc">
+                            Automates routine tasks — drafting email replies, daily voice summaries,
+                            project updates — without explicit requests.
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-item-title">Voice Notes</div>
+                        <div class="feature-item-desc">
+                            Records audio and automatically extracts key takeaways into the knowledge
+                            graph via Deepgram transcription.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Integrations Section -->
+            <div class="project-detail-section">
+                <div class="project-detail-section-title">Integrations</div>
+                <div class="integration-list">
+                    <div class="integration-item">
+                        <span class="integration-dot"></span>
+                        Gmail — email ingestion and reply drafting
+                    </div>
+                    <div class="integration-item">
+                        <span class="integration-dot"></span>
+                        Granola — meeting notes extraction
+                    </div>
+                    <div class="integration-item">
+                        <span class="integration-dot"></span>
+                        Fireflies — meeting transcript ingestion
+                    </div>
+                    <div class="integration-item">
+                        <span class="integration-dot"></span>
+                        Deepgram — voice transcription (optional)
+                    </div>
+                    <div class="integration-item">
+                        <span class="integration-dot"></span>
+                        Brave Search / Exa Search — web research (optional)
+                    </div>
+                    <div class="integration-item">
+                        <span class="integration-dot"></span>
+                        Model Context Protocol (MCP) — extensibility layer
+                    </div>
+                    <div class="integration-item">
+                        <span class="integration-dot"></span>
+                        Ollama / LM Studio — local model support
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tech Stack Section -->
+            <div class="project-detail-section">
+                <div class="project-detail-section-title">Technology Stack</div>
+                <div class="stack-tags">
+                    <span class="stack-tag primary">TypeScript</span>
+                    <span class="stack-tag">Electron</span>
+                    <span class="stack-tag">Docker</span>
+                    <span class="stack-tag">MCP</span>
+                    <span class="stack-tag">Obsidian Markdown</span>
+                    <span class="stack-tag">Ollama</span>
+                    <span class="stack-tag">Python</span>
+                    <span class="stack-tag">Node.js</span>
+                    <span class="stack-tag">Deepgram</span>
+                </div>
+            </div>
+
+        </div><!-- /project-detail-main -->
+
+        <!-- Sidebar -->
+        <aside class="project-sidebar">
+
+            <!-- Project Stats Panel -->
+            <div class="project-stat-panel">
+                <div class="project-stat-panel-title">// Project Intel</div>
+                <div class="project-stat-row">
+                    <span class="project-stat-label">Stars</span>
+                    <span class="project-stat-value accent">8,200+</span>
+                </div>
+                <div class="project-stat-row">
+                    <span class="project-stat-label">Forks</span>
+                    <span class="project-stat-value">701</span>
+                </div>
+                <div class="project-stat-row">
+                    <span class="project-stat-label">Contributors</span>
+                    <span class="project-stat-value">10</span>
+                </div>
+                <div class="project-stat-row">
+                    <span class="project-stat-label">License</span>
+                    <span class="project-stat-value cyan">Apache 2.0</span>
+                </div>
+                <div class="project-stat-row">
+                    <span class="project-stat-label">Backer</span>
+                    <span class="project-stat-value">YC S24</span>
+                </div>
+                <div class="project-stat-row">
+                    <span class="project-stat-label">Primary Lang</span>
+                    <span class="project-stat-value cyan">TypeScript</span>
+                </div>
+                <div class="project-stat-row">
+                    <span class="project-stat-label">Deployment</span>
+                    <span class="project-stat-value">Electron / Docker</span>
+                </div>
+                <div class="project-stat-row">
+                    <span class="project-stat-label">Status</span>
+                    <span class="project-stat-value accent">Active</span>
+                </div>
+            </div>
+
+            <!-- Model Flexibility Panel -->
+            <div class="project-stat-panel">
+                <div class="project-stat-panel-title">// Model Support</div>
+                <div class="project-stat-row">
+                    <span class="project-stat-label">Local</span>
+                    <span class="project-stat-value">Ollama / LM Studio</span>
+                </div>
+                <div class="project-stat-row">
+                    <span class="project-stat-label">Hosted</span>
+                    <span class="project-stat-value">Any API Key</span>
+                </div>
+                <div class="project-stat-row">
+                    <span class="project-stat-label">Data Residency</span>
+                    <span class="project-stat-value cyan">Local-First</span>
+                </div>
+                <div class="project-stat-row">
+                    <span class="project-stat-label">Knowledge Store</span>
+                    <span class="project-stat-value">Markdown Vault</span>
+                </div>
+            </div>
+
+            <!-- Links Panel -->
+            <div class="project-stat-panel">
+                <div class="project-stat-panel-title">// External Links</div>
+                <div style="display: flex; flex-direction: column; gap: var(--spacing-sm); margin-top: var(--spacing-sm);">
+                    <a href="https://github.com/rowboatlabs/rowboat" target="_blank" class="quick-link" style="padding: var(--spacing-sm) var(--spacing-md);">
+                        <div class="quick-link-icon" style="width:28px;height:28px;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/>
+                            </svg>
+                        </div>
+                        <span class="quick-link-text">GitHub</span>
+                    </a>
+                    <a href="https://www.rowboatlabs.com" target="_blank" class="quick-link" style="padding: var(--spacing-sm) var(--spacing-md);">
+                        <div class="quick-link-icon" style="width:28px;height:28px;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <line x1="2" y1="12" x2="22" y2="12"/>
+                                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                            </svg>
+                        </div>
+                        <span class="quick-link-text">rowboatlabs.com</span>
+                    </a>
+                </div>
+            </div>
+
+        </aside>
+
+    </div><!-- /project-detail-body -->
+</div>
+{% endblock %}
