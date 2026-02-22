@@ -8,21 +8,22 @@
    2. (Optional) Set OPENSKY_USER / OPENSKY_PASS for more API credits
       https://opensky-network.org — free registration
    3. (Optional) Replace CCTV_STREAMS urls with real .m3u8 HLS streams
-      Tips: Windy.com traffic cams, NYC DOT 511ny.org/cameras
+      Tips: Windy.com cams, NYC DOT 511ny.org/cameras
             Open cam page → DevTools (F12) → Network tab → filter ".m3u8"
    ============================================ */
 
 // ── Configuration ──────────────────────────────────────────────────────────
 
-const CESIUM_ION_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI3NmJiMzA2ZC0xZTY0LTRmY2ItOTc0OS01ZWM2MTFkZTc2MmIiLCJpZCI6MzkyNjYyLCJpYXQiOjE3NzE2NTQ2NDV9.22GxjzoKKKVKKl_CeCH7eJBW07RIOkCb2KhM0SWRcUA';
-//    ↑ Required for: world terrain, OSM 3D buildings, high-res imagery
+const CESIUM_ION_TOKEN = window.CESIUM_ION_TOKEN || '';
+//    ↑ Injected server-side from the CESIUM_ION_TOKEN environment variable (Doppler).
+//      Required for: world terrain, OSM 3D buildings, high-res imagery.
 //      Without a valid token the globe still works with basic imagery.
 
 const CENTER = { lat: 40.7128, lon: -74.006, alt: 8000 };
 //             ↑ New York City — default; overridden by localStorage on load
 
 const BBOX = 0.3;
-//           ↑ Degrees radius for flight/road queries (~33 km at NYC lat)
+//           ↑ Degrees radius for flight queries (~33 km at NYC lat)
 
 const OPENSKY_USER = '';
 const OPENSKY_PASS = '';
@@ -69,7 +70,6 @@ window.OW = {
     satMode:        false,
     aircraftCount:  0,
     satelliteCount: 0,
-    trafficCount:   0,
 };
 
 // ── Imagery provider instances ──────────────────────────────────────────────
@@ -169,6 +169,7 @@ function _buildEsriProvider() {
     // ── Location + SAT mode (reads localStorage, must run before flyTo) ──
     _initLocationSwitcher(viewer);
     _initSatMode(viewer);
+    _initViewTracking(viewer);
 
     // ── Fly to center city (uses window.OW.center, possibly restored) ──
     viewer.camera.flyTo({
@@ -196,8 +197,6 @@ function _buildEsriProvider() {
     OW_Data.startFlightPolling(FLIGHT_POLL_MS);
 
     setTimeout(() => OW_Data.fetchSatellites(), 500);
-
-    setTimeout(() => OW_Data.fetchRoads(), 1500);
 
     // ── Boot alerts ──
     OW_HUD.addAlert('OVERWATCH ONLINE — ALL SENSOR SYSTEMS NOMINAL', 'info');
@@ -288,7 +287,7 @@ function _initLocationSwitcher(viewer) {
             localStorage.setItem('ow_location', JSON.stringify(city));
             _updateLocDisplay(city.label, city.lat, city.lon);
             OW_HUD.addAlert(`LOCATION → ${city.label} (${city.lat.toFixed(4)}°, ${city.lon.toFixed(4)}°)`, 'info');
-            OW_Data.fetchRoads();
+            OW_Data.fetchFlights();
         });
     }
 }
@@ -298,6 +297,42 @@ function _updateLocDisplay(label, lat, lon) {
     if (el) {
         el.textContent = `${label} — ${lat.toFixed(4)}° / ${lon.toFixed(4)}°`;
     }
+}
+
+// ── View-based Flight Tracking ─────────────────────────────────────────────
+function _initViewTracking(viewer) {
+    let lastFetchAt = 0;
+    const MIN_FETCH_MS = 12000; // OpenSky minimum is 10s; keep buffer
+
+    function _updateFromView() {
+        const rect = viewer.camera.computeViewRectangle();
+        if (!rect) return;
+
+        const west  = Cesium.Math.toDegrees(rect.west);
+        const east  = Cesium.Math.toDegrees(rect.east);
+        const south = Cesium.Math.toDegrees(rect.south);
+        const north = Cesium.Math.toDegrees(rect.north);
+
+        const centerLat = (north + south) / 2;
+        let spanLon = east - west;
+        if (spanLon < 0) spanLon += 360; // handle dateline wrap
+        const centerLon = west + spanLon / 2;
+        const bbox = Math.max(Math.abs(north - south), Math.abs(spanLon)) / 2;
+
+        window.OW.center = { lat: centerLat, lon: centerLon, alt: window.OW.center.alt || 8000 };
+        window.OW.bbox   = Math.min(Math.max(bbox, 0.1), 2.0); // clamp 0.1°–2.0°
+        _updateLocDisplay('VIEW', centerLat, centerLon);
+
+        const now = Date.now();
+        if (now - lastFetchAt >= MIN_FETCH_MS) {
+            lastFetchAt = now;
+            OW_Data.fetchFlights();
+        }
+    }
+
+    // Initial sync after first render
+    setTimeout(_updateFromView, 1500);
+    viewer.camera.moveEnd.addEventListener(_updateFromView);
 }
 
 // ── SAT Imagery Mode ────────────────────────────────────────────────────────

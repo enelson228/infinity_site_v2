@@ -29,11 +29,12 @@
 
             <ul class="nav-links" id="nav-links">
                 <li><a href="{{ url_for('home') }}" class="nav-link{% if request.endpoint == 'home' %} active{% endif %}">Home</a></li>
-                <li><a href="{{ url_for('projects') }}" class="nav-link{% if request.endpoint == 'projects' %} active{% endif %}">Projects</a></li>
+                <li><a href="{{ url_for('projects') }}" class="nav-link{% if request.endpoint in ['projects', 'project_rowboat'] %} active{% endif %}">Projects</a></li>
                 <li><a href="{{ url_for('telemetry') }}" class="nav-link{% if request.endpoint == 'telemetry' %} active{% endif %}">Telemetry</a></li>
                 <li><a href="{{ url_for('uplink') }}" class="nav-link{% if request.endpoint == 'uplink' or request.endpoint == 'uplink_login' %} active{% endif %}">Uplink Cache</a></li>
-                <li><a href="{{ url_for('terminal') }}" class="nav-link{% if request.endpoint == 'terminal' or request.endpoint == 'terminal_login' %} active{% endif %}">Terminal</a></li>
-                <li><a href="{{ url_for('overwatch') }}" class="nav-link{% if request.endpoint == 'overwatch' %} active{% endif %}">Overwatch</a></li>
+                {% if session.get('role') == 'admin' %}
+                <li><a href="{{ url_for('control') }}" class="nav-link{% if request.endpoint == 'control' %} active{% endif %}">Control</a></li>
+                {% endif %}
             </ul>
         </div>
     </nav>

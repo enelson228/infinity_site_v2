@@ -1,6 +1,6 @@
 /* ============================================
    OVERWATCH Data — API Fetching Module
-   OpenSky flights · Celestrak TLEs · Overpass roads
+   OpenSky flights · Celestrak TLEs
    ============================================ */
 
 window.OW_Data = (function () {
@@ -134,77 +134,6 @@ window.OW_Data = (function () {
         setTimeout(fetchSatellites, 6 * 60 * 1000);
     }
 
-    // ────────────────────────────────────────
-    // Overpass API — OSM Road Network
-    // ────────────────────────────────────────
-    async function fetchRoads() {
-        const { lat, lon } = window.OW.center;
-        const r = window.OW.bbox;
-
-        const query = [
-            '[out:json][timeout:30];',
-            '(',
-            '  way["highway"~"^(motorway|trunk|primary|secondary|tertiary|residential|unclassified)$"]',
-            `    (${lat - r},${lon - r},${lat + r},${lon + r});`,
-            ');',
-            'out body;',
-            '>;',
-            'out skel qt;',
-        ].join('\n');
-
-        try {
-            OW_HUD.addAlert('FETCHING ROAD NETWORK FROM OVERPASS API...', 'info');
-            const resp = await fetch('https://overpass-api.de/api/interpreter', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: 'data=' + encodeURIComponent(query),
-            });
-            if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-            const data = await resp.json();
-            const graph = parseOverpass(data);
-            OW_HUD.addAlert(
-                `ROAD NETWORK LOADED — ${graph.edges.length} SEGMENTS ACROSS ${graph.nodes.size} NODES`,
-                'info'
-            );
-            OW_Render.initTraffic(graph);
-        } catch (e) {
-            console.warn('[OW] Overpass failed, using procedural mode:', e.message);
-            OW_HUD.addAlert('ROAD NETWORK UNAVAILABLE — ENGAGING PROCEDURAL TRAFFIC GRID', 'warn');
-            OW_Render.initTrafficProcedural();
-        }
-    }
-
-    function parseOverpass(data) {
-        const nodes = new Map();
-        const ways = [];
-
-        for (const el of data.elements) {
-            if (el.type === 'node') {
-                nodes.set(el.id, { lat: el.lat, lon: el.lon });
-            } else if (el.type === 'way' && el.nodes) {
-                ways.push({
-                    nodeIds: el.nodes,
-                    highway: el.tags && el.tags.highway || 'unclassified',
-                });
-            }
-        }
-
-        // Build bidirectional edge list
-        const edges = [];
-        for (const way of ways) {
-            for (let i = 0; i < way.nodeIds.length - 1; i++) {
-                const a = nodes.get(way.nodeIds[i]);
-                const b = nodes.get(way.nodeIds[i + 1]);
-                if (a && b) {
-                    edges.push({ from: a, to: b, highway: way.highway });
-                    edges.push({ from: b, to: a, highway: way.highway });
-                }
-            }
-        }
-
-        return { nodes, edges };
-    }
-
     // ── Public API ──
     return {
         fetchFlights,
@@ -212,6 +141,5 @@ window.OW_Data = (function () {
         fetchTLEs,
         parseTLEs,
         fetchSatellites,
-        fetchRoads,
     };
 })();

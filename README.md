@@ -5,9 +5,12 @@ Personal website and homelab dashboard running at [mjolnirarmory.com](https://mj
 ## Features
 
 - **Home** — Landing page
-- **Projects** — Homelab services dashboard (Plex, Pi-hole, Home Assistant, etc.)
+- **Projects** — Dashboard of internal services and tools (includes Overwatch + Terminal)
 - **Telemetry** — Live system metrics dashboard (CPU, RAM, disk, network, load avg) with Halo Reach military HUD aesthetic — glowing amber/cyan readouts and animated progress bars
-- **Uplink Cache** — Password-protected file upload/download portal (100MB max per file)
+- **Uplink Cache** — Authenticated file upload/download portal (100MB max per file)
+- **Terminal** — AI terminal with per-user memory (explicit `REMEMBER` / `RECALL`)
+- **Overwatch** — Live globe view with aircraft and satellite tracking
+- **Control** — Admin console for user and memory management with audit log
 
 ## Stack
 
@@ -110,3 +113,23 @@ systemctl status infinity_site
 ## Projects dashboard
 
 Edit `projects.json` to add, remove, or update homelab services shown on the projects page.
+
+## Authentication + Users
+
+- Logins now use **username + password** (not a single shared password).
+- The first admin user is seeded on first boot:
+  - Username: `john117`
+  - Password hash: `UPLINK_PASSWORD_HASH` (from Doppler)
+- Admins can manage accounts at `/control`:
+  - Create users
+  - Reset passwords
+  - Enable/disable/delete accounts
+  - Manage per-user memory
+  - View audit log (login attempts + user actions)
+
+## Terminal Memory (Per User)
+
+Memory is stored per user and only injected when explicitly requested:
+
+- `REMEMBER <text>` — store memory
+- `RECALL <prompt>` — ask with memory injected

@@ -18,6 +18,7 @@ window.OW_Geo = (function () {
 
     let viewer = null;
     const groundTrackEntities = new Map(); // sat name → entity
+    let _trackTimer = null;
 
     // ── Public init ────────────────────────────────────────────────────────────
     function init(v) {
@@ -88,12 +89,32 @@ window.OW_Geo = (function () {
     function _initGroundTracks() {
         const entities = OW_Render.getSatEntities();
         if (entities && entities.length > 0) {
-            _buildGroundTracks(entities);
-            setInterval(_refreshGroundTracks, 30000);
+            _startGroundTracks(entities);
         } else if (_retryCount < 10) {
             _retryCount++;
             setTimeout(_initGroundTracks, 2000);
         }
+    }
+
+    function _startGroundTracks(satEntities) {
+        _clearGroundTracks();
+        _buildGroundTracks(satEntities);
+        if (_trackTimer) { clearInterval(_trackTimer); }
+        _trackTimer = setInterval(_refreshGroundTracks, 30000);
+
+        const count = groundTrackEntities.size;
+        if (count > 0) {
+            OW_HUD.addAlert(`GROUND TRACKS LOADED — ${count} ORBITS`, 'info');
+        } else {
+            console.warn('[OW] Ground track build produced 0 tracks.');
+        }
+    }
+
+    function _clearGroundTracks() {
+        for (const [, rec] of groundTrackEntities) {
+            viewer.entities.remove(rec.entity);
+        }
+        groundTrackEntities.clear();
     }
 
     function _buildGroundTracks(satEntities) {
@@ -166,6 +187,9 @@ window.OW_Geo = (function () {
     }
 
     // ── Public API ─────────────────────────────────────────────────────────────
-    return { init };
+    return {
+        init,
+        onSatellitesReady: _startGroundTracks,
+    };
 
 })();

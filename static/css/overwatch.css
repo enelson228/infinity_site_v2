@@ -210,7 +210,28 @@ body.overwatch-page .footer {
     letter-spacing: 0.06em;
     padding: 4px 0;
 }
-.ow-flight-row {
+
+/* ── Flight hover tooltip ── */
+.ow-flight-tooltip {
+    position: fixed;
+    top: 0;
+    left: 0;
+    transform: translate(-9999px, -9999px);
+    background: rgba(10, 14, 20, 0.94);
+    border: 1px solid rgba(246, 166, 35, 0.2);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+    padding: 8px 10px;
+    border-radius: 6px;
+    z-index: 20;
+    pointer-events: none;
+    max-width: 220px;
+    opacity: 1;
+    transition: opacity 0.12s ease;
+}
+.ow-flight-tooltip.hidden {
+    opacity: 0;
+}
+.ow-flight-tooltip .ow-flight-row {
     display: flex;
     justify-content: space-between;
     font-family: var(--font-mono);
@@ -219,8 +240,11 @@ body.overwatch-page .footer {
     padding: 2px 0;
     border-bottom: 1px solid rgba(246, 166, 35, 0.05);
 }
-.ow-flight-row .fkey { color: var(--text-secondary); font-size: 0.58rem; }
-.ow-flight-row .fval { color: var(--reach-amber); }
+.ow-flight-tooltip .ow-flight-row:last-child {
+    border-bottom: none;
+}
+.ow-flight-tooltip .fkey { color: var(--text-secondary); font-size: 0.58rem; }
+.ow-flight-tooltip .fval { color: var(--reach-amber); }
 
 /* ── Satellite List ── */
 .ow-sat-list {

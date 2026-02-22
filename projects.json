@@ -1,58 +1,33 @@
 {
   "projects": [
     {
-      "id": "plex",
-      "name": "Plex Media Server",
-      "description": "Home media streaming and organization",
+      "id": "rowboat",
+      "name": "Rowboat",
+      "description": "Open-source AI coworker with persistent knowledge graph and background agents",
       "status": "online",
-      "url": "http://plex.local:32400",
-      "icon": "film",
-      "updated": "2024-02-01"
+      "url": "http://mjolnirarmory.com:3000",
+      "detail_url": "/projects/rowboat",
+      "icon": "anchor",
+      "type": "external_project",
+      "updated": "2026-02-22"
     },
     {
-      "id": "pihole",
-      "name": "Pi-hole",
-      "description": "Network-wide ad blocking and DNS",
+      "id": "overwatch",
+      "name": "Overwatch",
+      "description": "Live global situational display with flights, satellites, and sensors",
       "status": "online",
-      "url": "http://pihole.local/admin",
-      "icon": "shield",
-      "updated": "2024-01-28"
+      "detail_url": "/overwatch",
+      "icon": "globe",
+      "updated": "2026-02-22"
     },
     {
-      "id": "homeassistant",
-      "name": "Home Assistant",
-      "description": "Smart home automation hub",
+      "id": "terminal",
+      "name": "Infinity Terminal",
+      "description": "Secure command interface with AI assistance",
       "status": "online",
-      "url": "http://homeassistant.local:8123",
-      "icon": "home",
-      "updated": "2024-02-03"
-    },
-    {
-      "id": "portainer",
-      "name": "Portainer",
-      "description": "Docker container management",
-      "status": "maintenance",
-      "url": "http://portainer.local:9000",
-      "icon": "box",
-      "updated": "2024-01-15"
-    },
-    {
-      "id": "grafana",
-      "name": "Grafana",
-      "description": "Metrics visualization and monitoring",
-      "status": "offline",
-      "url": "http://grafana.local:3000",
-      "icon": "activity",
-      "updated": "2024-01-20"
-    },
-    {
-      "id": "nextcloud",
-      "name": "Nextcloud",
-      "description": "Self-hosted cloud storage and collaboration",
-      "status": "online",
-      "url": "http://nextcloud.local",
-      "icon": "cloud",
-      "updated": "2024-02-02"
+      "detail_url": "/terminal",
+      "icon": "server",
+      "updated": "2026-02-22"
     }
   ]
 }

@@ -62,10 +62,6 @@
         <span class="ow-stat-value" id="stat-satellites">--</span>
       </div>
       <div class="ow-stat-row">
-        <span class="ow-stat-label">TRAFFIC</span>
-        <span class="ow-stat-value" id="stat-traffic">--</span>
-      </div>
-      <div class="ow-stat-row">
         <span class="ow-stat-label">CCTV FEEDS</span>
         <span class="ow-stat-value" id="stat-cctv">3</span>
       </div>
@@ -75,14 +71,13 @@
       <div class="ow-section-header">// SYS UPLINK</div>
       <div class="ow-sys-row"><span class="ow-sys-dot dot-green"></span> OPENSKY NET</div>
       <div class="ow-sys-row"><span class="ow-sys-dot dot-green"></span> CELESTRAK TLE</div>
-      <div class="ow-sys-row"><span class="ow-sys-dot dot-amber"></span> OVERPASS OSM</div>
       <div class="ow-sys-row"><span class="ow-sys-dot dot-red" id="dot-cctv"></span> CCTV STREAMS</div>
     </div>
 
     <div class="ow-section ow-section-grow">
       <div class="ow-section-header">// ACTIVE FLIGHT</div>
       <div class="ow-flight-detail" id="flight-detail">
-        <div class="ow-no-selection">HOVER AIRCRAFT<br>TO INSPECT</div>
+        <div class="ow-no-selection">CLICK AIRCRAFT<br>TO LOCK DETAILS</div>
       </div>
     </div>
 
@@ -153,6 +148,8 @@
   </div>
 </div>
 
+<div class="ow-flight-tooltip hidden" id="flight-tooltip"></div>
+
 <!-- ── Bottom Status Bar ── -->
 <div class="ow-status-bar">
   <div class="ow-status-item">
@@ -182,6 +179,7 @@
 {% endblock %}
 
 {% block scripts %}
+<script>window.CESIUM_ION_TOKEN = {{ cesium_token | tojson }};</script>
 <!-- CesiumJS core -->
 <script src="https://cesium.com/downloads/cesiumjs/releases/1.113/Build/Cesium/Cesium.js"></script>
 <!-- satellite.js — SGP4 TLE propagation -->

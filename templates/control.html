@@ -1,0 +1,287 @@
+{% extends "base.html" %}
+
+{% block title %}Control{% endblock %}
+
+{% block content %}
+<div class="container uplink-container">
+    <div class="section-header">
+        <div class="section-label">ADMIN CONSOLE</div>
+        <h2>Control</h2>
+        <p>Manage user accounts</p>
+    </div>
+
+    <div class="control-grid">
+        <section class="uplink-section upload">
+            <h3>Create User</h3>
+            <div class="form-group">
+                <label class="form-label" for="new-username">Username</label>
+                <input id="new-username" class="form-input" type="text" placeholder="e.g. cortana" autocomplete="off">
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="new-password">Password</label>
+                <input id="new-password" class="form-input" type="password" placeholder="Set password">
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="new-role">Role</label>
+                <select id="new-role" class="form-input">
+                    <option value="user">User</option>
+                    <option value="admin">Admin</option>
+                </select>
+            </div>
+            <button class="btn btn-primary" id="create-user-btn">Create</button>
+            <p class="login-error" id="create-error">Failed to create user.</p>
+            <p class="upload-status success" id="create-success">User created.</p>
+        </section>
+
+        <section class="uplink-section download">
+            <h3>Users</h3>
+            <div class="terminal-output" id="user-list" style="height: 260px;"></div>
+
+            <div style="margin-top: 16px;">
+                <h4 style="margin-bottom: 8px;">Reset Password</h4>
+                <div class="form-group">
+                    <label class="form-label" for="reset-user-id">User ID</label>
+                    <input id="reset-user-id" class="form-input" type="number" min="1" placeholder="e.g. 2">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="reset-password">New Password</label>
+                    <input id="reset-password" class="form-input" type="password" placeholder="Set new password">
+                </div>
+                <button class="btn btn-secondary" id="reset-btn">Reset Password</button>
+                <p class="login-error" id="reset-error">Failed to reset password.</p>
+                <p class="upload-status success" id="reset-success">Password reset.</p>
+            </div>
+
+            <div style="margin-top: 16px;">
+                <h4 style="margin-bottom: 8px;">Disable / Enable / Delete</h4>
+                <div class="form-group">
+                    <label class="form-label" for="user-action-id">User ID</label>
+                    <input id="user-action-id" class="form-input" type="number" min="1" placeholder="e.g. 3">
+                </div>
+                <button class="btn btn-secondary" id="disable-user-btn">Disable</button>
+                <button class="btn btn-secondary" id="enable-user-btn" style="margin-left: 8px;">Enable</button>
+                <button class="btn btn-secondary" id="delete-user-btn" style="margin-left: 8px;">Delete</button>
+                <p class="login-error" id="user-action-error">User action failed.</p>
+                <p class="upload-status success" id="user-action-success">User updated.</p>
+            </div>
+        </section>
+
+        <section class="uplink-section upload">
+            <h3>User Memory</h3>
+            <div class="form-group">
+                <label class="form-label" for="mem-user-id">User ID</label>
+                <input id="mem-user-id" class="form-input" type="number" min="1" placeholder="e.g. 2">
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="mem-content">Memory</label>
+                <input id="mem-content" class="form-input" type="text" placeholder="Add memory">
+            </div>
+            <button class="btn btn-secondary" id="mem-add-btn">Add Memory</button>
+            <button class="btn btn-secondary" id="mem-load-btn" style="margin-left: 8px;">Load Memory</button>
+            <p class="login-error" id="mem-error">Memory action failed.</p>
+            <p class="upload-status success" id="mem-success">Memory updated.</p>
+            <div class="terminal-output" id="mem-list" style="height: 220px; margin-top: 12px;"></div>
+            <div class="form-group" style="margin-top: 12px;">
+                <label class="form-label" for="mem-delete-id">Delete Memory ID</label>
+                <input id="mem-delete-id" class="form-input" type="number" min="1" placeholder="e.g. 5">
+            </div>
+            <button class="btn btn-secondary" id="mem-delete-btn">Delete Memory</button>
+        </section>
+
+        <section class="uplink-section download control-span-2">
+            <h3>Audit Log</h3>
+            <div class="form-group" style="margin-bottom: 10px;">
+                <label class="form-label" for="audit-filter">Filter</label>
+                <input id="audit-filter" class="form-input" type="text" placeholder="Type to filter...">
+            </div>
+            <div class="form-group" style="margin-bottom: 10px;">
+                <label class="form-label" for="audit-type">Event Type</label>
+                <select id="audit-type" class="form-input">
+                    <option value="">All</option>
+                    <option value="login_success">login_success</option>
+                    <option value="login_failure">login_failure</option>
+                    <option value="user_create">user_create</option>
+                    <option value="user_disable">user_disable</option>
+                    <option value="user_enable">user_enable</option>
+                    <option value="user_delete">user_delete</option>
+                    <option value="password_reset">password_reset</option>
+                    <option value="memory_add">memory_add</option>
+                    <option value="memory_delete">memory_delete</option>
+                </select>
+            </div>
+            <div class="terminal-output" id="audit-log" style="height: 260px;"></div>
+            <button class="btn btn-secondary" id="audit-refresh-btn" style="margin-top: 10px;">Refresh</button>
+        </section>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const userListEl = document.getElementById('user-list');
+const createError = document.getElementById('create-error');
+const createSuccess = document.getElementById('create-success');
+const resetError = document.getElementById('reset-error');
+const resetSuccess = document.getElementById('reset-success');
+const memError = document.getElementById('mem-error');
+const memSuccess = document.getElementById('mem-success');
+const userActionError = document.getElementById('user-action-error');
+const userActionSuccess = document.getElementById('user-action-success');
+
+function show(el, on) {
+    if (!el) return;
+    el.style.display = on ? 'block' : 'none';
+}
+
+async function loadUsers() {
+    const res = await fetch('/api/admin/users');
+    if (!res.ok) {
+        userListEl.textContent = '[ ERROR ] Unable to load users';
+        return;
+    }
+    const data = await res.json();
+    const lines = (data.users || []).map(u =>
+        `ID ${u.id}  |  ${u.username}  |  ${u.role.toUpperCase()}  |  ${u.disabled ? 'DISABLED' : 'ACTIVE'}  |  ${u.created_at}`
+    );
+    userListEl.textContent = lines.join('\\n') || 'No users.';
+}
+
+document.getElementById('create-user-btn').addEventListener('click', async () => {
+    show(createError, false);
+    show(createSuccess, false);
+    const username = document.getElementById('new-username').value.trim();
+    const password = document.getElementById('new-password').value;
+    const role = document.getElementById('new-role').value;
+    const res = await fetch('/api/admin/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password, role })
+    });
+    if (!res.ok) {
+        show(createError, true);
+        return;
+    }
+    show(createSuccess, true);
+    document.getElementById('new-username').value = '';
+    document.getElementById('new-password').value = '';
+    await loadUsers();
+});
+
+document.getElementById('reset-btn').addEventListener('click', async () => {
+    show(resetError, false);
+    show(resetSuccess, false);
+    const userId = document.getElementById('reset-user-id').value;
+    const password = document.getElementById('reset-password').value;
+    const res = await fetch(`/api/admin/users/${userId}/password`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password })
+    });
+    if (!res.ok) {
+        show(resetError, true);
+        return;
+    }
+    show(resetSuccess, true);
+    document.getElementById('reset-password').value = '';
+});
+
+async function userAction(url, method) {
+    show(userActionError, false);
+    show(userActionSuccess, false);
+    const userId = document.getElementById('user-action-id').value;
+    if (!userId) { show(userActionError, true); return; }
+    const res = await fetch(url.replace(':id', userId), { method });
+    if (!res.ok) { show(userActionError, true); return; }
+    show(userActionSuccess, true);
+    await loadUsers();
+    await loadAudit();
+}
+
+document.getElementById('disable-user-btn').addEventListener('click', () =>
+    userAction('/api/admin/users/:id/disable', 'PUT')
+);
+document.getElementById('enable-user-btn').addEventListener('click', () =>
+    userAction('/api/admin/users/:id/enable', 'PUT')
+);
+document.getElementById('delete-user-btn').addEventListener('click', () =>
+    userAction('/api/admin/users/:id', 'DELETE')
+);
+
+async function loadMemory(userId) {
+    const res = await fetch(`/api/admin/memory/${userId}`);
+    if (!res.ok) {
+        document.getElementById('mem-list').textContent = '[ ERROR ] Unable to load memory';
+        return;
+    }
+    const data = await res.json();
+    const lines = (data.memories || []).map(m =>
+        `ID ${m.id}  |  ${m.created_at}  |  ${m.content}`
+    );
+    document.getElementById('mem-list').textContent = lines.join('\\n') || 'No memory.';
+}
+
+document.getElementById('mem-load-btn').addEventListener('click', async () => {
+    show(memError, false);
+    show(memSuccess, false);
+    const userId = document.getElementById('mem-user-id').value;
+    if (!userId) { show(memError, true); return; }
+    await loadMemory(userId);
+});
+
+document.getElementById('mem-add-btn').addEventListener('click', async () => {
+    show(memError, false);
+    show(memSuccess, false);
+    const userId = document.getElementById('mem-user-id').value;
+    const content = document.getElementById('mem-content').value.trim();
+    if (!userId || !content) { show(memError, true); return; }
+    const res = await fetch(`/api/admin/memory/${userId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content })
+    });
+    if (!res.ok) { show(memError, true); return; }
+    show(memSuccess, true);
+    document.getElementById('mem-content').value = '';
+    await loadMemory(userId);
+});
+
+document.getElementById('mem-delete-btn').addEventListener('click', async () => {
+    show(memError, false);
+    show(memSuccess, false);
+    const memoryId = document.getElementById('mem-delete-id').value;
+    if (!memoryId) { show(memError, true); return; }
+    const res = await fetch(`/api/admin/memory/${memoryId}`, { method: 'DELETE' });
+    if (!res.ok) { show(memError, true); return; }
+    show(memSuccess, true);
+});
+
+async function loadAudit() {
+    const res = await fetch('/api/admin/audit');
+    if (!res.ok) {
+        document.getElementById('audit-log').textContent = '[ ERROR ] Unable to load audit log';
+        return;
+    }
+    const data = await res.json();
+    const typeFilter = document.getElementById('audit-type').value;
+    const textFilter = document.getElementById('audit-filter').value.toLowerCase().trim();
+    const lines = (data.events || [])
+        .filter(e => !typeFilter || e.event_type === typeFilter)
+        .filter(e => {
+            if (!textFilter) return true;
+            const blob = `${e.id} ${e.created_at} ${e.event_type} ${e.actor_user_id || ''} ${e.target_user_id || ''} ${e.ip || ''} ${e.detail || ''}`.toLowerCase();
+            return blob.includes(textFilter);
+        })
+        .map(e =>
+            `ID ${e.id}  |  ${e.created_at}  |  ${e.event_type.toUpperCase()}  |  actor=${e.actor_user_id || '-'} target=${e.target_user_id || '-'} ip=${e.ip || '-'} ${e.detail || ''}`
+        );
+    document.getElementById('audit-log').textContent = lines.join('\\n') || 'No events.';
+}
+
+document.getElementById('audit-refresh-btn').addEventListener('click', loadAudit);
+document.getElementById('audit-filter').addEventListener('input', loadAudit);
+document.getElementById('audit-type').addEventListener('change', loadAudit);
+
+loadUsers();
+loadAudit();
+</script>
+{% endblock %}

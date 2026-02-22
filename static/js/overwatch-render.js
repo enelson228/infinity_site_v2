@@ -9,12 +9,11 @@ window.OW_Render = (function () {
     let viewer = null;
 
     // Entity stores
-    const aircraftMap   = new Map(); // icao24 → { entity, posProperty }
+    const aircraftMap   = new Map(); // icao24 → { entity, posProperty, flight, history }
+    const aircraftTrackMap = new Map(); // icao24 → track entity
+    let trackedAircraftIcao = null;
     const satEntities   = [];
-    const trafficAgents = [];
-
     let satPropTimer  = null;
-    let trafficTimer  = null;
     let currentSatData = [];
 
     function init(v) {
@@ -38,6 +37,11 @@ window.OW_Render = (function () {
                 const rec = aircraftMap.get(f.icao24);
                 rec.posProperty.addSample(now, pos);
                 rec.flight = f;
+                rec.history.push([f.lon, f.lat, Math.max(f.alt_m, 10)]);
+                if (rec.history.length > 120) rec.history.shift();
+                if (trackedAircraftIcao === f.icao24) {
+                    _updateAircraftTrack(f.icao24, rec);
+                }
             } else {
                 // Create new entity with sampled positions (enables path trail)
                 const posProperty = new Cesium.SampledPositionProperty();
@@ -76,7 +80,7 @@ window.OW_Render = (function () {
                     },
 
                     path: {
-                        show: true,
+                        show: false,
                         leadTime:  0,
                         trailTime: 90,
                         width: 1.5,
@@ -88,13 +92,24 @@ window.OW_Render = (function () {
                     },
                 });
 
-                aircraftMap.set(f.icao24, { entity, posProperty, flight: f });
+                aircraftMap.set(f.icao24, {
+                    entity,
+                    posProperty,
+                    flight: f,
+                    history: [[f.lon, f.lat, Math.max(f.alt_m, 10)]],
+                });
             }
         }
 
         // Remove entities for aircraft no longer in bbox
         for (const [icao, rec] of aircraftMap) {
             if (!seen.has(icao)) {
+                if (trackedAircraftIcao === icao) {
+                    trackedAircraftIcao = null;
+                    const trackEnt = aircraftTrackMap.get(icao);
+                    if (trackEnt) viewer.entities.remove(trackEnt);
+                    aircraftTrackMap.delete(icao);
+                }
                 viewer.entities.remove(rec.entity);
                 aircraftMap.delete(icao);
             }
@@ -105,6 +120,58 @@ window.OW_Render = (function () {
 
     // Allow HUD to inspect the aircraft map
     function getAircraftMap() { return aircraftMap; }
+
+    function setTrackedAircraft(icao24) {
+        if (trackedAircraftIcao && trackedAircraftIcao !== icao24) {
+            const prev = aircraftTrackMap.get(trackedAircraftIcao);
+            if (prev) viewer.entities.remove(prev);
+            aircraftTrackMap.delete(trackedAircraftIcao);
+        }
+
+        trackedAircraftIcao = icao24 || null;
+        if (!trackedAircraftIcao) return;
+
+        const rec = aircraftMap.get(trackedAircraftIcao);
+        if (!rec) return;
+        _updateAircraftTrack(trackedAircraftIcao, rec);
+    }
+
+    function _updateAircraftTrack(icao24, rec) {
+        if (!rec.history || rec.history.length < 1) return;
+        let coords = rec.history;
+        if (coords.length < 2 && rec.flight) {
+            const [lon, lat, alt] = coords[0];
+            const heading = (rec.flight.heading || 0) * Math.PI / 180;
+            const speed = rec.flight.velocity || 0; // m/s
+            const dist = Math.min(Math.max(speed * 60, 500), 5000); // 0.5–5 km
+            const dLat = dist / 111320;
+            const dLon = dist / (111320 * Math.cos(lat * Math.PI / 180) || 1);
+            const lat2 = lat + dLat * Math.cos(heading);
+            const lon2 = lon + dLon * Math.sin(heading);
+            coords = [[lon, lat, alt], [lon2, lat2, alt]];
+        }
+
+        const positions = Cesium.Cartesian3.fromDegreesArrayHeights(
+            coords.flat()
+        );
+
+        let trackEnt = aircraftTrackMap.get(icao24);
+        if (!trackEnt) {
+            trackEnt = viewer.entities.add({
+                polyline: {
+                    positions,
+                    width: 2,
+                    material: new Cesium.PolylineGlowMaterialProperty({
+                        glowPower: 0.15,
+                        color: Cesium.Color.fromCssColorString('#f6a623').withAlpha(0.6),
+                    }),
+                },
+            });
+            aircraftTrackMap.set(icao24, trackEnt);
+        } else {
+            trackEnt.polyline.positions = positions;
+        }
+    }
 
     // ═══════════════════════════════════════════
     // SATELLITES
@@ -187,6 +254,11 @@ window.OW_Render = (function () {
         satPropTimer = setInterval(propagateSatellites, 1000);
 
         updateSatList();
+
+        // Kick ground tracks after satellites are available (handles slow/failed initial fetches)
+        if (window.OW_Geo && typeof OW_Geo.onSatellitesReady === 'function') {
+            OW_Geo.onSatellitesReady(satEntities);
+        }
     }
 
     function propagateSatellites() {
@@ -221,6 +293,9 @@ window.OW_Render = (function () {
         // Update sidebar list every 5 s
         if (Math.floor(Date.now() / 1000) % 5 === 0) {
             updateSatList();
+            if (window.OW_HUD && typeof OW_HUD.refreshActivePanel === 'function') {
+                OW_HUD.refreshActivePanel();
+            }
         }
     }
 
@@ -256,120 +331,13 @@ window.OW_Render = (function () {
         });
     }
 
-    // ═══════════════════════════════════════════
-    // TRAFFIC AGENTS
-    // ═══════════════════════════════════════════
-
-    const AGENT_COUNT = 120;
-
-    const VEHICLE_TYPES = [
-        { color: '#e2e8f0', size: 4, weight: 65 }, // civilian white
-        { color: '#f6a623', size: 4, weight: 20 }, // amber taxi
-        { color: '#ef4444', size: 5, weight: 8  }, // red emergency
-        { color: '#3b82f6', size: 5, weight: 7  }, // blue enforcement
-    ];
-
-    function pickVehicleType() {
-        let r = Math.random() * 100, w = 0;
-        for (const t of VEHICLE_TYPES) { w += t.weight; if (r < w) return t; }
-        return VEHICLE_TYPES[0];
-    }
-
-    function initTraffic(graph) {
-        if (!graph || graph.edges.length < 10) {
-            initTrafficProcedural();
-            return;
-        }
-        _spawnAgents(graph.edges);
-    }
-
-    function initTrafficProcedural() {
-        const { lat, lon } = window.OW.center;
-        const step  = 0.004; // ~400 m city block
-        const span  = 10;
-        const edges = [];
-
-        for (let i = -span; i < span; i++) {
-            for (let j = -span; j < span; j++) {
-                const la0 = lat + i * step,       lo0 = lon + j * step;
-                const la1 = lat + (i + 1) * step, lo1 = lon + (j + 1) * step;
-
-                // Horizontal
-                edges.push({ from: { lat: la0, lon: lo0 }, to: { lat: la0, lon: lo1 } });
-                edges.push({ from: { lat: la0, lon: lo1 }, to: { lat: la0, lon: lo0 } });
-                // Vertical
-                edges.push({ from: { lat: la0, lon: lo0 }, to: { lat: la1, lon: lo0 } });
-                edges.push({ from: { lat: la1, lon: lo0 }, to: { lat: la0, lon: lo0 } });
-            }
-        }
-        _spawnAgents(edges);
-    }
-
-    function _spawnAgents(edges) {
-        // Clean up any existing traffic
-        for (const a of trafficAgents) {
-            if (a.entity) viewer.entities.remove(a.entity);
-        }
-        trafficAgents.length = 0;
-        if (trafficTimer) { clearInterval(trafficTimer); trafficTimer = null; }
-
-        for (let i = 0; i < AGENT_COUNT; i++) {
-            const type  = pickVehicleType();
-            const edge  = edges[Math.floor(Math.random() * edges.length)];
-            const prog  = Math.random();
-            const speed = 0.0006 + Math.random() * 0.0014; // progress-units/tick
-
-            const startPos = lerpEdge(edge, prog);
-            const entity   = viewer.entities.add({
-                position: Cesium.Cartesian3.fromDegrees(startPos.lon, startPos.lat, 1),
-                point: {
-                    pixelSize: type.size,
-                    color: Cesium.Color.fromCssColorString(type.color),
-                    heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
-                    disableDepthTestDistance: 5000,
-                },
-            });
-
-            trafficAgents.push({ edge, progress: prog, speed, edges, entity });
-        }
-
-        window.OW.trafficCount = AGENT_COUNT;
-        OW_HUD.updateCounts();
-
-        trafficTimer = setInterval(_tickTraffic, 100);
-    }
-
-    function _tickTraffic() {
-        for (const agent of trafficAgents) {
-            agent.progress += agent.speed;
-            if (agent.progress >= 1.0) {
-                // Pick a new random edge (simple simulation — no routing needed)
-                agent.edge     = agent.edges[Math.floor(Math.random() * agent.edges.length)];
-                agent.progress = 0;
-            }
-            const p = lerpEdge(agent.edge, agent.progress);
-            if (agent.entity) {
-                agent.entity.position =
-                    Cesium.Cartesian3.fromDegrees(p.lon, p.lat, 1);
-            }
-        }
-    }
-
-    function lerpEdge(edge, t) {
-        return {
-            lat: edge.from.lat + (edge.to.lat - edge.from.lat) * t,
-            lon: edge.from.lon + (edge.to.lon - edge.from.lon) * t,
-        };
-    }
-
     // ── Public API ──
     return {
         init,
         updateAircraft,
         getAircraftMap,
+        setTrackedAircraft,
         getSatEntities: () => satEntities,
         initSatellites,
-        initTraffic,
-        initTrafficProcedural,
     };
 })();

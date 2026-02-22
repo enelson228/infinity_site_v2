@@ -78,6 +78,14 @@
         scrollToBottom();
     }
 
+    function appendInfoLine(text) {
+        const el = document.createElement('div');
+        el.className = 'terminal-msg-boot';
+        el.textContent = text;
+        output.appendChild(el);
+        scrollToBottom();
+    }
+
     // ── Typewriter ───────────────────────────────────────────────────────────
 
     function typewriter(contentEl, cursorEl, text, delayMs) {
@@ -122,6 +130,33 @@
             return;
         }
 
+        // Remember command (explicit)
+        if (text.toLowerCase().startsWith('remember ') || text.toLowerCase().startsWith('remember:')) {
+            const content = text.replace(/^remember:?\s*/i, '').trim();
+            if (!content) {
+                appendErrorLine('Provide memory text after REMEMBER.');
+                setInputEnabled(true);
+                return;
+            }
+            try {
+                const res = await fetch('/api/memory', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ content }),
+                });
+                if (!res.ok) {
+                    appendErrorLine('Failed to store memory.');
+                } else {
+                    appendInfoLine('MEMORY STORED.');
+                }
+            } catch (_) {
+                appendErrorLine('Connection error. Try again.');
+            }
+            setInputEnabled(true);
+            input.focus();
+            return;
+        }
+
         appendUserMessage(text);
 
         // Add to history
@@ -133,12 +168,23 @@
         }
 
         const { content, cursor } = createAIBubble();
+        const includeMemory = text.toLowerCase().startsWith('recall ') || text.toLowerCase().startsWith('recall:');
+        if (includeMemory) {
+            const prompt = text.replace(/^recall:?\s*/i, '').trim();
+            if (!prompt) {
+                cursor.remove();
+                appendErrorLine('Provide a prompt after RECALL.');
+                setInputEnabled(true);
+                return;
+            }
+            messages[messages.length - 1].content = prompt;
+        }
 
         try {
             const res = await fetch('/api/claude/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ messages }),
+                body: JSON.stringify({ messages, include_memory: includeMemory }),
             });
 
             if (res.status === 401 || res.status === 302) {

@@ -7,6 +7,9 @@ window.OW_HUD = (function () {
     'use strict';
 
     let viewer = null;
+    let tooltipEl = null;
+    let trackedAircraftId = null;
+    let activePanelId = null;
 
     // ── Rotating ambient alert messages ──
     const AMBIENT_ALERTS = [
@@ -27,6 +30,13 @@ window.OW_HUD = (function () {
 
     function init(v) {
         viewer = v;
+        tooltipEl = document.getElementById('flight-tooltip');
+        if (!tooltipEl) {
+            tooltipEl = document.createElement('div');
+            tooltipEl.id = 'flight-tooltip';
+            tooltipEl.className = 'ow-flight-tooltip hidden';
+            document.body.appendChild(tooltipEl);
+        }
 
         // UTC clock
         _updateClock();
@@ -52,16 +62,28 @@ window.OW_HUD = (function () {
             const picked = viewer.scene.pick(evt.endPosition);
             if (Cesium.defined(picked) && picked.id && picked.id.id &&
                 picked.id.id.startsWith('aircraft_')) {
-                _showFlightDetail(picked.id);
+                _showFlightTooltip(picked.id, evt.endPosition);
                 picked.id.label.show = true;
             } else {
-                _clearFlightDetail();
+                _hideFlightTooltip();
                 const aircraftMap = OW_Render.getAircraftMap();
                 for (const rec of aircraftMap.values()) {
                     rec.entity.label.show = false;
                 }
             }
         }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+
+        handler.setInputAction(evt => {
+            const picked = viewer.scene.pick(evt.position);
+            if (Cesium.defined(picked) && picked.id && picked.id.id &&
+                picked.id.id.startsWith('aircraft_')) {
+                _trackAircraft(picked.id);
+                _setActivePanel(picked.id);
+            } else {
+                _trackAircraft(null);
+                _setActivePanel(null);
+            }
+        }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
         // Ambient alert ticker — every 14 s
         setInterval(() => {
@@ -112,7 +134,6 @@ window.OW_HUD = (function () {
         };
         set('stat-aircraft',  window.OW.aircraftCount  || 0);
         set('stat-satellites', window.OW.satelliteCount || 0);
-        set('stat-traffic',   window.OW.trafficCount   || 0);
         set('sb-aircraft',    window.OW.aircraftCount  || 0);
     }
 
@@ -141,30 +162,110 @@ window.OW_HUD = (function () {
     }
 
     // ── Flight detail panel ──
-    function _showFlightDetail(entity) {
+    function _showFlightTooltip(entity, screenPos) {
+        if (!tooltipEl) return;
+        const map = OW_Render.getAircraftMap();
+        const key = entity.id.replace('aircraft_', '');
+        const rec = map.get(key);
+        if (!rec) return _hideFlightTooltip();
+
+        const f = rec.flight;
+        const latStr = f.lat != null ? `${f.lat.toFixed(4)}°` : '--';
+        const lonStr = f.lon != null ? `${f.lon.toFixed(4)}°` : '--';
+        const callsign = (f.callsign || '').toUpperCase();
+        const squawk = (f.squawk || '').toUpperCase();
+        tooltipEl.innerHTML = [
+            _fr('CALLSIGN', callsign || f.icao24.toUpperCase()),
+            _fr('ICAO24',   f.icao24.toUpperCase()),
+            _fr('COUNTRY',  (f.country || '--').toUpperCase()),
+            _fr('LAT',      latStr),
+            _fr('LON',      lonStr),
+            _fr('ALT',      `${Math.round(f.alt_m)} m`),
+            _fr('SPEED',    `${Math.round(f.velocity * 1.944)} KT`),
+            _fr('HEADING',  `${Math.round(f.heading)}°`),
+            _fr('V/RATE',   `${f.vertRate > 0 ? '+' : ''}${Math.round(f.vertRate)} M/S`),
+            _fr('SQUAWK',   squawk || '--'),
+            _fr('ON GND',   f.onGround ? 'YES' : 'NO'),
+        ].join('');
+
+        tooltipEl.classList.remove('hidden');
+
+        const pad = 12;
+        const offset = 14;
+        let x = screenPos.x + offset;
+        let y = screenPos.y + offset;
+        const w = tooltipEl.offsetWidth;
+        const h = tooltipEl.offsetHeight;
+        const maxX = window.innerWidth - w - pad;
+        const maxY = window.innerHeight - h - pad;
+        x = Math.max(pad, Math.min(x, maxX));
+        y = Math.max(pad, Math.min(y, maxY));
+        tooltipEl.style.transform = `translate(${x}px, ${y}px)`;
+    }
+
+    function _hideFlightTooltip() {
+        if (!tooltipEl) return;
+        tooltipEl.classList.add('hidden');
+        tooltipEl.style.transform = 'translate(-9999px, -9999px)';
+    }
+
+    function _trackAircraft(entity) {
+        if (!entity) {
+            trackedAircraftId = null;
+            if (window.OW_Render && typeof OW_Render.setTrackedAircraft === 'function') {
+                OW_Render.setTrackedAircraft(null);
+            }
+            return;
+        }
+
+        trackedAircraftId = entity.id;
+        const icao = entity.id.replace('aircraft_', '');
+        if (window.OW_Render && typeof OW_Render.setTrackedAircraft === 'function') {
+            OW_Render.setTrackedAircraft(icao);
+        }
+        addAlert(`TRACK: ${entity.name || entity.id}`, 'info');
+    }
+
+    function _setActivePanel(entity) {
         const panel = document.getElementById('flight-detail');
         if (!panel) return;
 
+        if (!entity) {
+            activePanelId = null;
+            panel.innerHTML = '<div class="ow-no-selection">CLICK AIRCRAFT<br>TO LOCK DETAILS</div>';
+            return;
+        }
+
+        activePanelId = entity.id;
         const map = OW_Render.getAircraftMap();
         const key = entity.id.replace('aircraft_', '');
         const rec = map.get(key);
         if (!rec) return;
 
         const f = rec.flight;
+        const latStr = f.lat != null ? `${f.lat.toFixed(4)}°` : '--';
+        const lonStr = f.lon != null ? `${f.lon.toFixed(4)}°` : '--';
+        const callsign = (f.callsign || '').toUpperCase();
+        const squawk = (f.squawk || '').toUpperCase();
         panel.innerHTML = [
-            _fr('CALLSIGN', f.callsign),
+            _fr('CALLSIGN', callsign || f.icao24.toUpperCase()),
             _fr('ICAO24',   f.icao24.toUpperCase()),
+            _fr('COUNTRY',  (f.country || '--').toUpperCase()),
+            _fr('LAT',      latStr),
+            _fr('LON',      lonStr),
             _fr('ALT',      `${Math.round(f.alt_m)} m`),
-            _fr('SPEED',    `${Math.round(f.velocity * 1.944)} kt`),
+            _fr('SPEED',    `${Math.round(f.velocity * 1.944)} KT`),
             _fr('HEADING',  `${Math.round(f.heading)}°`),
-            _fr('V/RATE',   `${f.vertRate > 0 ? '+' : ''}${Math.round(f.vertRate)} m/s`),
-            _fr('COUNTRY',  f.country || '--'),
+            _fr('V/RATE',   `${f.vertRate > 0 ? '+' : ''}${Math.round(f.vertRate)} M/S`),
+            _fr('SQUAWK',   squawk || '--'),
+            _fr('ON GND',   f.onGround ? 'YES' : 'NO'),
         ].join('');
     }
 
-    function _clearFlightDetail() {
-        const panel = document.getElementById('flight-detail');
-        if (panel) panel.innerHTML = '<div class="ow-no-selection">HOVER AIRCRAFT<br>TO INSPECT</div>';
+    function refreshActivePanel() {
+        if (!activePanelId) return;
+        const ent = viewer.entities.getById(activePanelId);
+        if (ent) _setActivePanel(ent);
     }
 
     function _fr(key, val) {
@@ -175,5 +276,5 @@ window.OW_HUD = (function () {
         return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     }
 
-    return { init, updateCoords, updateCounts, addAlert };
+    return { init, updateCoords, updateCounts, addAlert, refreshActivePanel };
 })();

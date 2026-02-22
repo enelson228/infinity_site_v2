@@ -17,6 +17,7 @@ const projectIcons = {
     cloud: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>',
     database: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>',
     globe: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>',
+    anchor: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="3"/><line x1="12" y1="8" x2="12" y2="22"/><path d="M5 15H2a10 10 0 0 0 20 0h-3"/></svg>',
 };
 
 /**
@@ -30,8 +31,11 @@ function getProjectIcon(iconName) {
  * Create project card HTML
  */
 function createProjectCard(project) {
+    const clickAction = project.detail_url
+        ? `window.location.href='${project.detail_url}'`
+        : `window.open('${project.url}', '_blank')`;
     return `
-        <article class="project-card" onclick="window.open('${project.url}', '_blank')">
+        <article class="project-card" onclick="${clickAction}">
             <div class="project-header">
                 <div class="project-icon">${getProjectIcon(project.icon)}</div>
                 <span class="project-status ${project.status}">${project.status.toUpperCase()}</span>
@@ -46,6 +50,7 @@ function createProjectCard(project) {
                     </svg>
                     ${INFINITY.formatDate(project.updated)}
                 </span>
+                ${project.detail_url ? '<span class="project-detail-badge">View Details →</span>' : ''}
             </div>
         </article>
     `;
@@ -55,8 +60,13 @@ function createProjectCard(project) {
  * Create project list row HTML
  */
 function createProjectRow(project) {
+    const href = project.detail_url || project.url;
+    const target = project.detail_url ? '_self' : '_blank';
+    const clickAction = project.detail_url
+        ? `window.location.href='${project.detail_url}'`
+        : `window.open('${project.url}', '_blank')`;
     return `
-        <div class="list-row" onclick="window.open('${project.url}', '_blank')">
+        <div class="list-row" onclick="${clickAction}">
             <div class="list-name">
                 <div class="list-name-icon">${getProjectIcon(project.icon)}</div>
                 <div class="list-name-text">
@@ -67,7 +77,7 @@ function createProjectRow(project) {
             <span class="list-status project-status ${project.status}">${project.status.toUpperCase()}</span>
             <span class="list-updated">${INFINITY.formatDate(project.updated)}</span>
             <div class="list-action">
-                <a href="${project.url}" target="_blank" onclick="event.stopPropagation()">Open →</a>
+                <a href="${href}" target="${target}" onclick="event.stopPropagation()">${project.detail_url ? 'Details →' : 'Open →'}</a>
             </div>
         </div>
     `;
