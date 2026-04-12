@@ -3,3 +3,48 @@
  * All animation keyframes and supporting classes.
  * Loaded after style.css via base.html.
  */
+
+/* ============================================================
+   Concept 4 — Comms Static Overlay
+   ============================================================ */
+
+@keyframes staticShift {
+    0%   { background-position: 0px 0px; }
+    12%  { background-position: 30px 12px; }
+    25%  { background-position: -18px 40px; }
+    37%  { background-position: 45px -20px; }
+    50%  { background-position: -30px 25px; }
+    62%  { background-position: 20px -35px; }
+    75%  { background-position: -42px 18px; }
+    87%  { background-position: 15px 50px; }
+    100% { background-position: 0px 0px; }
+}
+
+@keyframes scanSweep {
+    0%   { top: -2px; opacity: 0; }
+    3%   { opacity: 0.12; }
+    97%  { opacity: 0.08; }
+    100% { top: 100%; opacity: 0; }
+}
+
+.hero-static {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+    background-size: 200px 200px;
+    animation: staticShift 0.8s steps(1) infinite;
+    opacity: 0.05;
+    mix-blend-mode: screen;
+}
+
+.hero-static::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: rgba(246, 166, 35, 0.5);
+    animation: scanSweep 5s linear infinite;
+}

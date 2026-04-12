@@ -6,11 +6,18 @@
 <!-- Hero Section -->
 <section class="hero">
     <div class="hero-background"></div>
-    <div class="hero-grid"></div>
+    <div class="hero-grid">
+        <div class="hero-static"></div>
+        <div class="hero-grid-ripple">
+            <div class="grid-ripple"></div>
+            <div class="grid-ripple"></div>
+            <div class="grid-crosshair"></div>
+        </div>
+    </div>
 
     <div class="hero-content">
         <div class="hero-badge">UNSC Network Terminal</div>
-        <h1 class="hero-title">INFINITY</h1>
+        <h1 class="hero-title glitch" data-text="INFINITY">INFINITY</h1>
         <p class="hero-subtitle">Homelab Command Center</p>
 
         <div class="hero-actions">
@@ -43,7 +50,11 @@
         <div class="status-panel">
             <div class="panel-header">
                 <span class="panel-title">Network Status</span>
-                <div class="panel-indicator"></div>
+                <div class="panel-indicator">
+                    <span class="sonar-ring"></span>
+                    <span class="sonar-ring"></span>
+                    <span class="sonar-ring"></span>
+                </div>
             </div>
             <div class="panel-value">OPERATIONAL</div>
             <div class="panel-label">All systems nominal</div>
@@ -52,7 +63,11 @@
         <div class="status-panel">
             <div class="panel-header">
                 <span class="panel-title">Active Services</span>
-                <div class="panel-indicator"></div>
+                <div class="panel-indicator">
+                    <span class="sonar-ring"></span>
+                    <span class="sonar-ring"></span>
+                    <span class="sonar-ring"></span>
+                </div>
             </div>
             <div class="panel-value" id="active-services">--</div>
             <div class="panel-label">Running projects</div>
@@ -61,7 +76,11 @@
         <div class="status-panel">
             <div class="panel-header">
                 <span class="panel-title">Uplink Cache</span>
-                <div class="panel-indicator"></div>
+                <div class="panel-indicator">
+                    <span class="sonar-ring"></span>
+                    <span class="sonar-ring"></span>
+                    <span class="sonar-ring"></span>
+                </div>
             </div>
             <div class="panel-value">SECURE</div>
             <div class="panel-label">Document repository active</div>
