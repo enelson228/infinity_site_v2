@@ -48,3 +48,38 @@
     background: rgba(246, 166, 35, 0.5);
     animation: scanSweep 5s linear infinite;
 }
+
+/* ============================================================
+   Concept 5 — Holographic Icon Float
+   ============================================================ */
+
+@keyframes iconFloat {
+    0%, 100% {
+        transform: translateY(0px);
+        filter: drop-shadow(0 2px 4px rgba(34, 211, 238, 0.2));
+    }
+    50% {
+        transform: translateY(-6px);
+        filter: drop-shadow(0 8px 16px rgba(34, 211, 238, 0.5));
+    }
+}
+
+.project-icon {
+    animation: iconFloat 3s ease-in-out infinite;
+}
+
+/* Stagger delays per card position */
+.project-card:nth-child(1) .project-icon { animation-delay: 0s; }
+.project-card:nth-child(2) .project-icon { animation-delay: 0.5s; }
+.project-card:nth-child(3) .project-icon { animation-delay: 1s; }
+.project-card:nth-child(4) .project-icon { animation-delay: 1.5s; }
+.project-card:nth-child(5) .project-icon { animation-delay: 2s; }
+.project-card:nth-child(6) .project-icon { animation-delay: 2.5s; }
+
+/* Hover: freeze float at elevated position with brighter glow */
+.project-card:hover .project-icon {
+    animation-play-state: paused;
+    transform: translateY(-6px);
+    filter: drop-shadow(0 8px 16px rgba(34, 211, 238, 0.7));
+    transition: filter 0.2s ease;
+}
