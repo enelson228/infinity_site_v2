@@ -6,6 +6,39 @@ const REFRESH_INTERVAL_MS = 5000;
 let prevNet = null;
 let prevTimestamp = null;
 
+/**
+ * Scramble count-up animation for metric values.
+ * @param {HTMLElement} el - Element to animate
+ * @param {string} finalValue - The real value to display (e.g. "94.7")
+ */
+function scrambleValue(el, finalValue) {
+    // Only play once per page load
+    if (el.dataset.scrambled) {
+        el.textContent = finalValue;
+        return;
+    }
+    el.dataset.scrambled = 'true';
+
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789#@$%';
+    const len = String(finalValue).length;
+    const numericVal = parseFloat(finalValue);
+    const duration = (isNaN(numericVal) || numericVal < 100) ? 400 : 600;
+
+    el.classList.add('scrambling');
+
+    const interval = setInterval(() => {
+        el.textContent = Array.from({ length: len }, () =>
+            chars[Math.floor(Math.random() * chars.length)]
+        ).join('');
+    }, 40);
+
+    setTimeout(() => {
+        clearInterval(interval);
+        el.classList.remove('scrambling');
+        el.textContent = finalValue;
+    }, duration);
+}
+
 function formatBytes(bytes) {
     if (bytes === null || bytes === undefined) return '—';
     if (bytes < 1024) return bytes + ' B';
@@ -45,7 +78,7 @@ function setBar(barId, fillId, percent) {
 }
 
 function updateCpu(cpu) {
-    document.getElementById('cpu-percent').textContent = cpu.percent;
+    scrambleValue(document.getElementById('cpu-percent'), String(cpu.percent));
     setBar('cpu-bar', 'cpu-bar-fill', cpu.percent);
 
     const coresText = cpu.cores_logical !== null
@@ -62,7 +95,7 @@ function updateCpu(cpu) {
 }
 
 function updateRam(ram) {
-    document.getElementById('ram-percent').textContent = ram.percent;
+    scrambleValue(document.getElementById('ram-percent'), String(ram.percent));
     setBar('ram-bar', 'ram-bar-fill', ram.percent);
     document.getElementById('ram-used').textContent = formatBytes(ram.used);
     document.getElementById('ram-available').textContent = formatBytes(ram.available);
@@ -70,7 +103,7 @@ function updateRam(ram) {
 }
 
 function updateDisk(disk) {
-    document.getElementById('disk-percent').textContent = disk.percent;
+    scrambleValue(document.getElementById('disk-percent'), String(disk.percent));
     setBar('disk-bar', 'disk-bar-fill', disk.percent);
     document.getElementById('disk-used').textContent = formatBytes(disk.used);
     document.getElementById('disk-free').textContent = formatBytes(disk.free);

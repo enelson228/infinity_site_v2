@@ -127,3 +127,14 @@
     opacity: 0.35;
     transition: none;
 }
+
+/* ============================================================
+   Concept 3 — Metric Scramble Count-Up
+   ============================================================ */
+
+/* Scramble phase: amber flash */
+.scrambling {
+    color: var(--reach-amber, #f6a623) !important;
+    text-shadow: 0 0 8px rgba(246, 166, 35, 0.6) !important;
+    transition: none !important;
+}
