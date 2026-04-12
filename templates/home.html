@@ -116,6 +116,7 @@
 {% endblock %}
 
 {% block scripts %}
+<script src="{{ url_for('static', filename='js/boot.js') }}"></script>
 <script>
     // Fetch project count for status panel
     fetch('/api/projects')
