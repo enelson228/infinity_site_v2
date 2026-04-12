@@ -8,14 +8,22 @@ const nav = document.getElementById('nav');
 const navToggle = document.getElementById('nav-toggle');
 const navLinks = document.getElementById('nav-links');
 
-// Add scrolled class on scroll
+// Check if on home page by looking for hero section
+const isHomePage = document.querySelector('.hero') !== null;
+
+// Add scrolled class on scroll (always on non-home pages)
 window.addEventListener('scroll', () => {
-    if (window.scrollY > 50) {
+    if (window.scrollY > 50 || !isHomePage) {
         nav.classList.add('scrolled');
-    } else {
+    } else if (isHomePage) {
         nav.classList.remove('scrolled');
     }
 });
+
+// Ensure nav is styled on load (non-home pages)
+if (!isHomePage) {
+    nav.classList.add('scrolled');
+}
 
 // Mobile nav toggle
 navToggle?.addEventListener('click', () => {
@@ -92,3 +100,29 @@ window.INFINITY = {
     formatDate,
     getFileIcon
 };
+
+// Target Lock Navigation — inject corner spans and wire hover
+(function initTargetLock() {
+    document.querySelectorAll('.nav-link').forEach(link => {
+        // Ensure relative positioning for absolute children
+        link.style.position = 'relative';
+
+        // Inject corner spans
+        const tl = document.createElement('span');
+        tl.className = 'corner-tl';
+        const br = document.createElement('span');
+        br.className = 'corner-br';
+        link.appendChild(tl);
+        link.appendChild(br);
+
+        // Draw in on hover
+        link.addEventListener('mouseenter', () => {
+            link.classList.add('targeted');
+        });
+
+        // Retract on mouse leave
+        link.addEventListener('mouseleave', () => {
+            link.classList.remove('targeted');
+        });
+    });
+}());

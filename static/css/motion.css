@@ -83,3 +83,47 @@
     filter: drop-shadow(0 8px 16px rgba(34, 211, 238, 0.7));
     transition: filter 0.2s ease;
 }
+
+/* ============================================================
+   Concept 2 — Target Lock Navigation
+   ============================================================ */
+
+/* Corner spans injected by JS into each .nav-link */
+.corner-tl,
+.corner-br {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    pointer-events: none;
+    clip-path: inset(50% 50% 50% 50%);
+    transition: clip-path 0.15s ease-in;
+}
+
+.corner-tl {
+    top: -3px;
+    left: -3px;
+    border-top: 1.5px solid var(--reach-amber, #f6a623);
+    border-left: 1.5px solid var(--reach-amber, #f6a623);
+}
+
+.corner-br {
+    bottom: -3px;
+    right: -3px;
+    border-bottom: 1.5px solid var(--reach-amber, #f6a623);
+    border-right: 1.5px solid var(--reach-amber, #f6a623);
+}
+
+/* Targeted state: draw corners in */
+.nav-link.targeted .corner-tl,
+.nav-link.targeted .corner-br {
+    clip-path: inset(0 0 0 0);
+    transition: clip-path 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Active link: corners always visible at low opacity */
+.nav-link.active .corner-tl,
+.nav-link.active .corner-br {
+    clip-path: inset(0 0 0 0);
+    opacity: 0.35;
+    transition: none;
+}
