@@ -364,10 +364,11 @@ def add_github_repo(repo_id: str, owner: str, repo: str):
         )
         conn.commit()
 
-def delete_github_repo(repo_id: str):
+def delete_github_repo(repo_id: str) -> bool:
     with _db_conn() as conn:
-        conn.execute("DELETE FROM github_repos WHERE id = ?", (repo_id,))
+        cur = conn.execute("DELETE FROM github_repos WHERE id = ?", (repo_id,))
         conn.commit()
+        return cur.rowcount > 0
 
 def upsert_github_repo_status(repo_id, last_commit_at, last_commit_msg,
                                open_prs, ci_status, fetched_at):
@@ -437,12 +438,13 @@ def list_recommendations(include_dismissed: bool = False):
             )
         return [dict(row) for row in cur.fetchall()]
 
-def dismiss_recommendation(rec_id: int):
+def dismiss_recommendation(rec_id: int) -> bool:
     with _db_conn() as conn:
-        conn.execute(
+        cur = conn.execute(
             "UPDATE monitor_recommendations SET dismissed = 1 WHERE id = ?", (rec_id,)
         )
         conn.commit()
+        return cur.rowcount > 0
 
 def clear_recommendations(source: str = None):
     """Delete all non-dismissed recommendations, optionally filtered by source."""

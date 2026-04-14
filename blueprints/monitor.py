@@ -76,7 +76,11 @@ def api_add_repo():
 @monitor_bp.route('/api/monitor/repos/<repo_id>', methods=['DELETE'])
 @admin_required
 def api_delete_repo(repo_id: str):
-    database.delete_github_repo(repo_id)
+    import re
+    if not re.match(r'^[a-zA-Z0-9_-]+$', repo_id):
+        return jsonify({'error': 'Invalid repo id'}), 400
+    if not database.delete_github_repo(repo_id):
+        return jsonify({'error': 'Repo not found'}), 404
     actor_id = session.get('user_id')
     database.append_audit('monitor_repo_delete', client_ip(),
                           actor_user_id=actor_id, detail=f'repo_id={repo_id}')
@@ -123,7 +127,8 @@ def api_refresh_recommendations():
 @monitor_bp.route('/api/monitor/recommendations/<int:rec_id>/dismiss', methods=['POST'])
 @admin_required
 def api_dismiss_recommendation(rec_id: int):
-    database.dismiss_recommendation(rec_id)
+    if not database.dismiss_recommendation(rec_id):
+        return jsonify({'error': 'Recommendation not found'}), 404
     actor_id = session.get('user_id')
     database.append_audit('recommendation_dismiss', client_ip(),
                           actor_user_id=actor_id, detail=f'rec_id={rec_id}')
