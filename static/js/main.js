@@ -1,3 +1,16 @@
+// CSRF: attach token to all non-GET fetch requests
+(function() {
+    const _fetch = window.fetch;
+    window.fetch = function(url, options = {}) {
+        const method = (options.method || 'GET').toUpperCase();
+        if (!['GET', 'HEAD', 'OPTIONS'].includes(method)) {
+            const token = document.querySelector('meta[name="csrf-token"]')?.content || '';
+            options.headers = Object.assign({}, options.headers, { 'X-CSRF-Token': token });
+        }
+        return _fetch(url, options);
+    };
+})();
+
 /**
  * INFINITY - Main JavaScript
  * Shared utilities and navigation

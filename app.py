@@ -7,7 +7,7 @@ from flask import Flask, render_template, url_for
 import psutil
 import config
 import database
-from auth import auth_bp, admin_required
+from auth import auth_bp, admin_required, validate_csrf
 from blueprints.admin import admin_bp
 from blueprints.uplink import uplink_bp
 from blueprints.telemetry import telemetry_bp
@@ -63,12 +63,19 @@ def get_static_hash(filename):
     with open(full_path, 'rb') as f:
         return hashlib.md5(f.read()).hexdigest()[:8]
 
+app.before_request(validate_csrf)
+
 @app.context_processor
 def inject_static_version():
     def static_versioned(filename):
         h = get_static_hash(filename)
         return f"{url_for('static', filename=filename)}?v={h}"
     return dict(static_versioned=static_versioned)
+
+@app.context_processor
+def inject_csrf_token():
+    from flask import session as _session
+    return dict(csrf_token=_session.get('csrf_token', ''))
 
 # ── Background Monitoring Task ───────────────────────────────────────────
 
