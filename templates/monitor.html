@@ -1,2 +1,321 @@
-<!DOCTYPE html>
-<html><head><title>Monitor</title></head><body><h1>Monitor</h1></body></html>
+{% extends 'base.html' %}
+{% block title %}Monitor{% endblock %}
+
+{% block head %}
+<style>
+  .monitor-wrap { max-width: 1200px; margin: 0 auto; padding: var(--spacing-lg); }
+
+  /* Stat row */
+  .stat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+  .stat-card {
+    background: rgba(13, 33, 55, 0.6);
+    border: 1px solid rgba(34, 211, 238, 0.15);
+    border-radius: 6px;
+    padding: 14px 18px;
+    text-align: center;
+  }
+  .stat-card .stat-value { font-family: var(--font-mono); font-size: 1.8rem; font-weight: 700; }
+  .stat-card .stat-label { font-size: 0.6rem; letter-spacing: 0.15em; color: rgba(34, 211, 238, 0.45); margin-top: 4px; }
+  .stat-card.critical .stat-value { color: #ff7043; }
+  .stat-card.good .stat-value { color: #81c784; }
+  .stat-card.info .stat-value { color: #4fc3f7; }
+  .stat-card.warn .stat-value { color: #ffd54f; }
+
+  /* Alert banner */
+  .alert-banner {
+    background: rgba(13, 33, 55, 0.8);
+    border: 1px solid rgba(255, 112, 67, 0.35);
+    border-radius: 6px;
+    padding: 12px 18px;
+    margin-bottom: 16px;
+  }
+  .alert-banner .banner-header {
+    font-family: var(--font-mono); font-size: 0.65rem; letter-spacing: 0.18em;
+    color: #ff7043; margin-bottom: 8px;
+  }
+  .alert-list { display: flex; flex-direction: column; gap: 6px; }
+  .alert-item {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    gap: 12px; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  .alert-item:last-child { border-bottom: none; }
+  .alert-icon { font-size: 0.75rem; flex-shrink: 0; margin-top: 1px; }
+  .alert-msg { font-size: 0.8rem; flex: 1; }
+  .alert-detail { font-size: 0.7rem; color: rgba(34, 211, 238, 0.4); margin-top: 2px; }
+  .alert-dismiss { font-size: 0.65rem; color: rgba(34, 211, 238, 0.35); cursor: pointer;
+    background: none; border: none; padding: 0 4px; flex-shrink: 0; }
+  .alert-dismiss:hover { color: rgba(34, 211, 238, 0.7); }
+  .sev-critical .alert-msg { color: #ff7043; }
+  .sev-warning .alert-msg { color: #ffd54f; }
+  .sev-info .alert-msg { color: #4fc3f7; }
+  .alert-empty { font-size: 0.8rem; color: rgba(34, 211, 238, 0.4); padding: 4px 0; }
+
+  /* Two-column grid */
+  .monitor-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+  /* Panel */
+  .monitor-panel {
+    background: rgba(13, 33, 55, 0.6);
+    border: 1px solid rgba(34, 211, 238, 0.15);
+    border-radius: 6px;
+    padding: 16px 18px;
+  }
+  .panel-header {
+    font-family: var(--font-mono); font-size: 0.65rem; letter-spacing: 0.18em;
+    color: rgba(34, 211, 238, 0.45); margin-bottom: 12px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .panel-action { font-size: 0.65rem; color: rgba(34, 211, 238, 0.4); cursor: pointer;
+    background: none; border: 1px solid rgba(34,211,238,0.2); border-radius: 3px;
+    padding: 2px 8px; }
+  .panel-action:hover { color: #4fc3f7; border-color: rgba(34,211,238,0.5); }
+
+  /* Service rows */
+  .service-row {
+    display: flex; align-items: center; gap: 10px; padding: 6px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 0.8rem;
+  }
+  .service-row:last-child { border-bottom: none; }
+  .svc-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .svc-dot.online { background: #81c784; box-shadow: 0 0 6px rgba(129,199,132,0.5); }
+  .svc-dot.offline { background: #ff7043; box-shadow: 0 0 6px rgba(255,112,67,0.5); }
+  .svc-dot.error { background: #ffd54f; }
+  .svc-name { flex: 1; color: rgba(255,255,255,0.85); }
+  .svc-rt { font-family: var(--font-mono); font-size: 0.7rem; color: rgba(34, 211, 238, 0.4); }
+
+  /* GitHub rows */
+  .repo-row {
+    display: flex; flex-direction: column; gap: 3px; padding: 7px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+  .repo-row:last-child { border-bottom: none; }
+  .repo-name { font-size: 0.8rem; color: #4fc3f7; }
+  .repo-meta { font-size: 0.7rem; color: rgba(34, 211, 238, 0.4); font-family: var(--font-mono); }
+  .ci-badge { display: inline-block; font-size: 0.6rem; padding: 1px 6px; border-radius: 3px;
+    font-family: var(--font-mono); margin-left: 6px; letter-spacing: 0.1em; }
+  .ci-success { background: rgba(129,199,132,0.15); color: #81c784; border: 1px solid rgba(129,199,132,0.3); }
+  .ci-failure { background: rgba(255,112,67,0.15); color: #ff7043; border: 1px solid rgba(255,112,67,0.3); }
+  .ci-pending { background: rgba(255,213,79,0.15); color: #ffd54f; border: 1px solid rgba(255,213,79,0.3); }
+  .ci-none { background: rgba(34,211,238,0.05); color: rgba(34,211,238,0.3); border: 1px solid rgba(34,211,238,0.1); }
+
+  /* Add repo form */
+  .add-repo-form { margin-top: 12px; display: flex; gap: 6px; flex-wrap: wrap; }
+  .add-repo-form input {
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(34,211,238,0.2);
+    color: #fff; padding: 5px 10px; border-radius: 4px; font-size: 0.75rem;
+    font-family: var(--font-mono); flex: 1; min-width: 80px;
+  }
+  .add-repo-form input::placeholder { color: rgba(34,211,238,0.25); }
+  .add-repo-form button { padding: 5px 12px; font-size: 0.7rem; letter-spacing: 0.1em; }
+  .no-items { font-size: 0.8rem; color: rgba(34,211,238,0.3); padding: 4px 0; }
+
+  @media (max-width: 768px) {
+    .stat-row { grid-template-columns: repeat(2, 1fr); }
+    .monitor-grid { grid-template-columns: 1fr; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="monitor-wrap">
+  <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom: 20px;">
+    <h1 style="font-family: var(--font-display); font-size: 1.4rem; letter-spacing: 0.15em;">
+      MONITOR <span style="color: rgba(34,211,238,0.4); font-size: 0.9rem;">// COMMAND CENTER</span>
+    </h1>
+    <div style="font-family: var(--font-mono); font-size: 0.6rem; color: rgba(34,211,238,0.35);" id="last-updated">
+      LOADING...
+    </div>
+  </div>
+
+  <!-- Stat Row -->
+  <div class="stat-row" id="stat-row">
+    <div class="stat-card info"><div class="stat-value" id="stat-services">—</div><div class="stat-label">SERVICES ONLINE</div></div>
+    <div class="stat-card good"><div class="stat-value" id="stat-prs">—</div><div class="stat-label">OPEN PRs</div></div>
+    <div class="stat-card warn"><div class="stat-value" id="stat-alerts">—</div><div class="stat-label">ALERTS</div></div>
+    <div class="stat-card info"><div class="stat-value" id="stat-ai">—</div><div class="stat-label">AI INSIGHTS</div></div>
+  </div>
+
+  <!-- Alert Banner -->
+  <div class="alert-banner">
+    <div class="banner-header">▲ ALERTS &amp; RECOMMENDATIONS</div>
+    <div class="alert-list" id="alert-list">
+      <div class="alert-empty">Loading...</div>
+    </div>
+  </div>
+
+  <!-- Two-Column Grid -->
+  <div class="monitor-grid">
+    <!-- Services Panel -->
+    <div class="monitor-panel">
+      <div class="panel-header">
+        <span>HOMELAB SERVICES</span>
+        <button class="panel-action" onclick="refreshData()">REFRESH</button>
+      </div>
+      <div id="services-list"><div class="no-items">Loading...</div></div>
+    </div>
+
+    <!-- GitHub Panel -->
+    <div class="monitor-panel">
+      <div class="panel-header">
+        <span>GITHUB REPOS</span>
+      </div>
+      <div id="github-list"><div class="no-items">Loading...</div></div>
+      <div class="add-repo-form">
+        <input id="repo-id" placeholder="slug" title="URL-safe identifier, e.g. my-repo">
+        <input id="repo-owner" placeholder="owner">
+        <input id="repo-name" placeholder="repo">
+        <button class="mock-button" onclick="addRepo()" style="font-size:0.7rem;padding:5px 12px;">ADD</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let _dashData = null;
+
+function sevIcon(sev) {
+  return sev === 'critical' ? '⚠' : sev === 'warning' ? '⚑' : '✦';
+}
+
+function timeAgo(iso) {
+  if (!iso) return 'never';
+  const diff = (Date.now() - new Date(iso).getTime()) / 1000;
+  if (diff < 120) return 'just now';
+  if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+  if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+  return Math.floor(diff / 86400) + 'd ago';
+}
+
+function renderStats(stats) {
+  const s = stats.services_online, t = stats.services_total;
+  document.getElementById('stat-services').textContent = `${s}/${t}`;
+  document.getElementById('stat-prs').textContent = stats.open_prs;
+  document.getElementById('stat-alerts').textContent = stats.alerts;
+  document.getElementById('stat-ai').textContent = stats.ai_insights;
+
+  // Color the alerts stat card based on whether there are active alerts
+  const alertCard = document.getElementById('stat-alerts').closest('.stat-card');
+  alertCard.className = 'stat-card ' + (stats.alerts > 0 ? 'critical' : 'good');
+}
+
+function renderAlerts(recs) {
+  const el = document.getElementById('alert-list');
+  if (!recs.length) {
+    el.innerHTML = '<div class="alert-empty">All clear — no active alerts.</div>';
+    return;
+  }
+  el.innerHTML = recs.map(r => `
+    <div class="alert-item sev-${r.severity}" id="alert-${r.id}">
+      <span class="alert-icon">${sevIcon(r.severity)}</span>
+      <div style="flex:1">
+        <div class="alert-msg">${escHtml(r.message)}</div>
+        ${r.detail ? `<div class="alert-detail">${escHtml(r.detail)}</div>` : ''}
+      </div>
+      <button class="alert-dismiss" onclick="dismissAlert(${r.id})" title="Dismiss">✕</button>
+    </div>
+  `).join('');
+}
+
+function renderServices(services) {
+  const el = document.getElementById('services-list');
+  if (!services.length) { el.innerHTML = '<div class="no-items">No services configured.</div>'; return; }
+  el.innerHTML = services.map(s => `
+    <div class="service-row">
+      <div class="svc-dot ${s.status === 'online' ? 'online' : 'offline'}"></div>
+      <span class="svc-name">${escHtml(s.name)}</span>
+      ${s.response_time ? `<span class="svc-rt">${s.response_time}ms</span>` : ''}
+    </div>
+  `).join('');
+}
+
+function renderGithub(repos) {
+  const el = document.getElementById('github-list');
+  if (!repos.length) { el.innerHTML = '<div class="no-items">No repos configured.</div>'; return; }
+  el.innerHTML = repos.map(r => {
+    const ci = r.ci_status || 'none';
+    const ciClass = ['success','failure','pending'].includes(ci) ? `ci-${ci}` : 'ci-none';
+    return `
+      <div class="repo-row">
+        <div>
+          <span class="repo-name">${escHtml(r.id)}</span>
+          <span class="ci-badge ${ciClass}">${ci.toUpperCase()}</span>
+          <button onclick="deleteRepo('${escHtml(r.id)}')" style="font-size:0.6rem;color:rgba(255,112,67,0.4);background:none;border:none;cursor:pointer;padding:0 4px;">✕</button>
+        </div>
+        <div class="repo-meta">
+          ${r.open_prs || 0} open PRs · last commit ${timeAgo(r.last_commit_at)}
+          ${r.last_commit_msg ? ' · ' + escHtml(r.last_commit_msg.slice(0, 60)) : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function escHtml(str) {
+  const d = document.createElement('div');
+  d.textContent = str || '';
+  return d.innerHTML;
+}
+
+async function refreshData() {
+  try {
+    const resp = await fetch('/api/monitor/status');
+    if (!resp.ok) return;
+    const data = await resp.json();
+    _dashData = data;
+    renderStats(data.stats);
+    renderAlerts(data.recommendations);
+    renderServices(data.services);
+    renderGithub(data.github);
+    document.getElementById('last-updated').textContent =
+      'LAST UPDATED: ' + new Date().toLocaleTimeString();
+  } catch (e) {
+    console.error('Monitor refresh failed:', e);
+  }
+}
+
+async function dismissAlert(id) {
+  const resp = await fetch(`/api/monitor/recommendations/${id}/dismiss`, { method: 'POST' });
+  if (resp.ok) {
+    const el = document.getElementById(`alert-${id}`);
+    if (el) el.remove();
+    // Update alert count
+    const remaining = document.querySelectorAll('#alert-list .alert-item').length;
+    document.getElementById('stat-alerts').textContent = remaining;
+  }
+}
+
+async function addRepo() {
+  const id = document.getElementById('repo-id').value.trim();
+  const owner = document.getElementById('repo-owner').value.trim();
+  const repo = document.getElementById('repo-name').value.trim();
+  if (!id || !owner || !repo) return;
+
+  const resp = await fetch('/api/monitor/repos', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id, owner, repo })
+  });
+  if (resp.ok) {
+    document.getElementById('repo-id').value = '';
+    document.getElementById('repo-owner').value = '';
+    document.getElementById('repo-name').value = '';
+    refreshData();
+  } else {
+    const err = await resp.json();
+    alert(err.error || 'Failed to add repo');
+  }
+}
+
+async function deleteRepo(id) {
+  if (!confirm(`Remove ${id} from monitor?`)) return;
+  const resp = await fetch(`/api/monitor/repos/${encodeURIComponent(id)}`, { method: 'DELETE' });
+  if (resp.ok) refreshData();
+}
+
+// Initial load + auto-refresh every 30s
+refreshData();
+setInterval(refreshData, 30000);
+</script>
+{% endblock %}

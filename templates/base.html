@@ -42,6 +42,7 @@
                 <li><a href="{{ url_for('uplink.uplink') }}" class="nav-link{% if request.endpoint in ['uplink.uplink', 'auth.uplink_login'] %} active{% endif %}">Uplink Cache</a></li>
                 {% if session.get('role') == 'admin' %}
                 <li><a href="{{ url_for('control') }}" class="nav-link{% if request.endpoint == 'control' %} active{% endif %}">Control</a></li>
+                <li><a href="{{ url_for('monitor.monitor') }}" class="nav-link{% if request.endpoint == 'monitor.monitor' %} active{% endif %}">Monitor</a></li>
                 {% endif %}
             </ul>
         </div>
