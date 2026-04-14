@@ -7,7 +7,7 @@ from flask import Flask, render_template, url_for
 import psutil
 import config
 import database
-from auth import auth_bp
+from auth import auth_bp, admin_required
 from blueprints.admin import admin_bp
 from blueprints.uplink import uplink_bp
 from blueprints.telemetry import telemetry_bp
@@ -17,6 +17,9 @@ from blueprints.projects import projects_bp
 
 app = Flask(__name__)
 app.secret_key = config.SECRET_KEY
+app.config['SESSION_COOKIE_HTTPONLY'] = config.SESSION_COOKIE_HTTPONLY
+app.config['SESSION_COOKIE_SAMESITE'] = config.SESSION_COOKIE_SAMESITE
+app.config['SESSION_COOKIE_SECURE'] = config.SESSION_COOKIE_SECURE
 app.config['UPLOAD_FOLDER'] = config.UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = config.MAX_CONTENT_LENGTH
 
@@ -35,6 +38,21 @@ app.register_blueprint(telemetry_bp)
 app.register_blueprint(terminal_bp)
 app.register_blueprint(overwatch_bp)
 app.register_blueprint(projects_bp)
+
+@app.after_request
+def add_security_headers(response):
+    response.headers['X-Frame-Options'] = 'DENY'
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+    response.headers['Content-Security-Policy'] = (
+        "default-src 'self'; "
+        "script-src 'self' 'unsafe-inline' https://cesium.com https://cdn.cesium.com; "
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+        "font-src 'self' https://fonts.gstatic.com; "
+        "img-src 'self' data: https:; "
+        "connect-src 'self' https://api.cesium.com;"
+    )
+    return response
 
 def get_static_hash(filename):
     full_path = os.path.join(app.root_path, 'static', filename)
@@ -104,12 +122,9 @@ def home():
     return render_template('home.html')
 
 @app.route('/control')
-def control_redirect():
-    from auth import admin_required
-    @admin_required
-    def control():
-        return render_template('control.html')
-    return control()
+@admin_required
+def control():
+    return render_template('control.html')
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5173)
