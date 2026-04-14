@@ -33,10 +33,10 @@ def run_rule_checks(projects: list, telemetry: list, recent_failures: int) -> li
             if last_ping_str:
                 try:
                     last_ping = datetime.fromisoformat(last_ping_str)
-                    # Normalize: strip tz info so both sides are naive UTC
+                    # Strip tz info if present — DB stores naive local timestamps
                     if last_ping.tzinfo is not None:
-                        last_ping = last_ping.astimezone(timezone.utc).replace(tzinfo=None)
-                    offline_minutes = (datetime.utcnow() - last_ping).total_seconds() / 60
+                        last_ping = last_ping.replace(tzinfo=None)
+                    offline_minutes = (datetime.now() - last_ping).total_seconds() / 60
                     if offline_minutes > 30:
                         recs.append(_rec(
                             'rule', 'critical',
