@@ -10,15 +10,6 @@ import database
 from auth import auth_bp, admin_required, validate_csrf
 from blueprints.admin import admin_bp
 
-# Monkeypatch hashlib.scrypt for Python < 3.10 support with Werkzeug 3.0
-if not hasattr(hashlib, 'scrypt'):
-    try:
-        import scrypt as _scrypt_module
-        def _scrypt_wrapper(password, salt, n, r, p, maxmem):
-            return _scrypt_module.hash(password, salt, N=n, r=r, p=p, buflen=32)
-        hashlib.scrypt = _scrypt_wrapper
-    except ImportError:
-        pass
 from blueprints.uplink import uplink_bp
 from blueprints.telemetry import telemetry_bp
 from blueprints.terminal import terminal_bp

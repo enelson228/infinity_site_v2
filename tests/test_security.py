@@ -45,15 +45,15 @@ def test_post_with_csrf_accepted(admin_client):
     assert resp.status_code == 200
 
 
-def test_new_passwords_use_scrypt(admin_client):
-    """Newly created user passwords are hashed with scrypt."""
+def test_new_passwords_use_strong_hashing(admin_client):
+    """Newly created user passwords use pbkdf2:sha256 with a long salt."""
     with admin_client.session_transaction() as sess:
         token = sess['csrf_token']
     resp = admin_client.post('/api/admin/users',
-        json={'username': 'scryptuser', 'password': 'SecurePass1!', 'role': 'user'},
+        json={'username': 'stronguser', 'password': 'SecurePass1!', 'role': 'user'},
         headers={'X-CSRF-Token': token}
     )
     assert resp.status_code == 200
     import database
-    user = database.get_user_by_username('scryptuser')
-    assert user['password_hash'].startswith('scrypt:')
+    user = database.get_user_by_username('stronguser')
+    assert user['password_hash'].startswith('pbkdf2:sha256:')

@@ -22,7 +22,7 @@ def api_admin_create_user():
         return jsonify({'error': 'Username and password required'}), 400
     if role not in ('user', 'admin'):
         return jsonify({'error': 'Invalid role'}), 400
-    pw_hash = generate_password_hash(password, method='scrypt')
+    pw_hash = generate_password_hash(password, method='pbkdf2:sha256', salt_length=32)
     try:
         database.create_user(username, pw_hash, role)
     except Exception: # In a real app, catch sqlite3.IntegrityError specifically
@@ -40,7 +40,7 @@ def api_admin_reset_password(user_id: int):
     password = data.get('password') or ''
     if not password:
         return jsonify({'error': 'Password required'}), 400
-    pw_hash = generate_password_hash(password, method='scrypt')
+    pw_hash = generate_password_hash(password, method='pbkdf2:sha256', salt_length=32)
     if not database.update_user_password(user_id, pw_hash):
         return jsonify({'error': 'User not found'}), 404
     
