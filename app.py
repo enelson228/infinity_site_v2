@@ -97,14 +97,19 @@ def _poll_github_repo(owner: str, repo: str, repo_id: str, token: str):
         with urllib.request.urlopen(req, timeout=10) as resp:
             return _json.loads(resp.read().decode())
 
-    # Latest commit
+    # Latest commit — guard against empty repos and error-shape API responses
     commits = gh_get(f'{base_url}/commits?per_page=1')
-    last_commit_at = commits[0]['commit']['committer']['date'] if commits else None
-    last_commit_msg = commits[0]['commit']['message'].split('\n')[0][:120] if commits else None
+    first = commits[0] if isinstance(commits, list) and commits else None
+    last_commit_at = (
+        (first.get('commit') or {}).get('committer', {}).get('date')
+        if first else None
+    )
+    raw_msg = ((first.get('commit') or {}).get('message') or '') if first else ''
+    last_commit_msg = raw_msg.split('\n')[0][:120] or None
 
-    # Open PR count
+    # Open PR count — guard against error-shape responses (dicts instead of lists)
     prs = gh_get(f'{base_url}/pulls?state=open&per_page=100')
-    open_prs = len(prs)
+    open_prs = len(prs) if isinstance(prs, list) else 0
 
     # Latest CI run status
     ci_status = 'none'
@@ -173,10 +178,14 @@ def background_monitor():
             if config.GITHUB_TOKEN:
                 try:
                     repos = database.list_github_repos()
-                    for r in repos:
-                        _poll_github_repo(r['owner'], r['repo'], r['id'], config.GITHUB_TOKEN)
                 except Exception as e:
-                    app.logger.error(f"Monitoring error (github): {e}")
+                    app.logger.error(f"Monitoring error (github list): {e}")
+                    repos = []
+                for r in repos:
+                    try:
+                        _poll_github_repo(r['owner'], r['repo'], r['id'], config.GITHUB_TOKEN)
+                    except Exception as e:
+                        app.logger.error(f"Monitoring error (github {r.get('id')}): {e}")
             last_github_time = now
 
         time.sleep(10)
