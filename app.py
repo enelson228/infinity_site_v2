@@ -136,6 +136,7 @@ def background_monitor():
     last_ping_time = 0
     last_telemetry_time = 0
     last_github_time = 0
+    last_recommendations_time = 0
     
     while True:
         now = time.time()
@@ -187,6 +188,39 @@ def background_monitor():
                     except Exception as e:
                         app.logger.error(f"Monitoring error (github {r.get('id')}): {e}")
             last_github_time = now
+
+        # Refresh recommendations every 30 minutes
+        if now - last_recommendations_time >= 1800:
+            try:
+                import recommendations as rec_engine
+                projects = database.list_projects()
+                telemetry = database.get_telemetry_history(limit=5)
+                from datetime import datetime as _dt, timedelta as _td
+                cutoff = (_dt.now() - _td(hours=1)).isoformat()
+                audit = database.get_audit_log(limit=500)
+                recent_failures = sum(
+                    1 for e in audit
+                    if e['event_type'] == 'login_failure' and e['created_at'] > cutoff
+                )
+                new_recs = rec_engine.run_rule_checks(projects, telemetry, recent_failures)
+                database.clear_recommendations(source='rule')
+                for r in new_recs:
+                    database.add_recommendation(
+                        r['source'], r['severity'], r['message'], r.get('detail')
+                    )
+
+                if config.ANTHROPIC_API_KEY:
+                    github = database.list_github_repo_statuses()
+                    snapshot = rec_engine.build_snapshot(projects, github, telemetry)
+                    ai_recs = rec_engine.run_ai_checks(snapshot, config.ANTHROPIC_API_KEY)
+                    database.clear_recommendations(source='ai')
+                    for r in ai_recs:
+                        database.add_recommendation(
+                            r['source'], r['severity'], r['message'], r.get('detail')
+                        )
+            except Exception as e:
+                app.logger.error(f"Monitoring error (recommendations): {e}")
+            last_recommendations_time = now
 
         time.sleep(10)
 
