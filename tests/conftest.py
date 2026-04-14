@@ -1,33 +1,18 @@
 import os
-import sys
 import tempfile
 import pytest
 
-# CRITICAL: Set required env vars BEFORE any app imports
-# Load from .env.test if it exists, otherwise use defaults
-_env_file = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), '.env.test')
-if os.path.exists(_env_file):
-    with open(_env_file) as f:
-        for line in f:
-            line = line.strip()
-            if line and not line.startswith('#'):
-                key, _, value = line.partition('=')
-                key = key.strip()
-                value = value.strip()
-                # Always set, even if already in environ (overwrite empty values)
-                os.environ[key] = value
-else:
-    # Fallback defaults if .env.test doesn't exist
-    _defaults = {
-        'SECRET_KEY': 'test-secret-key-not-for-production',
-        'UPLINK_PASSWORD_HASH': 'pbkdf2:sha256:1:aaaaaaaaaa:bbbbbbbbbb',
-        'CLAUDE_PASSWORD_HASH': 'pbkdf2:sha256:1:aaaaaaaaaa:bbbbbbbbbb',
-        'ANTHROPIC_API_KEY': 'test-anthropic-key',
-        'SESSION_COOKIE_SECURE': 'false',
-    }
-    for key, value in _defaults.items():
-        # Always set, even if already in environ (overwrite empty values)
-        os.environ[key] = value
+# Set required env vars before any app import.
+# Use direct assignment for empty/missing vars — setdefault won't override empty strings.
+_test_defaults = {
+    'SECRET_KEY': 'test-secret-key-not-for-production',
+    'UPLINK_PASSWORD_HASH': 'pbkdf2:sha256:1:aaaaaaaaaa:bbbbbbbbbb',
+    'CLAUDE_PASSWORD_HASH': 'pbkdf2:sha256:1:aaaaaaaaaa:bbbbbbbbbb',
+    'ANTHROPIC_API_KEY': 'test-anthropic-key',
+}
+for _k, _v in _test_defaults.items():
+    if not os.environ.get(_k):
+        os.environ[_k] = _v
 
 
 @pytest.fixture
