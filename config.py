@@ -45,3 +45,12 @@ UPLOAD_ALLOWED_EXTENSIONS = {
     for ext in os.environ.get('UPLOAD_ALLOWED_EXTENSIONS', '').split(',')
     if ext.strip()
 }
+
+# GitHub API token for monitor dashboard (optional — GitHub panel disabled if missing)
+GITHUB_TOKEN = os.environ.get('GITHUB_TOKEN', '')
+
+# Session cookie security
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'
+# Set SESSION_COOKIE_SECURE=False only in local dev without HTTPS
+SESSION_COOKIE_SECURE = os.environ.get('SESSION_COOKIE_SECURE', 'true').lower() not in ('0', 'false', 'no')
