@@ -38,7 +38,20 @@
     function appendUserMessage(text) {
         const el = document.createElement('div');
         el.className = 'terminal-msg-user';
-        el.textContent = 'YOU > ' + text;
+        
+        const label = document.createElement('span');
+        label.style.fontWeight = 'bold';
+        label.style.display = 'block';
+        label.style.marginBottom = '4px';
+        label.style.borderBottom = '1px solid rgba(246, 166, 35, 0.2)';
+        label.style.paddingBottom = '2px';
+        label.textContent = '[OPERATIVE UPLINK]';
+        el.appendChild(label);
+        
+        const content = document.createElement('span');
+        content.textContent = text;
+        el.appendChild(content);
+        
         output.appendChild(el);
         scrollToBottom();
     }
@@ -53,7 +66,7 @@
 
         const label = document.createElement('span');
         label.className = 'terminal-ai-label';
-        label.textContent = 'INFINITY > ';
+        label.textContent = '[INFINITY CONSTRUCT]';
         el.appendChild(label);
 
         const content = document.createElement('span');
@@ -84,6 +97,22 @@
         el.textContent = text;
         output.appendChild(el);
         scrollToBottom();
+    }
+
+    // ── Vitals Update ────────────────────────────────────────────────────────
+    
+    async function updateVitals() {
+        const cpuEl = document.getElementById('vital-cpu');
+        const ramEl = document.getElementById('vital-ram');
+        if (!cpuEl || !ramEl) return;
+
+        try {
+            const res = await fetch('/api/telemetry');
+            if (!res.ok) return;
+            const data = await res.json();
+            cpuEl.textContent = `${data.cpu.percent}%`;
+            ramEl.textContent = `${data.ram.percent}%`;
+        } catch (e) {}
     }
 
     // ── Typewriter ───────────────────────────────────────────────────────────
@@ -244,7 +273,7 @@
 
     logoutBtn.addEventListener('click', async () => {
         try {
-            await fetch('/api/terminal/logout', { method: 'POST' });
+            await fetch('/api/auth/logout', { method: 'POST' });
         } finally {
             window.location.href = '/terminal/login';
         }
@@ -253,4 +282,6 @@
     // ── Init ─────────────────────────────────────────────────────────────────
 
     boot();
+    updateVitals();
+    setInterval(updateVitals, 5000);
 })();

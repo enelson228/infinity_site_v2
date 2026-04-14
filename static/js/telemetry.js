@@ -89,16 +89,12 @@ function updateCpu(cpu) {
     document.getElementById('cpu-freq').textContent = cpu.freq_current !== null
         ? cpu.freq_current + ' MHz'
         : '—';
-    document.getElementById('cpu-freq-max').textContent = cpu.freq_max !== null
-        ? cpu.freq_max + ' MHz'
-        : '—';
 }
 
 function updateRam(ram) {
     scrambleValue(document.getElementById('ram-percent'), String(ram.percent));
     setBar('ram-bar', 'ram-bar-fill', ram.percent);
     document.getElementById('ram-used').textContent = formatBytes(ram.used);
-    document.getElementById('ram-available').textContent = formatBytes(ram.available);
     document.getElementById('ram-total').textContent = formatBytes(ram.total);
 }
 
@@ -106,15 +102,12 @@ function updateDisk(disk) {
     scrambleValue(document.getElementById('disk-percent'), String(disk.percent));
     setBar('disk-bar', 'disk-bar-fill', disk.percent);
     document.getElementById('disk-used').textContent = formatBytes(disk.used);
-    document.getElementById('disk-free').textContent = formatBytes(disk.free);
     document.getElementById('disk-total').textContent = formatBytes(disk.total);
 }
 
 function updateNetwork(network, timestamp) {
     document.getElementById('net-rx-total').textContent = formatBytes(network.bytes_recv);
     document.getElementById('net-tx-total').textContent = formatBytes(network.bytes_sent);
-    document.getElementById('net-pkts-rx').textContent = network.packets_recv.toLocaleString();
-    document.getElementById('net-pkts-tx').textContent = network.packets_sent.toLocaleString();
 
     if (prevNet !== null && prevTimestamp !== null) {
         const dt = timestamp - prevTimestamp;
@@ -124,9 +117,6 @@ function updateNetwork(network, timestamp) {
             document.getElementById('net-rx-rate').textContent = formatBytesPerSec(Math.max(0, rxRate));
             document.getElementById('net-tx-rate').textContent = formatBytesPerSec(Math.max(0, txRate));
         }
-    } else {
-        document.getElementById('net-rx-rate').textContent = 'Calculating...';
-        document.getElementById('net-tx-rate').textContent = 'Calculating...';
     }
 
     prevNet = network;
@@ -137,7 +127,6 @@ function updateSystem(uptimeSeconds, loadAvg) {
     document.getElementById('sys-uptime').textContent = formatUptime(uptimeSeconds);
     document.getElementById('load-1').textContent = loadAvg.one;
     document.getElementById('load-5').textContent = loadAvg.five;
-    document.getElementById('load-15').textContent = loadAvg.fifteen;
 }
 
 function updateLastUpdate(timestamp) {
@@ -146,6 +135,23 @@ function updateLastUpdate(timestamp) {
     const mm = String(d.getMinutes()).padStart(2, '0');
     const ss = String(d.getSeconds()).padStart(2, '0');
     document.getElementById('last-update').textContent = hh + ':' + mm + ':' + ss;
+}
+
+function drawChart(pathId, data, maxVal = 100) {
+    const path = document.querySelector('.' + pathId);
+    if (!path || !data || data.length < 2) return;
+    
+    // Reverse data so it's left-to-right (newest on right)
+    const points = [...data].reverse();
+    const width = 100;
+    const height = 40;
+    const step = width / (points.length - 1);
+    
+    let d = `M 0,${height - (points[0] / maxVal) * height}`;
+    for (let i = 1; i < points.length; i++) {
+        d += ` L ${i * step},${height - (points[i] / maxVal) * height}`;
+    }
+    path.setAttribute('d', d);
 }
 
 function showError(msg) {
@@ -171,12 +177,40 @@ async function fetchTelemetry() {
         updateNetwork(data.network, data.timestamp);
         updateSystem(data.uptime_seconds, data.load_avg);
         updateLastUpdate(data.timestamp);
+        
+        if (data.history) {
+            drawChart('chart-path-cpu', data.history.map(h => h.cpu_usage));
+            drawChart('chart-path-ram', data.history.map(h => h.ram_usage));
+        }
     } catch (err) {
         showError('SENSOR FEED INTERRUPTED — RETRYING... (' + err.message + ')');
     }
 }
 
+async function fetchAudit() {
+    try {
+        const res = await fetch('/api/telemetry/audit');
+        if (!res.ok) return;
+        const data = await res.json();
+        const feed = document.getElementById('audit-feed');
+        if (!feed) return;
+        
+        feed.innerHTML = data.events.map(e => {
+            const time = e.created_at.split('T')[1].split('.')[0];
+            return `
+                <div class="audit-entry">
+                    <span class="time">[${time}]</span>
+                    <span class="type">${e.event_type.toUpperCase()}</span>
+                    <span class="detail">${e.detail || ''}</span>
+                </div>
+            `;
+        }).join('');
+    } catch (e) {}
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     fetchTelemetry();
+    fetchAudit();
     setInterval(fetchTelemetry, REFRESH_INTERVAL_MS);
+    setInterval(fetchAudit, 10000);
 });

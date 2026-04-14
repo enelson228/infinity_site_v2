@@ -16,101 +16,138 @@
     </div>
 
     <div class="hero-content">
-        <div class="hero-badge">UNSC Network Terminal</div>
+        <div class="hero-badge">UNSC Network Terminal — MJOLNIR GEN3</div>
         <h1 class="hero-title glitch" data-text="INFINITY">INFINITY</h1>
-        <p class="hero-subtitle">Homelab Command Center</p>
+        <p class="hero-subtitle">Homelab Command Center & Infrastructure Controller</p>
 
         <div class="hero-actions">
-            <a href="{{ url_for('projects') }}" class="btn btn-primary">
+            <a href="{{ url_for('projects.projects') }}" class="btn btn-primary">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <rect x="3" y="3" width="7" height="7"></rect>
                     <rect x="14" y="3" width="7" height="7"></rect>
                     <rect x="14" y="14" width="7" height="7"></rect>
                     <rect x="3" y="14" width="7" height="7"></rect>
                 </svg>
-                View Projects
+                Infrastructure Scan
             </a>
-            <a href="{{ url_for('uplink') }}" class="btn btn-secondary">
+            <a href="{{ url_for('terminal.terminal') }}" class="btn btn-secondary">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                    <polyline points="17 8 12 3 7 8"></polyline>
-                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                    <polyline points="4 17 10 11 4 5"></polyline>
+                    <line x1="12" y1="19" x2="20" y2="19"></line>
                 </svg>
-                Uplink Cache
+                AI Terminal
             </a>
         </div>
     </div>
 </section>
 
-<!-- Status Section -->
+<!-- Main Dashboard Layout -->
 <section class="container" style="padding: var(--spacing-3xl) 0;">
-    <div class="section-label">System Status</div>
+    <div class="home-dashboard">
+        
+        <!-- Left Column: Metrics & Status -->
+        <div class="home-col-stats">
+            <div class="section-label">System Diagnostics</div>
+            <div class="status-grid-vertical">
+                <div class="status-panel">
+                    <div class="panel-header">
+                        <span class="panel-title">Infrastructure Health</span>
+                        <div class="panel-indicator" id="health-indicator"></div>
+                    </div>
+                    <div class="panel-value" id="active-services">--</div>
+                    <div class="panel-label">Nodes Online</div>
+                </div>
 
-    <div class="status-grid">
-        <div class="status-panel">
-            <div class="panel-header">
-                <span class="panel-title">Network Status</span>
-                <div class="panel-indicator">
-                    <span class="sonar-ring"></span>
-                    <span class="sonar-ring"></span>
-                    <span class="sonar-ring"></span>
+                <div class="status-panel">
+                    <div class="panel-header">
+                        <span class="panel-title">CPU Load</span>
+                    </div>
+                    <div class="panel-value" id="home-cpu-val">--%</div>
+                    <div class="metric-bar" style="height: 4px; margin-top: 8px;">
+                        <div id="home-cpu-bar" class="metric-bar-fill" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <div class="status-panel">
+                    <div class="panel-header">
+                        <span class="panel-title">Memory Allocation</span>
+                    </div>
+                    <div class="panel-value" id="home-ram-val">--%</div>
+                    <div class="metric-bar" style="height: 4px; margin-top: 8px;">
+                        <div id="home-ram-bar" class="metric-bar-fill" style="width: 0%"></div>
+                    </div>
                 </div>
             </div>
-            <div class="panel-value">OPERATIONAL</div>
-            <div class="panel-label">All systems nominal</div>
+
+            <!-- Quick Access -->
+            <div class="section-label" style="margin-top: var(--spacing-xl);">Quick Access</div>
+            <div class="quick-links">
+                <a href="{{ url_for('telemetry.telemetry') }}" class="quick-link">
+                    <div class="quick-link-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                        </svg>
+                    </div>
+                    <span class="quick-link-text">Live Telemetry</span>
+                </a>
+                <a href="{{ url_for('overwatch.overwatch') }}" class="quick-link">
+                    <div class="quick-link-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="2" y1="12" x2="22" y2="12"></line>
+                            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                        </svg>
+                    </div>
+                    <span class="quick-link-text">Overwatch Grid</span>
+                </a>
+                <a href="{{ url_for('uplink.uplink') }}" class="quick-link">
+                    <div class="quick-link-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="17 8 12 3 7 8"></polyline>
+                            <line x1="12" y1="3" x2="12" y2="15"></line>
+                        </svg>
+                    </div>
+                    <span class="quick-link-text">Uplink Cache</span>
+                </a>
+            </div>
         </div>
 
-        <div class="status-panel">
-            <div class="panel-header">
-                <span class="panel-title">Active Services</span>
-                <div class="panel-indicator">
-                    <span class="sonar-ring"></span>
-                    <span class="sonar-ring"></span>
-                    <span class="sonar-ring"></span>
+        <!-- Right Column: Live Feed & Map -->
+        <div class="home-col-feed">
+            <div class="section-label">Intelligence Feed</div>
+            <div class="intel-feed">
+                <div class="intel-feed-header">
+                    <span>EVENT_LOG</span>
+                    <span>SOURCE: MJOLNIR_SITE</span>
+                </div>
+                <div id="intel-feed-body" class="intel-feed-body">
+                    <div class="intel-line">INITIALIZING INTEL FEED...</div>
+                </div>
+                <div class="intel-feed-footer">
+                    <span class="blinking-dot"></span> SECURE CONNECTION ACTIVE
                 </div>
             </div>
-            <div class="panel-value" id="active-services">--</div>
-            <div class="panel-label">Running projects</div>
-        </div>
 
-        <div class="status-panel">
-            <div class="panel-header">
-                <span class="panel-title">Uplink Cache</span>
-                <div class="panel-indicator">
-                    <span class="sonar-ring"></span>
-                    <span class="sonar-ring"></span>
-                    <span class="sonar-ring"></span>
+            <div class="section-label" style="margin-top: var(--spacing-xl);">Tactical Grid Preview</div>
+            <div class="tactical-preview">
+                <div class="tactical-overlay">
+                    <div class="tactical-scanline"></div>
+                    <div class="tactical-coords">40.7128° N, 74.0060° W</div>
+                    <div class="tactical-label">SECTOR: NEW YORK</div>
+                </div>
+                <div class="tactical-map-placeholder">
+                    <!-- This represents the overwatch view -->
+                    <svg viewBox="0 0 400 200" preserveAspectRatio="none">
+                        <path d="M0,100 Q100,50 200,100 T400,100" stroke="rgba(34, 211, 238, 0.2)" fill="none" stroke-width="1"/>
+                        <circle cx="200" cy="100" r="40" stroke="rgba(34, 211, 238, 0.3)" fill="none" stroke-width="1"/>
+                        <circle cx="200" cy="100" r="60" stroke="rgba(34, 211, 238, 0.1)" fill="none" stroke-width="1"/>
+                        <line x1="200" y1="0" x2="200" y2="200" stroke="rgba(34, 211, 238, 0.1)" stroke-width="1"/>
+                        <line x1="0" y1="100" x2="400" y2="100" stroke="rgba(34, 211, 238, 0.1)" stroke-width="1"/>
+                    </svg>
                 </div>
             </div>
-            <div class="panel-value">SECURE</div>
-            <div class="panel-label">Document repository active</div>
         </div>
-    </div>
-
-    <!-- Quick Links -->
-    <div class="section-label" style="margin-top: var(--spacing-3xl);">Quick Access</div>
-
-    <div class="quick-links">
-        <a href="{{ url_for('projects') }}" class="quick-link">
-            <div class="quick-link-icon">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
-                    <line x1="8" y1="21" x2="16" y2="21"></line>
-                    <line x1="12" y1="17" x2="12" y2="21"></line>
-                </svg>
-            </div>
-            <span class="quick-link-text">Projects Dashboard</span>
-        </a>
-
-        <a href="{{ url_for('uplink') }}" class="quick-link">
-            <div class="quick-link-icon">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                    <polyline points="14 2 14 8 20 8"></polyline>
-                </svg>
-            </div>
-            <span class="quick-link-text">Document Uplink</span>
-        </a>
     </div>
 </section>
 {% endblock %}
@@ -118,15 +155,97 @@
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/boot.js') }}"></script>
 <script>
-    // Fetch project count for status panel
-    fetch('/api/projects')
-        .then(res => res.json())
-        .then(data => {
-            const onlineCount = data.projects.filter(p => p.status === 'online').length;
-            document.getElementById('active-services').textContent = onlineCount;
-        })
-        .catch(() => {
-            document.getElementById('active-services').textContent = '0';
-        });
+    const intelFeedBody = document.getElementById('intel-feed-body');
+    const healthIndicator = document.getElementById('health-indicator');
+
+    function addIntelLine(text, type = 'info') {
+        const line = document.createElement('div');
+        line.className = `intel-line ${type}`;
+        const time = new Date().toLocaleTimeString('en-GB', { hour12: false });
+        line.innerHTML = `<span class="intel-time">[${time}]</span> <span class="intel-text">${text.toUpperCase()}</span>`;
+        intelFeedBody.appendChild(line);
+        intelFeedBody.scrollTop = intelFeedBody.scrollHeight;
+        
+        // Keep only last 20 lines
+        while (intelFeedBody.children.length > 20) {
+            intelFeedBody.removeChild(intelFeedBody.firstChild);
+        }
+    }
+
+    // Initial boot sequence
+    setTimeout(() => addIntelLine('SYSTEM CORE ONLINE', 'success'), 500);
+    setTimeout(() => addIntelLine('ESTABLISHING SECURE UPLINK...', 'info'), 1000);
+    setTimeout(() => addIntelLine('ACCESS GRANTED: KINETIC_FORCE', 'success'), 1500);
+
+    let homeIntervalId = null;
+
+    // Update Metrics
+    async function updateHomeStats() {
+        try {
+            const [telemetryRes, projectsRes, auditRes] = await Promise.all([
+                fetch('/api/telemetry'),
+                fetch('/api/projects'),
+                fetch('/api/telemetry/audit')
+            ]);
+
+            if (telemetryRes.status === 401) {
+                if (homeIntervalId) clearInterval(homeIntervalId);
+                document.getElementById('home-cpu-val').textContent = `AUTH REQ`;
+                document.getElementById('home-ram-val').textContent = `AUTH REQ`;
+                document.getElementById('active-services').textContent = `SECURED`;
+                healthIndicator.style.background = 'var(--text-secondary)';
+                healthIndicator.style.boxShadow = 'none';
+                
+                if (intelFeedBody.children.length < 5) {
+                    intelFeedBody.innerHTML = '';
+                    addIntelLine('AUTHENTICATION REQUIRED FOR TELEMETRY', 'warn');
+                    addIntelLine('AWAITING SECURE CREDENTIALS...', 'info');
+                }
+                return;
+            }
+
+            const telemetry = await telemetryRes.json();
+            const projectsData = await projectsRes.json();
+            const auditData = await auditRes.json();
+
+            // Stats
+            document.getElementById('home-cpu-val').textContent = `${telemetry.cpu.percent}%`;
+            document.getElementById('home-cpu-bar').style.width = `${telemetry.cpu.percent}%`;
+            document.getElementById('home-ram-val').textContent = `${telemetry.ram.percent}%`;
+            document.getElementById('home-ram-bar').style.width = `${telemetry.ram.percent}%`;
+
+            const onlineCount = projectsData.projects.filter(p => p.status === 'online').length;
+            document.getElementById('active-services').textContent = `${onlineCount} / ${projectsData.projects.length}`;
+            
+            if (onlineCount === projectsData.projects.length) {
+                healthIndicator.style.background = 'var(--status-online)';
+                healthIndicator.style.boxShadow = '0 0 10px var(--status-online)';
+            } else if (onlineCount > 0) {
+                healthIndicator.style.background = 'var(--status-maintenance)';
+                healthIndicator.style.boxShadow = '0 0 10px var(--status-maintenance)';
+            } else {
+                healthIndicator.style.background = 'var(--status-offline)';
+                healthIndicator.style.boxShadow = '0 0 10px var(--status-offline)';
+            }
+
+            // Audit Feed
+            if (auditData.events && auditData.events.length > 0) {
+                // Clear initial if we have real data
+                if (intelFeedBody.children.length < 5) intelFeedBody.innerHTML = '';
+                
+                auditData.events.slice(0, 10).reverse().forEach(ev => {
+                    let msg = `${ev.event_type}: ${ev.detail || 'SYSTEM EVENT'}`;
+                    addIntelLine(msg);
+                });
+            }
+
+        } catch (e) {
+            console.error('Home stats update failed', e);
+        }
+    }
+
+    // Start updates
+    updateHomeStats();
+    homeIntervalId = setInterval(updateHomeStats, 15000);
 </script>
 {% endblock %}

@@ -1,30 +1,31 @@
 {% extends "base.html" %}
 
-{% block title %}Projects{% endblock %}
+{% block title %}Infrastructure Scan{% endblock %}
 
 {% block content %}
-<div class="container">
+<div class="container" style="padding-top: var(--spacing-xl); padding-bottom: var(--spacing-3xl);">
     <!-- Page Header -->
-    <header class="page-header">
-        <div class="section-label">Homelab Services</div>
-        <h1 class="page-title">Projects</h1>
-        <p class="page-description">Monitor and access your homelab services and infrastructure.</p>
+    <header class="page-header" style="border-bottom: 1px solid rgba(246, 166, 35, 0.3);">
+        <div class="section-label" style="color: var(--reach-amber);">Tactical Network Interface</div>
+        <h1 class="page-title typewriter" style="color: var(--reach-amber); text-shadow: 0 0 10px rgba(246, 166, 35, 0.4);">Infrastructure Scan</h1>
+        <p class="page-description" style="font-family: var(--font-mono); font-size: 0.85rem; text-transform: uppercase; color: var(--text-secondary);">
+            Scanning MJOLNIR GEN3 environment for active nodes and homelab services.
+        </p>
     </header>
 
     <!-- View Controls -->
     <div class="view-controls">
-        <div class="view-toggle">
-            <button class="view-toggle-btn active" data-view="grid" aria-label="Grid view">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <div class="view-toggle" style="border-color: rgba(246, 166, 35, 0.3);">
+            <button class="view-toggle-btn active" data-view="grid" title="Grid View" style="color: var(--reach-amber);">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <rect x="3" y="3" width="7" height="7"></rect>
                     <rect x="14" y="3" width="7" height="7"></rect>
                     <rect x="14" y="14" width="7" height="7"></rect>
                     <rect x="3" y="14" width="7" height="7"></rect>
                 </svg>
-                Grid
             </button>
-            <button class="view-toggle-btn" data-view="list" aria-label="List view">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <button class="view-toggle-btn" data-view="list" title="List View" style="color: var(--reach-amber);">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <line x1="8" y1="6" x2="21" y2="6"></line>
                     <line x1="8" y1="12" x2="21" y2="12"></line>
                     <line x1="8" y1="18" x2="21" y2="18"></line>
@@ -32,31 +33,47 @@
                     <line x1="3" y1="12" x2="3.01" y2="12"></line>
                     <line x1="3" y1="18" x2="3.01" y2="18"></line>
                 </svg>
-                List
             </button>
         </div>
+
+        <button id="refresh-status-btn" class="btn btn-secondary btn-icon" title="Force Rescan" style="border-color: rgba(246, 166, 35, 0.4); color: var(--reach-amber);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M23 4v6h-6"></path>
+                <path d="M1 20v-6h6"></path>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+            </svg>
+        </button>
     </div>
 
-    <!-- Grid View -->
-    <div class="projects-grid active" id="projects-grid">
-        <!-- Projects loaded via JS -->
-    </div>
-
-    <!-- List View -->
-    <div class="projects-list" id="projects-list">
-        <div class="list-header">
-            <span>Name</span>
-            <span>Status</span>
-            <span>Updated</span>
-            <span>Action</span>
+    <!-- Grid View Wrapper -->
+    <div class="tactical-scanner-container">
+        <!-- Scanning Overlay -->
+        <div class="tactical-scanner-sweep" id="tactical-scanner-sweep"></div>
+        
+        <div id="projects-grid" class="projects-grid active">
+            <!-- Projects populated by JS -->
+            <div class="radar-empty-state">
+                <div class="radar-sweep"></div>
+                <div class="radar-text">INITIALIZING INFRASTRUCTURE SCAN...</div>
+            </div>
         </div>
-        <div id="projects-list-body">
-            <!-- Projects loaded via JS -->
+
+        <!-- List View -->
+        <div id="projects-list" class="projects-list">
+            <div class="list-header tactical-list-header">
+                <span>NODE</span>
+                <span>STATUS</span>
+                <span>LATENCY</span>
+                <span style="text-align: right;">UPLINK</span>
+            </div>
+            <div id="projects-list-body">
+                <!-- Projects populated by JS -->
+            </div>
         </div>
     </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/projects.js') }}"></script>
+<script src="{{ static_versioned('js/projects.js') }}"></script>
 {% endblock %}

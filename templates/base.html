@@ -11,8 +11,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
 
     <!-- Styles -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/motion.css') }}">
+    <link rel="stylesheet" href="{{ static_versioned('css/style.css') }}">
+    <link rel="stylesheet" href="{{ static_versioned('css/motion.css') }}">
 
     {% block head %}{% endblock %}
 </head>
@@ -20,7 +20,13 @@
     <!-- Navigation -->
     <nav class="nav" id="nav">
         <div class="nav-container">
-            <a href="{{ url_for('home') }}" class="nav-logo">INFINITY</a>
+            <div style="display: flex; align-items: center; gap: var(--spacing-sm);">
+                <a href="{{ url_for('home') }}" class="nav-logo" style="letter-spacing: 0.15em; text-shadow: 0 0 10px rgba(34, 211, 238, 0.4);">INFINITY</a>
+                <div class="nav-datalink-indicator">
+                    <span class="blinking-dot" style="background: var(--reach-amber); width: 4px; height: 4px; display: inline-block;"></span>
+                    <span style="font-family: var(--font-mono); font-size: 0.5rem; color: var(--reach-amber); letter-spacing: 0.2em;">DATALINK ACTIVE</span>
+                </div>
+            </div>
 
             <button class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation">
                 <span></span>
@@ -30,11 +36,11 @@
 
             <ul class="nav-links" id="nav-links">
                 <li><a href="{{ url_for('home') }}" class="nav-link{% if request.endpoint == 'home' %} active{% endif %}">Home</a></li>
-                <li><a href="{{ url_for('projects') }}" class="nav-link{% if request.endpoint in ['projects', 'project_rowboat'] %} active{% endif %}">Projects</a></li>
-                <li><a href="{{ url_for('telemetry') }}" class="nav-link{% if request.endpoint == 'telemetry' %} active{% endif %}">Telemetry</a></li>
-                <li><a href="{{ url_for('uplink') }}" class="nav-link{% if request.endpoint == 'uplink' or request.endpoint == 'uplink_login' %} active{% endif %}">Uplink</a></li>
+                <li><a href="{{ url_for('projects.projects') }}" class="nav-link{% if request.endpoint in ['projects.projects', 'projects.project_rowboat'] %} active{% endif %}">Projects</a></li>
+                <li><a href="{{ url_for('telemetry.telemetry') }}" class="nav-link{% if request.endpoint == 'telemetry.telemetry' %} active{% endif %}">Telemetry</a></li>
+                <li><a href="{{ url_for('uplink.uplink') }}" class="nav-link{% if request.endpoint in ['uplink.uplink', 'auth.uplink_login'] %} active{% endif %}">Uplink Cache</a></li>
                 {% if session.get('role') == 'admin' %}
-                <li><a href="{{ url_for('control') }}" class="nav-link{% if request.endpoint == 'control' %} active{% endif %}">Control</a></li>
+                <li><a href="{{ url_for('control_redirect') }}" class="nav-link{% if request.endpoint == 'control_redirect' %} active{% endif %}">Control</a></li>
                 {% endif %}
             </ul>
         </div>
@@ -45,18 +51,44 @@
         {% block content %}{% endblock %}
     </main>
 
+    <!-- Global Status Bar -->
+    <div class="status-bar" style="border-top: 1px solid rgba(246, 166, 35, 0.3); background: rgba(10, 14, 20, 0.95);">
+        <div class="status-item">
+            <span class="status-dot" style="background: var(--reach-cyan); box-shadow: 0 0 5px var(--reach-cyan);"></span>
+            <span class="label" style="color: var(--reach-cyan);">SYSTEM:</span>
+            <span class="value" style="color: var(--reach-cyan);">ACTIVE</span>
+        </div>
+        <div class="status-item">
+            <span class="label">LOAD:</span>
+            <span id="status-load" class="value" style="color: var(--reach-amber);">--%</span>
+        </div>
+        <div class="status-item">
+            <span class="label">RAM:</span>
+            <span id="status-ram" class="value" style="color: var(--reach-amber);">--%</span>
+        </div>
+        <div class="status-item" style="margin-left: auto;">
+            <span class="label">USER:</span>
+            <span id="status-user" class="value">{{ session.get('username', 'GUEST').upper() }}</span>
+        </div>
+        <div class="status-item">
+            <span class="label">SEC:</span>
+            <span class="value" style="color: var(--reach-orange);">{{ session.get('role', 'NONE').upper() }}</span>
+        </div>
+    </div>
+
     <!-- Footer -->
-    <footer class="footer">
+    <footer class="footer" style="background: rgba(8, 10, 16, 0.97); border-top: 1px solid rgba(34, 211, 238, 0.1); padding: 10px 0; margin-bottom: 28px;">
         <div class="container">
-            <div class="footer-content">
-                <div class="footer-logo">INFINITY HOMELAB</div>
-                <div>// UNSC NETWORK TERMINAL</div>
+            <div class="footer-content" style="font-family: var(--font-mono); font-size: 0.6rem; color: rgba(34, 211, 238, 0.35); letter-spacing: 0.15em; display: flex; justify-content: space-between; align-items: center;">
+                <div class="footer-logo" style="color: rgba(34, 211, 238, 0.5);">INFINITY HOMELAB</div>
+                <div class="footer-crypto-string" id="footer-crypto">AES-256-GCM SECURE CHANNEL // ENCRYPTED</div>
+                <div style="color: rgba(246, 166, 35, 0.4);">// UNSC NETWORK TERMINAL</div>
             </div>
         </div>
     </footer>
 
     <!-- Scripts -->
-    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script src="{{ static_versioned('js/main.js') }}"></script>
     {% block scripts %}{% endblock %}
 </body>
 </html>

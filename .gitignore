@@ -29,3 +29,9 @@ Thumbs.db
 # Environment
 .env
 .env.local
+
+# Git worktrees
+.worktrees/
+
+# Superpowers brainstorm sessions
+.superpowers/

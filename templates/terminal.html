@@ -11,6 +11,10 @@
                 <span class="terminal-title">INFINITY TERMINAL</span>
                 <span class="terminal-subtitle">// MJOLNIR ARMORY SYSTEMS</span>
             </div>
+            <div class="terminal-vitals">
+                <div class="vital-item">CPU: <span id="vital-cpu">--%</span></div>
+                <div class="vital-item">RAM: <span id="vital-ram">--%</span></div>
+            </div>
             <button class="terminal-logout-btn" id="terminal-logout">LOGOUT</button>
         </div>
 
@@ -32,5 +36,5 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/terminal.js') }}"></script>
+<script src="{{ static_versioned('js/terminal.js') }}"></script>
 {% endblock %}

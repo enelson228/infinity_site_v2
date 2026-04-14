@@ -4,15 +4,15 @@
 
 {% block content %}
 <div class="container uplink-container">
-    <div class="section-header">
-        <div class="section-label">ADMIN CONSOLE</div>
-        <h2>Control</h2>
-        <p>Manage user accounts</p>
+    <div class="section-header" style="border-bottom: 2px solid rgba(232, 93, 4, 0.4); padding-bottom: var(--spacing-md); margin-bottom: var(--spacing-2xl);">
+        <div class="section-label" style="color: var(--reach-orange); letter-spacing: 0.2em; font-weight: bold; animation: pulse 2s infinite;">SECURITY CLEARANCE: ONI TOP SECRET</div>
+        <h2 style="font-size: 2.5rem; color: var(--text-primary); text-shadow: 0 0 15px rgba(232, 93, 4, 0.3);">HIGH COMMAND CONSOLE</h2>
+        <p style="font-family: var(--font-mono); color: var(--text-secondary); text-transform: uppercase; font-size: 0.85rem;">Classified user and system management interface.</p>
     </div>
 
     <div class="control-grid">
-        <section class="uplink-section upload">
-            <h3>Create User</h3>
+        <section class="uplink-section upload oni-panel">
+            <h3 class="oni-header">Create User</h3>
             <div class="form-group">
                 <label class="form-label" for="new-username">Username</label>
                 <input id="new-username" class="form-input" type="text" placeholder="e.g. cortana" autocomplete="off">
@@ -33,12 +33,12 @@
             <p class="upload-status success" id="create-success">User created.</p>
         </section>
 
-        <section class="uplink-section download">
-            <h3>Users</h3>
-            <div class="terminal-output" id="user-list" style="height: 260px;"></div>
+        <section class="uplink-section download oni-panel">
+            <h3 class="oni-header">Users</h3>
+            <div class="terminal-output oni-output" id="user-list" style="height: 260px;"></div>
 
-            <div style="margin-top: 16px;">
-                <h4 style="margin-bottom: 8px;">Reset Password</h4>
+            <div style="margin-top: 16px; border-top: 1px solid rgba(74, 85, 104, 0.4); padding-top: 16px;">
+                <h4 style="margin-bottom: 8px; color: var(--reach-amber); font-family: var(--font-mono); text-transform: uppercase;">Reset Password</h4>
                 <div class="form-group">
                     <label class="form-label" for="reset-user-id">User ID</label>
                     <input id="reset-user-id" class="form-input" type="number" min="1" placeholder="e.g. 2">
@@ -52,22 +52,22 @@
                 <p class="upload-status success" id="reset-success">Password reset.</p>
             </div>
 
-            <div style="margin-top: 16px;">
-                <h4 style="margin-bottom: 8px;">Disable / Enable / Delete</h4>
+            <div style="margin-top: 16px; border-top: 1px solid rgba(74, 85, 104, 0.4); padding-top: 16px;">
+                <h4 style="margin-bottom: 8px; color: var(--reach-orange); font-family: var(--font-mono); text-transform: uppercase;">Disable / Enable / Delete</h4>
                 <div class="form-group">
                     <label class="form-label" for="user-action-id">User ID</label>
                     <input id="user-action-id" class="form-input" type="number" min="1" placeholder="e.g. 3">
                 </div>
                 <button class="btn btn-secondary" id="disable-user-btn">Disable</button>
                 <button class="btn btn-secondary" id="enable-user-btn" style="margin-left: 8px;">Enable</button>
-                <button class="btn btn-secondary" id="delete-user-btn" style="margin-left: 8px;">Delete</button>
+                <button class="btn btn-secondary btn-danger" id="delete-user-btn" style="margin-left: 8px;">Delete</button>
                 <p class="login-error" id="user-action-error">User action failed.</p>
                 <p class="upload-status success" id="user-action-success">User updated.</p>
             </div>
         </section>
 
-        <section class="uplink-section upload">
-            <h3>User Memory</h3>
+        <section class="uplink-section upload oni-panel">
+            <h3 class="oni-header">User Memory</h3>
             <div class="form-group">
                 <label class="form-label" for="mem-user-id">User ID</label>
                 <input id="mem-user-id" class="form-input" type="number" min="1" placeholder="e.g. 2">
@@ -80,21 +80,21 @@
             <button class="btn btn-secondary" id="mem-load-btn" style="margin-left: 8px;">Load Memory</button>
             <p class="login-error" id="mem-error">Memory action failed.</p>
             <p class="upload-status success" id="mem-success">Memory updated.</p>
-            <div class="terminal-output" id="mem-list" style="height: 220px; margin-top: 12px;"></div>
+            <div class="terminal-output oni-output" id="mem-list" style="height: 220px; margin-top: 12px;"></div>
             <div class="form-group" style="margin-top: 12px;">
                 <label class="form-label" for="mem-delete-id">Delete Memory ID</label>
                 <input id="mem-delete-id" class="form-input" type="number" min="1" placeholder="e.g. 5">
             </div>
-            <button class="btn btn-secondary" id="mem-delete-btn">Delete Memory</button>
+            <button class="btn btn-secondary btn-danger" id="mem-delete-btn">Delete Memory</button>
         </section>
 
-        <section class="uplink-section download control-span-2">
-            <h3>Audit Log</h3>
-            <div class="form-group" style="margin-bottom: 10px;">
+        <section class="uplink-section download control-span-2 oni-panel" style="border-color: rgba(232, 93, 4, 0.4);">
+            <h3 class="oni-header" style="color: var(--reach-orange); border-bottom-color: rgba(232, 93, 4, 0.3);">Audit Log (CLASSIFIED)</h3>
+            <div class="form-group" style="margin-bottom: 10px; display: inline-block; width: 48%;">
                 <label class="form-label" for="audit-filter">Filter</label>
                 <input id="audit-filter" class="form-input" type="text" placeholder="Type to filter...">
             </div>
-            <div class="form-group" style="margin-bottom: 10px;">
+            <div class="form-group" style="margin-bottom: 10px; display: inline-block; width: 48%; margin-left: 2%;">
                 <label class="form-label" for="audit-type">Event Type</label>
                 <select id="audit-type" class="form-input">
                     <option value="">All</option>
@@ -109,8 +109,8 @@
                     <option value="memory_delete">memory_delete</option>
                 </select>
             </div>
-            <div class="terminal-output" id="audit-log" style="height: 260px;"></div>
-            <button class="btn btn-secondary" id="audit-refresh-btn" style="margin-top: 10px;">Refresh</button>
+            <div class="terminal-output oni-output" id="audit-log" style="height: 400px; border: 1px solid rgba(232, 93, 4, 0.2);"></div>
+            <button class="btn btn-secondary" id="audit-refresh-btn" style="margin-top: 10px;">Force Sync Logs</button>
         </section>
     </div>
 </div>

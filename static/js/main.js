@@ -47,6 +47,39 @@ document.addEventListener('click', (e) => {
     }
 });
 
+// ── Global Status Bar ─────────────────────────────────────────────────────
+
+const statusBar = {
+    load: document.getElementById('status-load'),
+    ram: document.getElementById('status-ram'),
+    user: document.getElementById('status-user'),
+    intervalId: null,
+    
+    async update() {
+        try {
+            const res = await fetch('/api/telemetry');
+            if (res.status === 401) {
+                if (this.intervalId) clearInterval(this.intervalId);
+                if (this.load) this.load.textContent = `AUTH REQ`;
+                if (this.ram) this.ram.textContent = `AUTH REQ`;
+                return;
+            }
+            if (!res.ok) return;
+            const data = await res.json();
+            
+            if (this.load) this.load.textContent = `${data.cpu.percent}%`;
+            if (this.ram) this.ram.textContent = `${data.ram.percent}%`;
+        } catch (e) {
+            console.error('Status update failed');
+        }
+    },
+    
+    start() {
+        this.update();
+        this.intervalId = setInterval(() => this.update(), 10000);
+    }
+};
+
 /**
  * Format file size for display
  * @param {number} bytes - File size in bytes
@@ -126,3 +159,22 @@ window.INFINITY = {
         });
     });
 }());
+
+// Initialize
+document.addEventListener('DOMContentLoaded', () => {
+    statusBar.start();
+
+    // Animate footer crypto string
+    const cryptoEl = document.getElementById('footer-crypto');
+    if (cryptoEl) {
+        const chars = '0123456789ABCDEF';
+        setInterval(() => {
+            if (Math.random() > 0.8) {
+                const text = cryptoEl.innerText.split('');
+                const idx = Math.floor(Math.random() * 12);
+                text[idx] = chars[Math.floor(Math.random() * chars.length)];
+                cryptoEl.innerText = text.join('');
+            }
+        }, 100);
+    }
+});

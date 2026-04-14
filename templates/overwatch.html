@@ -188,10 +188,10 @@
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest/dist/hls.min.js"></script>
 
 <!-- Overwatch modules (order matters: data/render/filters/hud/geo before main) -->
-<script src="{{ url_for('static', filename='js/overwatch-data.js') }}"></script>
-<script src="{{ url_for('static', filename='js/overwatch-render.js') }}"></script>
-<script src="{{ url_for('static', filename='js/overwatch-filters.js') }}"></script>
-<script src="{{ url_for('static', filename='js/overwatch-hud.js') }}"></script>
-<script src="{{ url_for('static', filename='js/overwatch-geo.js') }}"></script>
-<script src="{{ url_for('static', filename='js/overwatch-main.js') }}"></script>
+<script src="{{ static_versioned('js/overwatch-data.js') }}"></script>
+<script src="{{ static_versioned('js/overwatch-render.js') }}"></script>
+<script src="{{ static_versioned('js/overwatch-filters.js') }}"></script>
+<script src="{{ static_versioned('js/overwatch-hud.js') }}"></script>
+<script src="{{ static_versioned('js/overwatch-geo.js') }}"></script>
+<script src="{{ static_versioned('js/overwatch-main.js') }}"></script>
 {% endblock %}

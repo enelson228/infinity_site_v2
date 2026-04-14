@@ -1,24 +1,24 @@
 {
   "projects": [
     {
-      "id": "rowboat",
-      "name": "Rowboat",
-      "description": "Open-source AI coworker with persistent knowledge graph and background agents",
+      "id": "telemetry",
+      "name": "Telemetry",
+      "description": "Live system metrics dashboard with Halo Reach military HUD aesthetic",
       "status": "online",
-      "url": "http://mjolnirarmory.com:3000",
-      "detail_url": "/projects/rowboat",
-      "icon": "anchor",
-      "type": "external_project",
-      "updated": "2026-02-22"
+      "detail_url": "/telemetry",
+      "icon": "activity",
+      "category": "Infrastructure",
+      "updated": "2026-04-06"
     },
     {
-      "id": "overwatch",
-      "name": "Overwatch",
-      "description": "Live global situational display with flights, satellites, and sensors",
+      "id": "uplink",
+      "name": "Uplink Cache",
+      "description": "Authenticated file upload/download portal",
       "status": "online",
-      "detail_url": "/overwatch",
-      "icon": "globe",
-      "updated": "2026-02-22"
+      "detail_url": "/uplink",
+      "icon": "cloud",
+      "category": "Infrastructure",
+      "updated": "2026-04-06"
     },
     {
       "id": "terminal",
@@ -27,7 +27,29 @@
       "status": "online",
       "detail_url": "/terminal",
       "icon": "server",
-      "updated": "2026-02-22"
+      "category": "Tools",
+      "updated": "2026-04-06"
+    },
+    {
+      "id": "overwatch",
+      "name": "Overwatch",
+      "description": "Live global situational display with flights, satellites, and sensors",
+      "status": "online",
+      "detail_url": "/overwatch",
+      "icon": "globe",
+      "category": "Tools",
+      "updated": "2026-04-06"
+    },
+    {
+      "id": "rowboat",
+      "name": "Rowboat",
+      "description": "Open-source AI coworker with persistent knowledge graph and background agents",
+      "status": "online",
+      "url": "http://mjolnirarmory.com:3000",
+      "detail_url": "/projects/rowboat",
+      "icon": "anchor",
+      "category": "AI / Lab",
+      "updated": "2026-04-06"
     }
   ]
 }

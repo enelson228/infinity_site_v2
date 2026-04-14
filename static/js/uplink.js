@@ -45,35 +45,45 @@ function renderFiles(files) {
     // Sort by upload date (newest first)
     files.sort((a, b) => new Date(b.uploaded) - new Date(a.uploaded));
 
-    files.forEach(file => {
+    files.forEach((file, index) => {
         const fileItem = document.createElement('div');
-        fileItem.className = 'file-item';
+        fileItem.className = 'file-item vault-file-item';
+        
+        // Add a staggering entrance animation
+        fileItem.style.animationDelay = `${index * 0.1}s`;
+        
         fileItem.innerHTML = `
             <div class="file-info">
-                <div class="file-icon">${INFINITY.getFileIcon(file.name)}</div>
+                <div class="file-icon vault-icon" style="border: 1px solid rgba(34, 211, 238, 0.3); background: rgba(34, 211, 238, 0.05); color: var(--reach-cyan);">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="12" y1="8" x2="12" y2="16"></line>
+                        <line x1="8" y1="12" x2="16" y2="12"></line>
+                    </svg>
+                </div>
                 <div class="file-details">
-                    <div class="file-name">${file.name}</div>
-                    <div class="file-meta">
-                        <span>${INFINITY.formatFileSize(file.size)}</span>
-                        <span>${INFINITY.formatDate(file.uploaded)}</span>
+                    <div class="file-name scramble-text" data-text="${file.name}"></div>
+                    <div class="file-meta" style="color: rgba(34, 211, 238, 0.6); font-family: var(--font-mono);">
+                        <span style="border-right: 1px solid rgba(34, 211, 238, 0.2); padding-right: 8px;">${INFINITY.formatFileSize(file.size)}</span>
+                        <span style="padding-left: 8px;">${INFINITY.formatDate(file.uploaded)}</span>
                     </div>
                 </div>
             </div>
             <div class="file-actions">
-                <button class="file-btn download" data-id="${file.id}" title="Download">
+                <button class="file-btn download vault-btn" data-id="${file.id}" title="Decrypt & Download" style="color: var(--reach-cyan); border-color: rgba(34, 211, 238, 0.3);">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                         <polyline points="7 10 12 15 17 10"/>
                         <line x1="12" y1="15" x2="12" y2="3"/>
                     </svg>
-                    Download
+                    DECRYPT
                 </button>
-                <button class="file-btn delete" data-id="${file.id}" title="Delete">
+                <button class="file-btn delete vault-btn-danger" data-id="${file.id}" title="Purge Record" style="color: var(--reach-orange); border-color: rgba(232, 93, 4, 0.3);">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="3 6 5 6 21 6"/>
                         <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
                     </svg>
-                    Delete
+                    PURGE
                 </button>
             </div>
         `;
@@ -82,6 +92,34 @@ function renderFiles(files) {
 
     // Attach event listeners
     attachFileActions();
+    
+    // Trigger Scramble Animation
+    triggerScrambleAnimation();
+}
+
+/**
+ * Scramble text animation for a cyber/decrypt effect
+ */
+function triggerScrambleAnimation() {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&*';
+    document.querySelectorAll('.scramble-text').forEach(el => {
+        const targetText = el.getAttribute('data-text');
+        let iterations = 0;
+        const maxIterations = 15;
+        
+        const interval = setInterval(() => {
+            el.textContent = targetText.split('').map((char, index) => {
+                if (index < iterations) return char;
+                return chars[Math.floor(Math.random() * chars.length)];
+            }).join('');
+            
+            iterations += 1;
+            if (iterations > targetText.length) {
+                clearInterval(interval);
+                el.textContent = targetText;
+            }
+        }, 30);
+    });
 }
 
 /**

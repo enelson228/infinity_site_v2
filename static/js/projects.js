@@ -5,6 +5,7 @@
 const projectsGrid = document.getElementById('projects-grid');
 const projectsListBody = document.getElementById('projects-list-body');
 const viewToggleBtns = document.querySelectorAll('.view-toggle-btn');
+const refreshBtn = document.getElementById('refresh-status-btn');
 
 // Icon SVGs for projects
 const projectIcons = {
@@ -34,11 +35,18 @@ function createProjectCard(project) {
     const clickAction = project.detail_url
         ? `window.location.href='${project.detail_url}'`
         : `window.open('${project.url}', '_blank')`;
+    
+    const latency = project.response_time ? `<span class="latency-badge">${project.response_time}ms</span>` : '';
+    const heartbeat = `<span class="heartbeat ${project.status}"></span>`;
+
     return `
         <article class="project-card" onclick="${clickAction}">
             <div class="project-header">
                 <div class="project-icon">${getProjectIcon(project.icon)}</div>
-                <span class="project-status ${project.status}">${project.status.toUpperCase()}</span>
+                <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
+                    <span class="project-status ${project.status}">${heartbeat} ${project.status.toUpperCase()}</span>
+                    ${latency}
+                </div>
             </div>
             <h3 class="project-name">${project.name}</h3>
             <p class="project-description">${project.description}</p>
@@ -48,9 +56,8 @@ function createProjectCard(project) {
                         <circle cx="12" cy="12" r="10"/>
                         <polyline points="12 6 12 12 16 14"/>
                     </svg>
-                    ${INFINITY.formatDate(project.updated)}
+                    ${project.last_ping ? 'PINGED: ' + project.last_ping.split('T')[1].split('.')[0] : 'NEVER'}
                 </span>
-                ${project.detail_url ? '<span class="project-detail-badge">View Details →</span>' : ''}
             </div>
         </article>
     `;
@@ -65,6 +72,9 @@ function createProjectRow(project) {
     const clickAction = project.detail_url
         ? `window.location.href='${project.detail_url}'`
         : `window.open('${project.url}', '_blank')`;
+    
+    const heartbeat = `<span class="heartbeat ${project.status}"></span>`;
+
     return `
         <div class="list-row" onclick="${clickAction}">
             <div class="list-name">
@@ -74,10 +84,10 @@ function createProjectRow(project) {
                     <p>${project.description}</p>
                 </div>
             </div>
-            <span class="list-status project-status ${project.status}">${project.status.toUpperCase()}</span>
-            <span class="list-updated">${INFINITY.formatDate(project.updated)}</span>
+            <span class="list-status project-status ${project.status}">${heartbeat} ${project.status.toUpperCase()}</span>
+            <span class="list-updated">${project.response_time ? project.response_time + 'ms' : '---'}</span>
             <div class="list-action">
-                <a href="${href}" target="${target}" onclick="event.stopPropagation()">${project.detail_url ? 'Details →' : 'Open →'}</a>
+                <a href="${href}" target="${target}" onclick="event.stopPropagation()">OPEN →</a>
             </div>
         </div>
     `;
@@ -87,19 +97,68 @@ function createProjectRow(project) {
  * Load and render projects
  */
 async function loadProjects() {
+    const sweep = document.getElementById('tactical-scanner-sweep');
+    if (refreshBtn) refreshBtn.classList.add('loading');
+    
     try {
+        // Trigger scanning effect
+        if (sweep) {
+            sweep.classList.remove('scanning');
+            // Trigger reflow
+            void sweep.offsetWidth;
+            sweep.classList.add('scanning');
+        }
+        
         const response = await fetch('/api/projects');
         const data = await response.json();
 
-        // Render grid view
-        projectsGrid.innerHTML = data.projects.map(createProjectCard).join('');
+        // Artificial delay for the scan effect
+        await new Promise(r => setTimeout(r, 600));
 
-        // Render list view
-        projectsListBody.innerHTML = data.projects.map(createProjectRow).join('');
+        if (data.categories && data.categories.length > 0) {
+            // Render grouped by category
+            let gridHtml = '';
+            let listHtml = '';
+
+            data.categories.forEach((cat, cIdx) => {
+                // Category Header in Grid
+                gridHtml += `<h2 class="category-title" style="animation-delay: ${cIdx * 0.1}s">${cat.name.toUpperCase()}</h2>`;
+                gridHtml += `<div class="category-grid">`;
+                
+                // Add staggering to cards
+                cat.projects.forEach((p, pIdx) => {
+                    const cardHtml = createProjectCard(p);
+                    // Inject animation delay into the article tag
+                    const delayedCard = cardHtml.replace('<article class="project-card"', `<article class="project-card tactical-fade-in" style="animation-delay: ${(cIdx * 0.1) + (pIdx * 0.05)}s"`);
+                    gridHtml += delayedCard;
+                });
+                gridHtml += `</div>`;
+
+                // Category Header in List
+                listHtml += `<div class="list-category-row">${cat.name.toUpperCase()}</div>`;
+                cat.projects.forEach((p, pIdx) => {
+                     const rowHtml = createProjectRow(p);
+                     const delayedRow = rowHtml.replace('<div class="list-row"', `<div class="list-row tactical-fade-in" style="animation-delay: ${(cIdx * 0.1) + (pIdx * 0.05)}s"`);
+                     listHtml += delayedRow;
+                });
+            });
+
+            projectsGrid.innerHTML = gridHtml;
+            projectsListBody.innerHTML = listHtml;
+        } else {
+            // Fallback to original linear list
+            projectsGrid.innerHTML = `<div class="category-grid">${data.projects.map(createProjectCard).join('')}</div>`;
+            projectsListBody.innerHTML = data.projects.map(createProjectRow).join('');
+        }
 
     } catch (error) {
         console.error('Failed to load projects:', error);
-        projectsGrid.innerHTML = '<p class="empty-state">Failed to load projects</p>';
+        projectsGrid.innerHTML = '<div class="radar-empty-state"><div class="radar-text" style="color: var(--reach-orange)">SCAN FAILED</div></div>';
+    } finally {
+        if (refreshBtn) refreshBtn.classList.remove('loading');
+        setTimeout(() => {
+            if (sweep) sweep.classList.remove('scanning');
+        }, 1500);
     }
 }
 
@@ -123,6 +182,8 @@ viewToggleBtns.forEach(btn => {
     btn.addEventListener('click', () => setView(btn.dataset.view));
 });
 
+refreshBtn?.addEventListener('click', loadProjects);
+
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
     // Restore view preference
@@ -131,4 +192,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Load projects
     loadProjects();
+    
+    // Auto refresh every 60s
+    setInterval(loadProjects, 60000);
 });

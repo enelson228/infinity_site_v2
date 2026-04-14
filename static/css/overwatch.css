@@ -76,28 +76,32 @@ body.overwatch-page .footer {
 
 /* ── Side Panels (shared) ── */
 .ow-panel {
-    width: 220px;
-    min-width: 220px;
+    width: 260px;
+    min-width: 260px;
     height: 100%;
     overflow-y: auto;
     overflow-x: hidden;
-    background: rgba(20, 25, 38, 0.97);
+    background: rgba(13, 17, 23, 0.85);
     display: flex;
     flex-direction: column;
     scrollbar-width: thin;
     scrollbar-color: rgba(246, 166, 35, 0.35) transparent;
+    backdrop-filter: blur(10px);
+    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.8);
+    position: relative;
+    z-index: 10;
 }
 .ow-panel::-webkit-scrollbar       { width: 4px; }
 .ow-panel::-webkit-scrollbar-track { background: transparent; }
 .ow-panel::-webkit-scrollbar-thumb { background: rgba(246, 166, 35, 0.35); border-radius: 2px; }
 
-.ow-panel-left  { border-right: 1px solid rgba(246, 166, 35, 0.2); }
-.ow-panel-right { border-left:  1px solid rgba(246, 166, 35, 0.2); }
+.ow-panel-left  { border-right: 1px solid rgba(34, 211, 238, 0.3); box-shadow: inset -10px 0 20px rgba(0, 0, 0, 0.5), 5px 0 15px rgba(34, 211, 238, 0.1); }
+.ow-panel-right { border-left:  1px solid rgba(34, 211, 238, 0.3); box-shadow: inset 10px 0 20px rgba(0, 0, 0, 0.5), -5px 0 15px rgba(34, 211, 238, 0.1); }
 
 /* ── Sections within panels ── */
 .ow-section {
-    padding: 10px 12px;
-    border-bottom: 1px solid rgba(246, 166, 35, 0.08);
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(34, 211, 238, 0.15);
     flex-shrink: 0;
 }
 .ow-section-grow {
@@ -122,8 +126,8 @@ body.overwatch-page .footer {
     gap: 5px;
 }
 .ow-filter-btn {
-    background: transparent;
-    border: 1px solid rgba(246, 166, 35, 0.35);
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(246, 166, 35, 0.4);
     color: var(--reach-amber);
     font-family: var(--font-mono);
     font-size: 0.68rem;
@@ -133,19 +137,23 @@ body.overwatch-page .footer {
     cursor: pointer;
     transition: all var(--transition-fast);
     position: relative;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
 }
 .ow-filter-btn:hover {
-    background: rgba(246, 166, 35, 0.08);
-    border-color: rgba(246, 166, 35, 0.7);
+    background: rgba(246, 166, 35, 0.15);
+    border-color: var(--reach-amber);
+    box-shadow: 0 0 10px rgba(246, 166, 35, 0.2);
 }
 .ow-filter-btn.active {
-    background: rgba(246, 166, 35, 0.18);
+    background: rgba(246, 166, 35, 0.3);
     border-color: var(--reach-amber);
     color: #fff;
+    box-shadow: inset 0 0 15px rgba(246, 166, 35, 0.3), 0 0 10px rgba(246, 166, 35, 0.3);
 }
 .ow-filter-btn.active::before {
     content: '▶ ';
-    color: var(--reach-amber);
+    color: #fff;
+    text-shadow: 0 0 5px #fff;
 }
 
 /* ── Status Stat Rows ── */
@@ -153,20 +161,21 @@ body.overwatch-page .footer {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 3px 0;
+    padding: 4px 0;
 }
 .ow-stat-label {
     font-family: var(--font-mono);
-    font-size: 0.6rem;
+    font-size: 0.65rem;
     color: var(--text-secondary);
-    letter-spacing: 0.07em;
+    letter-spacing: 0.1em;
 }
 .ow-stat-value {
     font-family: var(--font-mono);
-    font-size: 0.72rem;
+    font-size: 0.8rem;
     color: var(--reach-cyan);
     font-weight: 600;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.05em;
+    text-shadow: 0 0 10px rgba(34, 211, 238, 0.4);
 }
 
 /* ── System uplink indicators ── */
@@ -448,68 +457,76 @@ body.overwatch-page .footer {
 /* ── Location Switcher ── */
 .ow-location-display {
     font-family: var(--font-mono);
-    font-size: 0.58rem;
+    font-size: 0.65rem;
     color: var(--reach-cyan);
-    letter-spacing: 0.05em;
-    padding: 2px 0 6px;
-    opacity: 0.85;
+    letter-spacing: 0.1em;
+    padding: 4px 0 8px;
+    text-shadow: 0 0 10px rgba(34, 211, 238, 0.4);
 }
 .ow-location-select {
     width: 100%;
-    background: rgba(20, 25, 38, 0.95);
-    border: 1px solid rgba(246, 166, 35, 0.35);
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(246, 166, 35, 0.4);
     color: var(--reach-amber);
     font-family: var(--font-mono);
-    font-size: 0.61rem;
-    padding: 5px 7px;
-    margin-bottom: 5px;
+    font-size: 0.7rem;
+    padding: 6px 8px;
+    margin-bottom: 6px;
     cursor: pointer;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.1em;
     outline: none;
     appearance: none;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.8);
 }
 .ow-location-select option {
-    background: #141926;
+    background: #000;
     color: var(--reach-amber);
 }
 .ow-location-custom {
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    margin-bottom: 5px;
+    gap: 6px;
+    margin-bottom: 6px;
 }
 .ow-location-input {
     width: 100%;
-    background: rgba(20, 25, 38, 0.95);
-    border: 1px solid rgba(246, 166, 35, 0.2);
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(246, 166, 35, 0.3);
     color: var(--reach-cyan);
     font-family: var(--font-mono);
-    font-size: 0.61rem;
-    padding: 4px 7px;
+    font-size: 0.7rem;
+    padding: 6px 8px;
     outline: none;
     box-sizing: border-box;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.8);
 }
 .ow-location-input:focus {
-    border-color: rgba(246, 166, 35, 0.55);
+    border-color: var(--reach-amber);
+    box-shadow: inset 0 0 10px rgba(246, 166, 35, 0.2), 0 0 10px rgba(246, 166, 35, 0.2);
 }
 .ow-location-input::placeholder {
-    color: rgba(148, 163, 184, 0.35);
-    font-size: 0.54rem;
+    color: rgba(148, 163, 184, 0.4);
+    font-size: 0.6rem;
+    letter-spacing: 0.05em;
 }
 .ow-location-set-btn {
     width: 100%;
-    background: transparent;
-    border: 1px solid rgba(246, 166, 35, 0.4);
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(246, 166, 35, 0.5);
     color: var(--reach-amber);
     font-family: var(--font-mono);
-    font-size: 0.62rem;
-    letter-spacing: 0.08em;
-    padding: 6px 0;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    padding: 8px 0;
     cursor: pointer;
     transition: all var(--transition-fast);
-    margin-top: 2px;
+    margin-top: 4px;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
 }
 .ow-location-set-btn:hover {
-    background: rgba(246, 166, 35, 0.1);
+    background: rgba(246, 166, 35, 0.2);
     border-color: var(--reach-amber);
+    box-shadow: inset 0 0 15px rgba(246, 166, 35, 0.4), 0 0 10px rgba(246, 166, 35, 0.2);
+    color: #fff;
+    text-shadow: 0 0 5px #fff;
 }

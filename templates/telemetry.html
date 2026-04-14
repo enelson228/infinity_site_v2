@@ -1,23 +1,23 @@
 {% extends "base.html" %}
 
-{% block title %}Telemetry{% endblock %}
+{% block title %}Telemetry HUD{% endblock %}
 
 {% block content %}
-<div class="container">
+<div class="container telemetry-container" style="padding-top: var(--spacing-xl); padding-bottom: var(--spacing-3xl);">
     <!-- Page Header -->
-    <div class="page-header">
-        <div class="section-label">System Diagnostics</div>
-        <h1 class="page-title">Telemetry</h1>
-        <p class="page-description">Live VPS hardware metrics. Data refreshes every 5 seconds via onboard sensor array.</p>
+    <div class="page-header telemetry-header" style="border-bottom: 2px solid rgba(34, 211, 238, 0.4); margin-bottom: var(--spacing-lg); padding-bottom: var(--spacing-sm);">
+        <div class="section-label" style="color: var(--reach-cyan); letter-spacing: 0.2em; font-weight: bold; animation: pulse 2s infinite;">System Diagnostics</div>
+        <h1 class="page-title typewriter" style="color: var(--reach-cyan); text-shadow: 0 0 15px rgba(34, 211, 238, 0.4); font-size: 2.5rem;">Telemetry HUD</h1>
+        <p class="page-description" style="font-family: var(--font-mono); color: var(--text-secondary); text-transform: uppercase; font-size: 0.85rem;">Live VPS hardware metrics. Data refreshes every 5 seconds via onboard sensor array.</p>
     </div>
 
     <!-- Telemetry Meta Strip -->
-    <div class="telemetry-meta">
-        <span class="telemetry-node">NODE: INFINITY-VPS-01</span>
-        <span class="telemetry-live-wrap">
-            <span class="telemetry-live-dot"></span>
-            <span class="telemetry-live-label">LIVE</span>
-            <span class="telemetry-last-update" id="last-update">—</span>
+    <div class="telemetry-meta" style="background: rgba(13, 17, 23, 0.8); border: 1px solid rgba(34, 211, 238, 0.3); padding: var(--spacing-sm) var(--spacing-md); margin-bottom: var(--spacing-xl);">
+        <span class="telemetry-node" style="color: var(--reach-cyan);">NODE: INFINITY-VPS-01</span>
+        <span class="telemetry-live-wrap" style="border-left: 1px solid rgba(34, 211, 238, 0.3); padding-left: var(--spacing-md);">
+            <span class="telemetry-live-dot" style="box-shadow: 0 0 10px var(--reach-amber);"></span>
+            <span class="telemetry-live-label" style="color: var(--reach-amber);">LIVE</span>
+            <span class="telemetry-last-update" id="last-update" style="color: var(--text-secondary);">—</span>
         </span>
     </div>
 
@@ -48,7 +48,12 @@
                         <div class="metric-bar-fill" id="cpu-bar-fill"></div>
                     </div>
                 </div>
-                <div class="metric-details">
+                <div class="chart-container">
+                    <svg id="cpu-chart" class="chart-svg" viewBox="0 0 100 40" preserveAspectRatio="none">
+                        <path class="chart-path-cpu" d=""></path>
+                    </svg>
+                </div>
+                <div class="metric-details" style="margin-top: 12px;">
                     <div class="metric-detail-row">
                         <span class="metric-detail-label">CORES</span>
                         <span class="metric-detail-value" id="cpu-cores">—</span>
@@ -56,10 +61,6 @@
                     <div class="metric-detail-row">
                         <span class="metric-detail-label">FREQ</span>
                         <span class="metric-detail-value" id="cpu-freq">—</span>
-                    </div>
-                    <div class="metric-detail-row">
-                        <span class="metric-detail-label">MAX FREQ</span>
-                        <span class="metric-detail-value" id="cpu-freq-max">—</span>
                     </div>
                 </div>
             </div>
@@ -79,14 +80,15 @@
                         <div class="metric-bar-fill" id="ram-bar-fill"></div>
                     </div>
                 </div>
-                <div class="metric-details">
+                <div class="chart-container">
+                    <svg id="ram-chart" class="chart-svg" viewBox="0 0 100 40" preserveAspectRatio="none">
+                        <path class="chart-path-ram" d=""></path>
+                    </svg>
+                </div>
+                <div class="metric-details" style="margin-top: 12px;">
                     <div class="metric-detail-row">
                         <span class="metric-detail-label">USED</span>
                         <span class="metric-detail-value" id="ram-used">—</span>
-                    </div>
-                    <div class="metric-detail-row">
-                        <span class="metric-detail-label">AVAILABLE</span>
-                        <span class="metric-detail-value" id="ram-available">—</span>
                     </div>
                     <div class="metric-detail-row">
                         <span class="metric-detail-label">TOTAL</span>
@@ -116,10 +118,6 @@
                         <span class="metric-detail-value" id="disk-used">—</span>
                     </div>
                     <div class="metric-detail-row">
-                        <span class="metric-detail-label">FREE</span>
-                        <span class="metric-detail-value" id="disk-free">—</span>
-                    </div>
-                    <div class="metric-detail-row">
                         <span class="metric-detail-label">TOTAL</span>
                         <span class="metric-detail-value" id="disk-total">—</span>
                     </div>
@@ -144,16 +142,6 @@
                         <div class="network-total" id="net-tx-total">—</div>
                     </div>
                 </div>
-                <div class="metric-details" style="margin-top: var(--spacing-md);">
-                    <div class="metric-detail-row">
-                        <span class="metric-detail-label">PKTS RX</span>
-                        <span class="metric-detail-value" id="net-pkts-rx">—</span>
-                    </div>
-                    <div class="metric-detail-row">
-                        <span class="metric-detail-label">PKTS TX</span>
-                        <span class="metric-detail-value" id="net-pkts-tx">—</span>
-                    </div>
-                </div>
             </div>
 
             <!-- System Card -->
@@ -166,7 +154,6 @@
                     <span class="metric-detail-label">UPTIME</span>
                     <span class="metric-detail-value metric-uptime" id="sys-uptime">—</span>
                 </div>
-                <div class="metric-detail-label" style="margin-bottom: var(--spacing-sm);">LOAD AVG</div>
                 <div class="load-avg-cols">
                     <div class="load-avg-col">
                         <div class="load-avg-value" id="load-1">—</div>
@@ -175,10 +162,6 @@
                     <div class="load-avg-col">
                         <div class="load-avg-value" id="load-5">—</div>
                         <div class="load-avg-label">5 MIN</div>
-                    </div>
-                    <div class="load-avg-col">
-                        <div class="load-avg-value" id="load-15">—</div>
-                        <div class="load-avg-label">15 MIN</div>
                     </div>
                 </div>
             </div>
@@ -191,25 +174,13 @@
                 <span class="panel-title">AI Context</span>
                 <span class="ai-panel-dot"></span>
             </div>
-            <div class="ai-model-name">Claude Sonnet 4.6</div>
-            <div class="ai-model-id">claude-sonnet-4-6</div>
+            <div class="ai-model-name">Claude Sonnet 3.5</div>
+            <div class="ai-model-id">claude-3-5-sonnet-20241022</div>
 
             <div class="ai-fields">
                 <div class="ai-field-row">
                     <span class="ai-field-label">PROVIDER</span>
                     <span class="ai-field-value">Anthropic</span>
-                </div>
-                <div class="ai-field-row">
-                    <span class="ai-field-label">MODEL ID</span>
-                    <span class="ai-field-value ai-field-mono">claude-sonnet-4-6</span>
-                </div>
-                <div class="ai-field-row">
-                    <span class="ai-field-label">TYPE</span>
-                    <span class="ai-field-value">Language Model</span>
-                </div>
-                <div class="ai-field-row">
-                    <span class="ai-field-label">CONTEXT</span>
-                    <span class="ai-field-value">200K tokens</span>
                 </div>
                 <div class="ai-field-row">
                     <span class="ai-field-label">STATUS</span>
@@ -222,8 +193,10 @@
 
             <div class="ai-panel-divider"></div>
 
-            <div class="ai-note">
-                This node is augmented by Claude Sonnet 4.6 for operational support, diagnostics, and intelligence tasks via the Anthropic API.
+            <div class="section-label">Live Audit Feed</div>
+            <div id="audit-feed" class="audit-feed">
+                <!-- Entries populated by JS -->
+                <div class="audit-entry">Initialising secure feed...</div>
             </div>
         </aside>
 
@@ -232,5 +205,5 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/telemetry.js') }}"></script>
+<script src="{{ static_versioned('js/telemetry.js') }}"></script>
 {% endblock %}
