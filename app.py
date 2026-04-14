@@ -82,10 +82,55 @@ def inject_csrf_token():
 
 # ── Background Monitoring Task ───────────────────────────────────────────
 
+def _poll_github_repo(owner: str, repo: str, repo_id: str, token: str):
+    """Fetch GitHub repo status and store in DB. Called from background thread."""
+    import json as _json
+    base_url = f'https://api.github.com/repos/{owner}/{repo}'
+    headers = {
+        'Authorization': f'token {token}',
+        'User-Agent': 'InfinityMonitor/1.0',
+        'Accept': 'application/vnd.github.v3+json',
+    }
+
+    def gh_get(url):
+        req = urllib.request.Request(url, headers=headers)
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            return _json.loads(resp.read().decode())
+
+    # Latest commit
+    commits = gh_get(f'{base_url}/commits?per_page=1')
+    last_commit_at = commits[0]['commit']['committer']['date'] if commits else None
+    last_commit_msg = commits[0]['commit']['message'].split('\n')[0][:120] if commits else None
+
+    # Open PR count
+    prs = gh_get(f'{base_url}/pulls?state=open&per_page=100')
+    open_prs = len(prs)
+
+    # Latest CI run status
+    ci_status = 'none'
+    try:
+        runs = gh_get(f'{base_url}/actions/runs?per_page=1')
+        workflow_runs = runs.get('workflow_runs', [])
+        if workflow_runs:
+            ci_status = workflow_runs[0].get('conclusion') or workflow_runs[0].get('status', 'none')
+    except Exception:
+        pass  # No CI configured for this repo
+
+    from datetime import datetime as _dt
+    database.upsert_github_repo_status(
+        repo_id=repo_id,
+        last_commit_at=last_commit_at,
+        last_commit_msg=last_commit_msg,
+        open_prs=open_prs,
+        ci_status=ci_status,
+        fetched_at=_dt.now().isoformat(),
+    )
+
 def background_monitor():
     """Background thread to ping projects and log telemetry history."""
     last_ping_time = 0
     last_telemetry_time = 0
+    last_github_time = 0
     
     while True:
         now = time.time()
@@ -122,7 +167,18 @@ def background_monitor():
             except Exception as e:
                 app.logger.error(f"Monitoring error (telemetry): {e}")
             last_telemetry_time = now
-            
+
+        # Poll GitHub every 10 minutes
+        if now - last_github_time >= 600:
+            if config.GITHUB_TOKEN:
+                try:
+                    repos = database.list_github_repos()
+                    for r in repos:
+                        _poll_github_repo(r['owner'], r['repo'], r['id'], config.GITHUB_TOKEN)
+                except Exception as e:
+                    app.logger.error(f"Monitoring error (github): {e}")
+            last_github_time = now
+
         time.sleep(10)
 
 # Start background monitor
