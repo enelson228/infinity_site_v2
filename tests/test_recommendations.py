@@ -72,8 +72,9 @@ def test_ai_insights_returns_recommendations(app):
     with patch('recommendations.anthropic.Anthropic', return_value=mock_client):
         recs = run_ai_checks(snapshot, api_key='fake-key')
 
-    assert len(recs) >= 1
+    assert len(recs) == 2
     assert all(r['source'] == 'ai' for r in recs)
+    assert any('backlog' in r['message'].lower() or 'cpu' in r['message'].lower() for r in recs)
 
 
 def test_ai_insights_fails_gracefully(app):

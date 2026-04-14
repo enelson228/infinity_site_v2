@@ -5,7 +5,8 @@ Two entry points:
   - run_ai_checks(snapshot, api_key) -> list[dict]
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+import json
 import anthropic
 
 
@@ -32,7 +33,10 @@ def run_rule_checks(projects: list, telemetry: list, recent_failures: int) -> li
             if last_ping_str:
                 try:
                     last_ping = datetime.fromisoformat(last_ping_str)
-                    offline_minutes = (datetime.now() - last_ping).total_seconds() / 60
+                    # Normalize: strip tz info so both sides are naive UTC
+                    if last_ping.tzinfo is not None:
+                        last_ping = last_ping.astimezone(timezone.utc).replace(tzinfo=None)
+                    offline_minutes = (datetime.utcnow() - last_ping).total_seconds() / 60
                     if offline_minutes > 30:
                         recs.append(_rec(
                             'rule', 'critical',
@@ -45,7 +49,7 @@ def run_rule_checks(projects: list, telemetry: list, recent_failures: int) -> li
                             f"{p['name']} appears offline",
                             f"Last ping {int(offline_minutes)} minutes ago"
                         ))
-                except ValueError:
+                except (ValueError, TypeError):
                     recs.append(_rec('rule', 'warning', f"{p['name']} appears offline", None))
             else:
                 recs.append(_rec('rule', 'warning', f"{p['name']} has never been pinged", None))
@@ -60,9 +64,9 @@ def run_rule_checks(projects: list, telemetry: list, recent_failures: int) -> li
             f"Average over last 5 readings: {avg:.1f}%"
         ))
 
-    # RAM check — critical if any reading above 90%
-    if recent and any(r['ram_usage'] > 90 for r in recent):
-        max_ram = max(r['ram_usage'] for r in recent)
+    # RAM check — critical if any reading above 90% (checks all telemetry, not just recent 5)
+    if telemetry and any(r['ram_usage'] > 90 for r in telemetry):
+        max_ram = max(r['ram_usage'] for r in telemetry)
         recs.append(_rec(
             'rule', 'critical',
             'RAM usage critically high',
@@ -86,7 +90,7 @@ def run_ai_checks(snapshot: dict, api_key: str) -> list:
     Returns recommendation dicts with source='ai'.
     Fails silently — returns [] on any error.
 
-    snapshot keys: services, github, telemetry_avg (cpu, ram), recent_audit_events
+    snapshot keys: services, github, telemetry_avg (cpu_avg, ram_avg)
     """
     try:
         client = anthropic.Anthropic(api_key=api_key)
@@ -96,7 +100,7 @@ def run_ai_checks(snapshot: dict, api_key: str) -> list:
             "return 1-3 short, actionable insights that rule-based checks would miss. "
             "Focus on trends, stale projects, or patterns. "
             "Format: one insight per line, starting with '- '. No preamble.\n\n"
-            f"Snapshot:\n{snapshot}"
+            f"Snapshot:\n{json.dumps(snapshot)}"
         )
 
         response = client.messages.create(
