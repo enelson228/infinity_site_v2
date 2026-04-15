@@ -67,3 +67,90 @@ def api_forge_generate():
         return jsonify({'job_id': result['id']})
     except Exception as e:
         return jsonify({'error': f'RunPod error: {e}'}), 502
+
+
+_TERMINAL_STATUSES = {'COMPLETED', 'FAILED', 'CANCELLED', 'TIMED_OUT'}
+
+
+@forge_bp.route('/api/forge/status/<job_id>')
+@login_required
+def api_forge_status(job_id):
+    if not config.RUNPOD_API_KEY or not config.SD_ENDPOINT_ID:
+        return jsonify({'error': 'Endpoint not configured'}), 503
+
+    prompt = request.args.get('prompt', '')
+
+    url = f'{_RUNPOD_BASE}/{config.SD_ENDPOINT_ID}/status/{job_id}'
+    req = urllib.request.Request(url, headers=_runpod_headers())
+
+    try:
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            result = json.loads(resp.read().decode())
+    except Exception as e:
+        return jsonify({'error': f'RunPod error: {e}'}), 502
+
+    status = result.get('status', 'UNKNOWN')
+
+    if status == 'COMPLETED':
+        # Idempotency: return existing record if already saved
+        existing = database.get_forge_image_by_job_id(job_id)
+        if existing:
+            return jsonify({
+                'status': 'COMPLETED',
+                'image_url': f'/static/forge_outputs/{existing["filename"]}',
+                'image_id': existing['id'],
+            })
+
+        # Extract base64 image — handle list-of-objects or dict output formats
+        output = result.get('output')
+        b64_image = None
+        if isinstance(output, list) and output:
+            b64_image = output[0].get('image') or output[0].get('images', [None])[0]
+        elif isinstance(output, dict):
+            b64_image = output.get('image') or (output.get('images') or [None])[0]
+
+        if not b64_image:
+            return jsonify({'error': 'No image in response', 'status': 'FAILED'}), 502
+
+        filename = f'{job_id}.png'
+        filepath = os.path.join(_FORGE_OUTPUTS, filename)
+
+        try:
+            image_bytes = base64.b64decode(b64_image)
+            os.makedirs(_FORGE_OUTPUTS, exist_ok=True)
+            with open(filepath, 'wb') as f:
+                f.write(image_bytes)
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).error(f'Forge: failed to save image {job_id}: {e}')
+            return jsonify({'error': 'Failed to save image', 'status': 'FAILED'}), 500
+
+        img_id = database.add_forge_image(job_id, prompt, filename, datetime.now().isoformat())
+        return jsonify({
+            'status': 'COMPLETED',
+            'image_url': f'/static/forge_outputs/{filename}',
+            'image_id': img_id,
+        })
+
+    if status in _TERMINAL_STATUSES:
+        return jsonify({'status': 'FAILED', 'error': result.get('error', status)})
+
+    return jsonify({'status': status})
+
+
+@forge_bp.route('/api/forge/images/<int:image_id>', methods=['DELETE'])
+@login_required
+def api_forge_delete(image_id):
+    row = database.get_forge_image(image_id)
+    if not row:
+        return jsonify({'error': 'Not found'}), 404
+
+    filepath = os.path.join(_FORGE_OUTPUTS, row['filename'])
+    try:
+        os.remove(filepath)
+    except OSError as e:
+        import logging
+        logging.getLogger(__name__).error(f'Forge: could not delete file {filepath}: {e}')
+
+    database.delete_forge_image(image_id)
+    return jsonify({'success': True})
