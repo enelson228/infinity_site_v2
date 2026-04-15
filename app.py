@@ -13,9 +13,9 @@ from blueprints.admin import admin_bp
 from blueprints.uplink import uplink_bp
 from blueprints.telemetry import telemetry_bp
 from blueprints.terminal import terminal_bp
-from blueprints.overwatch import overwatch_bp
 from blueprints.projects import projects_bp
 from blueprints.monitor import monitor_bp
+from blueprints.forge import forge_bp
 
 app = Flask(__name__)
 app.secret_key = config.SECRET_KEY
@@ -31,6 +31,7 @@ database.init_db()
 # Ensure upload folder exists
 os.makedirs(config.UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(app.instance_path, exist_ok=True)
+os.makedirs(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', 'forge_outputs'), exist_ok=True)
 
 # Register Blueprints
 app.register_blueprint(auth_bp)
@@ -38,9 +39,9 @@ app.register_blueprint(admin_bp)
 app.register_blueprint(uplink_bp)
 app.register_blueprint(telemetry_bp)
 app.register_blueprint(terminal_bp)
-app.register_blueprint(overwatch_bp)
 app.register_blueprint(projects_bp)
 app.register_blueprint(monitor_bp)
+app.register_blueprint(forge_bp)
 
 @app.after_request
 def add_security_headers(response):
@@ -49,12 +50,11 @@ def add_security_headers(response):
     response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
     response.headers['Content-Security-Policy'] = (
         "default-src 'self'; "
-        "script-src 'self' 'unsafe-inline' https://cesium.com https://cdn.cesium.com; "
+        "script-src 'self' 'unsafe-inline'; "
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
         "font-src 'self' https://fonts.gstatic.com; "
         "img-src 'self' data: https:; "
-        "connect-src 'self' https://api.cesium.com https://ion.cesium.com "
-        "https://assets.cesium.com https://opensky-network.org; "
+        "connect-src 'self'; "
         "frame-ancestors 'none';"
     )
     return response
