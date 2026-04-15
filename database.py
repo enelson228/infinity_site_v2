@@ -139,6 +139,17 @@ def init_db():
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_recommendations_dismissed ON monitor_recommendations(dismissed)"
         )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS forge_images (
+                id         INTEGER PRIMARY KEY AUTOINCREMENT,
+                job_id     TEXT NOT NULL UNIQUE,
+                prompt     TEXT NOT NULL,
+                filename   TEXT NOT NULL,
+                created_at TEXT NOT NULL
+            )
+            """
+        )
         conn.commit()
 
         # Schema migrations for existing installs
@@ -475,4 +486,40 @@ def clear_recommendations(source: str = None):
             )
         else:
             conn.execute("DELETE FROM monitor_recommendations WHERE dismissed = 0")
+        conn.commit()
+
+
+# ── Forge Images ──────────────────────────────────────────────────────────────
+
+def add_forge_image(job_id: str, prompt: str, filename: str, created_at: str) -> int:
+    with _db_conn() as conn:
+        cur = conn.execute(
+            "INSERT INTO forge_images (job_id, prompt, filename, created_at) VALUES (?, ?, ?, ?)",
+            (job_id, prompt, filename, created_at),
+        )
+        conn.commit()
+        return cur.lastrowid
+
+def list_forge_images():
+    with _db_conn() as conn:
+        cur = conn.execute(
+            "SELECT * FROM forge_images ORDER BY id DESC"
+        )
+        return [dict(row) for row in cur.fetchall()]
+
+def get_forge_image(image_id: int):
+    with _db_conn() as conn:
+        cur = conn.execute("SELECT * FROM forge_images WHERE id = ?", (image_id,))
+        row = cur.fetchone()
+        return dict(row) if row else None
+
+def get_forge_image_by_job_id(job_id: str):
+    with _db_conn() as conn:
+        cur = conn.execute("SELECT * FROM forge_images WHERE job_id = ?", (job_id,))
+        row = cur.fetchone()
+        return dict(row) if row else None
+
+def delete_forge_image(image_id: int):
+    with _db_conn() as conn:
+        conn.execute("DELETE FROM forge_images WHERE id = ?", (image_id,))
         conn.commit()
