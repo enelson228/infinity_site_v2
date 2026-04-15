@@ -41,6 +41,17 @@ def client(app):
     return app.test_client()
 
 
+@pytest.fixture(autouse=True)
+def reset_runpod_config():
+    """Restore RunPod config vars after each test to prevent order-dependent failures."""
+    import config
+    original_key = config.RUNPOD_API_KEY
+    original_endpoint = config.SD_ENDPOINT_ID
+    yield
+    config.RUNPOD_API_KEY = original_key
+    config.SD_ENDPOINT_ID = original_endpoint
+
+
 @pytest.fixture
 def admin_client(app, client):
     """Authenticated admin test client."""
