@@ -1,4 +1,5 @@
 import pytest
+import time
 import database
 
 
@@ -58,3 +59,42 @@ def test_clear_recommendations_by_source(app):
     recs = database.list_recommendations(include_dismissed=True)
     assert len(recs) == 1
     assert recs[0]['source'] == 'ai'
+
+
+def test_prune_old_data(app):
+    now = time.time()
+    old_ts = now - (8 * 24 * 3600)  # 8 days ago
+
+    # Insert old and recent telemetry rows directly via the DB connection
+    with database._db_conn() as conn:
+        conn.execute(
+            "INSERT INTO telemetry_history (cpu_usage, ram_usage, timestamp) VALUES (?, ?, ?)",
+            (50.0, 60.0, old_ts),
+        )
+        conn.execute(
+            "INSERT INTO telemetry_history (cpu_usage, ram_usage, timestamp) VALUES (?, ?, ?)",
+            (55.0, 65.0, now),
+        )
+        conn.commit()
+
+    # Insert 10,005 audit_log rows
+    with database._db_conn() as conn:
+        for i in range(10005):
+            conn.execute(
+                "INSERT INTO audit_log (event_type, actor_user_id, target_user_id, ip, detail, created_at) VALUES (?, ?, ?, ?, ?, ?)",
+                ('test_event', None, None, '127.0.0.1', f'detail {i}', '2026-01-01T00:00:00'),
+            )
+        conn.commit()
+
+    database.prune_old_data()
+
+    # Old telemetry rows should be gone, recent row should remain
+    with database._db_conn() as conn:
+        rows = conn.execute("SELECT * FROM telemetry_history").fetchall()
+    assert len(rows) == 1
+    assert rows[0]['cpu_usage'] == 55.0
+
+    # audit_log should have exactly 10,000 rows
+    with database._db_conn() as conn:
+        count = conn.execute("SELECT COUNT(*) FROM audit_log").fetchone()[0]
+    assert count == 10000

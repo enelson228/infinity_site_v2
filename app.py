@@ -136,6 +136,7 @@ def background_monitor():
     last_ping_time = 0
     last_telemetry_time = 0
     last_github_time = 0
+    last_prune_time = 0
     last_recommendations_time = 0
     
     while True:
@@ -188,6 +189,14 @@ def background_monitor():
                     except Exception as e:
                         app.logger.error(f"Monitoring error (github {r.get('id')}): {e}")
             last_github_time = now
+
+        # Prune old data once per day
+        if now - last_prune_time >= 86400:
+            try:
+                database.prune_old_data()
+            except Exception as e:
+                app.logger.error(f"Monitoring error (prune): {e}")
+            last_prune_time = now
 
         # Refresh recommendations every 30 minutes
         if now - last_recommendations_time >= 1800:

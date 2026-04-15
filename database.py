@@ -340,6 +340,25 @@ def add_telemetry_history(cpu, ram):
         )
         conn.commit()
 
+def prune_old_data():
+    """
+    Trim unbounded tables to prevent silent performance degradation.
+    - telemetry_history: keep last 7 days
+    - audit_log: keep last 10,000 rows
+    """
+    import time as _time
+    cutoff_ts = _time.time() - (7 * 24 * 3600)  # 7 days in Unix epoch
+    with _db_conn() as conn:
+        conn.execute("DELETE FROM telemetry_history WHERE timestamp < ?", (cutoff_ts,))
+        conn.execute(
+            """
+            DELETE FROM audit_log WHERE id NOT IN (
+                SELECT id FROM audit_log ORDER BY id DESC LIMIT 10000
+            )
+            """
+        )
+        conn.commit()
+
 def get_telemetry_history(limit=24):
     with _db_conn() as conn:
         cur = conn.execute(
