@@ -151,3 +151,41 @@ def build_snapshot(projects: list, github_statuses: list, telemetry: list) -> di
         ],
         'telemetry_avg': telemetry_avg,
     }
+
+
+def refresh_recommendations() -> dict:
+    """
+    Run the full recommendation refresh cycle: rule checks + optional AI checks.
+    Reads state from the database and writes results back.
+    Returns {'rule_count': N, 'ai_count': N}.
+    """
+    import database
+    import config
+    from datetime import datetime as _dt, timedelta as _td
+
+    projects = database.list_projects()
+    telemetry = database.get_telemetry_history(limit=5)
+
+    cutoff = (_dt.now() - _td(hours=1)).isoformat()
+    audit = database.get_audit_log(limit=500)
+    recent_failures = sum(
+        1 for e in audit
+        if e['event_type'] == 'login_failure' and e['created_at'] > cutoff
+    )
+
+    new_recs = run_rule_checks(projects, telemetry, recent_failures)
+    database.clear_recommendations(source='rule')
+    for r in new_recs:
+        database.add_recommendation(r['source'], r['severity'], r['message'], r.get('detail'))
+
+    ai_count = 0
+    if config.ANTHROPIC_API_KEY and config.ANTHROPIC_API_KEY != 'test-anthropic-key':
+        github = database.list_github_repo_statuses()
+        snapshot = build_snapshot(projects, github, telemetry)
+        ai_recs = run_ai_checks(snapshot, config.ANTHROPIC_API_KEY)
+        database.clear_recommendations(source='ai')
+        for r in ai_recs:
+            database.add_recommendation(r['source'], r['severity'], r['message'], r.get('detail'))
+        ai_count = len(ai_recs)
+
+    return {'rule_count': len(new_recs), 'ai_count': ai_count}

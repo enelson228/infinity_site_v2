@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request, render_template, session
 from auth import admin_required
 import database
+import recommendations
 from utils import client_ip
 
 monitor_bp = Blueprint('monitor', __name__)
@@ -91,37 +92,8 @@ def api_delete_repo(repo_id: str):
 @admin_required
 def api_refresh_recommendations():
     """Trigger immediate regen of rule-based recommendations."""
-    import config
-    import recommendations
-
-    projects = database.list_projects()
-    telemetry = database.get_telemetry_history(limit=5)
-
-    # Count recent login failures from audit log
-    from datetime import datetime, timedelta
-    cutoff = (datetime.now() - timedelta(hours=1)).isoformat()
-    audit = database.get_audit_log(limit=500)
-    recent_failures = sum(
-        1 for e in audit
-        if e['event_type'] == 'login_failure' and e['created_at'] > cutoff
-    )
-
-    new_recs = recommendations.run_rule_checks(projects, telemetry, recent_failures)
-
-    database.clear_recommendations(source='rule')
-    for r in new_recs:
-        database.add_recommendation(r['source'], r['severity'], r['message'], r.get('detail'))
-
-    # AI insights (non-blocking — skip if API key not configured)
-    if config.ANTHROPIC_API_KEY and config.ANTHROPIC_API_KEY != 'test-anthropic-key':
-        github = database.list_github_repo_statuses()
-        snapshot = recommendations.build_snapshot(projects, github, telemetry)
-        ai_recs = recommendations.run_ai_checks(snapshot, config.ANTHROPIC_API_KEY)
-        database.clear_recommendations(source='ai')
-        for r in ai_recs:
-            database.add_recommendation(r['source'], r['severity'], r['message'], r.get('detail'))
-
-    return jsonify({'success': True, 'count': len(new_recs)})
+    result = recommendations.refresh_recommendations()
+    return jsonify({'success': True, 'count': result['rule_count']})
 
 
 @monitor_bp.route('/api/monitor/recommendations/<int:rec_id>/dismiss', methods=['POST'])
