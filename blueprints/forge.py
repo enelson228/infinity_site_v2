@@ -1,5 +1,6 @@
 import base64
 import json
+import logging
 import os
 import urllib.request
 from datetime import datetime
@@ -7,6 +8,8 @@ from flask import Blueprint, jsonify, render_template, request
 import config
 import database
 from auth import login_required
+
+logger = logging.getLogger(__name__)
 
 forge_bp = Blueprint('forge', __name__)
 
@@ -121,8 +124,7 @@ def api_forge_status(job_id):
             with open(filepath, 'wb') as f:
                 f.write(image_bytes)
         except Exception as e:
-            import logging
-            logging.getLogger(__name__).error(f'Forge: failed to save image {job_id}: {e}')
+            logger.error(f'Forge: failed to save image {job_id}: {e}')
             return jsonify({'error': 'Failed to save image', 'status': 'FAILED'}), 500
 
         img_id = database.add_forge_image(job_id, prompt, filename, datetime.now().isoformat())
@@ -149,8 +151,7 @@ def api_forge_delete(image_id):
     try:
         os.remove(filepath)
     except OSError as e:
-        import logging
-        logging.getLogger(__name__).error(f'Forge: could not delete file {filepath}: {e}')
+        logger.error(f'Forge: could not delete file {filepath}: {e}')
 
     database.delete_forge_image(image_id)
     return jsonify({'success': True})
