@@ -500,26 +500,27 @@ def add_forge_image(job_id: str, prompt: str, filename: str, created_at: str) ->
         conn.commit()
         return cur.lastrowid
 
-def list_forge_images():
+def list_forge_images() -> list:
     with _db_conn() as conn:
         cur = conn.execute(
             "SELECT * FROM forge_images ORDER BY id DESC"
         )
         return [dict(row) for row in cur.fetchall()]
 
-def get_forge_image(image_id: int):
+def get_forge_image(image_id: int) -> dict:
     with _db_conn() as conn:
         cur = conn.execute("SELECT * FROM forge_images WHERE id = ?", (image_id,))
         row = cur.fetchone()
         return dict(row) if row else None
 
-def get_forge_image_by_job_id(job_id: str):
+def get_forge_image_by_job_id(job_id: str) -> dict:
     with _db_conn() as conn:
         cur = conn.execute("SELECT * FROM forge_images WHERE job_id = ?", (job_id,))
         row = cur.fetchone()
         return dict(row) if row else None
 
-def delete_forge_image(image_id: int):
+def delete_forge_image(image_id: int) -> bool:
     with _db_conn() as conn:
-        conn.execute("DELETE FROM forge_images WHERE id = ?", (image_id,))
+        cur = conn.execute("DELETE FROM forge_images WHERE id = ?", (image_id,))
         conn.commit()
+        return cur.rowcount > 0
