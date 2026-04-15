@@ -130,7 +130,16 @@ document.getElementById('forge-generate-btn')?.addEventListener('click', async (
 
 function pollStatus(jobId, prompt) {
   showStatus('QUEUED...');
+  let polls = 0;
+  const MAX_POLLS = 150; // 5 minutes at 2s intervals
   const interval = setInterval(async () => {
+    if (++polls > MAX_POLLS) {
+      clearInterval(interval);
+      showError('Generation timed out. The job may still be running on RunPod.');
+      showStatus('');
+      setGenerating(false);
+      return;
+    }
     try {
       const resp = await fetch(`/api/forge/status/${jobId}?prompt=${encodeURIComponent(prompt)}`);
       const data = await resp.json();
@@ -192,6 +201,8 @@ async function forgeDelete(imageId, btn) {
         const gallery = document.getElementById('forge-gallery');
         gallery.innerHTML = '<p id="forge-empty" style="font-family:var(--font-mono);font-size:0.7rem;color:rgba(34,211,238,0.3);letter-spacing:0.1em;grid-column:1/-1;">NO IMAGES GENERATED YET.</p>';
       }
+    } else {
+      btn.disabled = false;
     }
   } catch (e) {
     btn.disabled = false;
