@@ -1,5 +1,224 @@
 {% extends "base.html" %}
+
 {% block title %}Forge{% endblock %}
+
 {% block content %}
-<div>FORGE</div>
+<div class="container" style="padding-top: var(--spacing-xl); padding-bottom: var(--spacing-xl);">
+
+  <!-- Header -->
+  <div style="margin-bottom: var(--spacing-xl);">
+    <h1 style="font-family: var(--font-display); font-size: 1.8rem; letter-spacing: 0.15em; color: var(--reach-cyan); text-shadow: 0 0 12px rgba(34,211,238,0.4); margin: 0 0 4px 0;">FORGE</h1>
+    <p style="font-family: var(--font-mono); font-size: 0.65rem; color: rgba(34,211,238,0.4); letter-spacing: 0.2em; margin: 0;">// IMAGE SYNTHESIS — RUNPOD SDXL SERVERLESS</p>
+  </div>
+
+  <!-- Generation Panel -->
+  <div class="terminal-panel" style="margin-bottom: var(--spacing-xl); padding: var(--spacing-lg);">
+
+    {% if not endpoint_configured %}
+    <div style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--reach-orange); letter-spacing: 0.1em; padding: var(--spacing-md); border: 1px solid rgba(234,88,12,0.3); background: rgba(234,88,12,0.05); margin-bottom: var(--spacing-md);">
+      ⚠ ENDPOINT NOT CONFIGURED — Set RUNPOD_API_KEY and SD_ENDPOINT_ID in Doppler.
+    </div>
+    {% endif %}
+
+    <div style="margin-bottom: var(--spacing-md);">
+      <label style="font-family: var(--font-mono); font-size: 0.65rem; color: rgba(34,211,238,0.6); letter-spacing: 0.15em; display: block; margin-bottom: 6px;">PROMPT</label>
+      <textarea
+        id="forge-prompt"
+        rows="3"
+        maxlength="500"
+        placeholder="Describe the image..."
+        {% if not endpoint_configured %}disabled{% endif %}
+        style="width: 100%; background: rgba(0,0,0,0.4); border: 1px solid rgba(34,211,238,0.2); color: var(--text-primary); font-family: var(--font-mono); font-size: 0.8rem; padding: 10px 12px; resize: vertical; outline: none; box-sizing: border-box;"
+      ></textarea>
+      <div style="font-family: var(--font-mono); font-size: 0.6rem; color: rgba(34,211,238,0.3); text-align: right; margin-top: 3px;"><span id="prompt-count">0</span>/500</div>
+    </div>
+
+    <details style="margin-bottom: var(--spacing-md);">
+      <summary style="font-family: var(--font-mono); font-size: 0.65rem; color: rgba(34,211,238,0.4); letter-spacing: 0.1em; cursor: pointer; user-select: none;">NEGATIVE PROMPT (optional)</summary>
+      <textarea
+        id="forge-negative"
+        rows="2"
+        maxlength="500"
+        placeholder="Things to exclude from the image..."
+        {% if not endpoint_configured %}disabled{% endif %}
+        style="width: 100%; margin-top: 8px; background: rgba(0,0,0,0.4); border: 1px solid rgba(34,211,238,0.15); color: var(--text-primary); font-family: var(--font-mono); font-size: 0.8rem; padding: 10px 12px; resize: vertical; outline: none; box-sizing: border-box;"
+      ></textarea>
+    </details>
+
+    <div style="display: flex; align-items: center; gap: var(--spacing-md);">
+      <button
+        id="forge-generate-btn"
+        {% if not endpoint_configured %}disabled{% endif %}
+        style="font-family: var(--font-display); font-size: 0.8rem; letter-spacing: 0.15em; padding: 10px 28px; background: transparent; border: 1px solid var(--reach-cyan); color: var(--reach-cyan); cursor: pointer; transition: all 0.2s;"
+        onmouseover="if(!this.disabled)this.style.background='rgba(34,211,238,0.1)'"
+        onmouseout="this.style.background='transparent'"
+      >GENERATE</button>
+      <span id="forge-status" style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--reach-amber); letter-spacing: 0.1em; display: none;"></span>
+    </div>
+
+    <div id="forge-error" style="display: none; margin-top: var(--spacing-sm); font-family: var(--font-mono); font-size: 0.7rem; color: var(--reach-orange); letter-spacing: 0.05em;"></div>
+  </div>
+
+  <!-- Gallery -->
+  <div style="margin-bottom: var(--spacing-md);">
+    <h2 style="font-family: var(--font-display); font-size: 1rem; letter-spacing: 0.15em; color: rgba(34,211,238,0.7); margin: 0 0 var(--spacing-md) 0;">GENERATED IMAGES</h2>
+  </div>
+
+  <div id="forge-gallery" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--spacing-md);">
+    {% for img in images %}
+    <div class="forge-card" data-id="{{ img.id }}" style="background: rgba(0,0,0,0.4); border: 1px solid rgba(34,211,238,0.15); overflow: hidden;">
+      <img src="/static/forge_outputs/{{ img.filename }}" alt="Generated image" loading="lazy"
+           style="width: 100%; display: block; aspect-ratio: 1; object-fit: cover;">
+      <div style="padding: 10px 12px;">
+        <p style="font-family: var(--font-mono); font-size: 0.65rem; color: rgba(34,211,238,0.5); margin: 0 0 6px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ img.prompt }}">{{ img.prompt }}</p>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-family: var(--font-mono); font-size: 0.55rem; color: rgba(34,211,238,0.3);">{{ img.created_at[:16] }}</span>
+          <button
+            onclick="forgeDelete({{ img.id }}, this)"
+            style="font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.1em; padding: 3px 10px; background: transparent; border: 1px solid rgba(234,88,12,0.4); color: var(--reach-orange); cursor: pointer;"
+            onmouseover="this.style.background='rgba(234,88,12,0.1)'"
+            onmouseout="this.style.background='transparent'"
+          >DELETE</button>
+        </div>
+      </div>
+    </div>
+    {% else %}
+    <p id="forge-empty" style="font-family: var(--font-mono); font-size: 0.7rem; color: rgba(34,211,238,0.3); letter-spacing: 0.1em; grid-column: 1 / -1;">NO IMAGES GENERATED YET.</p>
+    {% endfor %}
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+
+// Prompt character counter
+const promptEl = document.getElementById('forge-prompt');
+const countEl = document.getElementById('prompt-count');
+if (promptEl) {
+  promptEl.addEventListener('input', () => {
+    countEl.textContent = promptEl.value.length;
+  });
+}
+
+// Generate
+document.getElementById('forge-generate-btn')?.addEventListener('click', async () => {
+  const prompt = promptEl.value.trim();
+  const negative = document.getElementById('forge-negative')?.value.trim() || '';
+  if (!prompt) { showError('Prompt is required.'); return; }
+
+  setGenerating(true);
+  showError('');
+  showStatus('SUBMITTING...');
+
+  try {
+    const resp = await fetch('/api/forge/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
+      body: JSON.stringify({ prompt, negative_prompt: negative }),
+    });
+    const data = await resp.json();
+    if (!resp.ok) { showError(data.error || 'Generation failed.'); setGenerating(false); return; }
+    pollStatus(data.job_id, prompt);
+  } catch (e) {
+    showError('Network error. Try again.');
+    setGenerating(false);
+  }
+});
+
+function pollStatus(jobId, prompt) {
+  showStatus('QUEUED...');
+  const interval = setInterval(async () => {
+    try {
+      const resp = await fetch(`/api/forge/status/${jobId}?prompt=${encodeURIComponent(prompt)}`);
+      const data = await resp.json();
+
+      if (data.status === 'COMPLETED') {
+        clearInterval(interval);
+        showStatus('');
+        setGenerating(false);
+        prependImageCard(data.image_id, data.image_url, prompt);
+      } else if (data.status === 'FAILED') {
+        clearInterval(interval);
+        showError(data.error || 'Generation failed.');
+        showStatus('');
+        setGenerating(false);
+      } else if (data.status === 'IN_PROGRESS') {
+        showStatus('GENERATING...');
+      } else {
+        showStatus('QUEUED...');
+      }
+    } catch (e) {
+      // transient network error — keep polling
+    }
+  }, 2000);
+}
+
+function prependImageCard(imageId, imageUrl, prompt) {
+  const gallery = document.getElementById('forge-gallery');
+  const empty = document.getElementById('forge-empty');
+  if (empty) empty.remove();
+
+  const now = new Date().toISOString().slice(0, 16);
+  const card = document.createElement('div');
+  card.className = 'forge-card';
+  card.dataset.id = imageId;
+  card.style.cssText = 'background:rgba(0,0,0,0.4);border:1px solid rgba(34,211,238,0.15);overflow:hidden;';
+  card.innerHTML = `
+    <img src="${imageUrl}" alt="Generated image" style="width:100%;display:block;aspect-ratio:1;object-fit:cover;">
+    <div style="padding:10px 12px;">
+      <p style="font-family:var(--font-mono);font-size:0.65rem;color:rgba(34,211,238,0.5);margin:0 0 6px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${escapeHtml(prompt)}">${escapeHtml(prompt)}</p>
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-family:var(--font-mono);font-size:0.55rem;color:rgba(34,211,238,0.3);">${now}</span>
+        <button onclick="forgeDelete(${imageId},this)" style="font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.1em;padding:3px 10px;background:transparent;border:1px solid rgba(234,88,12,0.4);color:var(--reach-orange);cursor:pointer;" onmouseover="this.style.background='rgba(234,88,12,0.1)'" onmouseout="this.style.background='transparent'">DELETE</button>
+      </div>
+    </div>`;
+  gallery.prepend(card);
+}
+
+async function forgeDelete(imageId, btn) {
+  btn.disabled = true;
+  try {
+    const resp = await fetch(`/api/forge/images/${imageId}`, {
+      method: 'DELETE',
+      headers: { 'X-CSRF-Token': csrfToken },
+    });
+    if (resp.ok) {
+      const card = document.querySelector(`.forge-card[data-id="${imageId}"]`);
+      if (card) card.remove();
+      if (!document.querySelector('.forge-card')) {
+        const gallery = document.getElementById('forge-gallery');
+        gallery.innerHTML = '<p id="forge-empty" style="font-family:var(--font-mono);font-size:0.7rem;color:rgba(34,211,238,0.3);letter-spacing:0.1em;grid-column:1/-1;">NO IMAGES GENERATED YET.</p>';
+      }
+    }
+  } catch (e) {
+    btn.disabled = false;
+  }
+}
+
+function setGenerating(on) {
+  const btn = document.getElementById('forge-generate-btn');
+  if (btn) btn.disabled = on;
+}
+
+function showStatus(msg) {
+  const el = document.getElementById('forge-status');
+  if (!el) return;
+  el.textContent = msg;
+  el.style.display = msg ? 'inline' : 'none';
+}
+
+function showError(msg) {
+  const el = document.getElementById('forge-error');
+  if (!el) return;
+  el.textContent = msg;
+  el.style.display = msg ? 'block' : 'none';
+}
+
+function escapeHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
 {% endblock %}
