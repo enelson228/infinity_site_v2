@@ -197,7 +197,8 @@ function renderStats(stats) {
 
   // Color the alerts stat card based on whether there are active alerts
   const alertCard = document.getElementById('stat-alerts').closest('.stat-card');
-  alertCard.className = 'stat-card ' + (stats.alerts > 0 ? 'critical' : 'good');
+  alertCard.classList.toggle('critical', stats.alerts > 0);
+  alertCard.classList.toggle('good', stats.alerts === 0);
 }
 
 function renderAlerts(recs) {
@@ -252,12 +253,6 @@ function renderGithub(repos) {
   }).join('');
 }
 
-function escHtml(str) {
-  const d = document.createElement('div');
-  d.textContent = str || '';
-  return d.innerHTML;
-}
-
 async function refreshData() {
   try {
     const resp = await fetch('/api/monitor/status');
@@ -277,10 +272,13 @@ async function refreshData() {
 
 async function dismissAlert(id) {
   const resp = await fetch(`/api/monitor/recommendations/${id}/dismiss`, { method: 'POST' });
+  if (resp.status === 403) {
+    window.location.reload();
+    return;
+  }
   if (resp.ok) {
     const el = document.getElementById(`alert-${id}`);
     if (el) el.remove();
-    // Update alert count
     const remaining = document.querySelectorAll('#alert-list .alert-item').length;
     document.getElementById('stat-alerts').textContent = remaining;
   }
