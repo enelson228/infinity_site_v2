@@ -1,3 +1,5 @@
+import re
+
 from flask import Blueprint, jsonify, request, render_template, session
 from auth import admin_required
 import database
@@ -59,9 +61,12 @@ def api_add_repo():
         return jsonify({'error': 'id, owner, and repo are required'}), 400
 
     # Sanitize: only allow alphanumeric, hyphens, underscores
-    import re
     if not re.match(r'^[a-zA-Z0-9_-]+$', repo_id):
         return jsonify({'error': 'Invalid repo id — alphanumeric, hyphens, underscores only'}), 400
+    if not re.match(r'^[a-zA-Z0-9_.-]+$', owner):
+        return jsonify({'error': 'Invalid owner — alphanumeric, hyphens, underscores, dots only'}), 400
+    if not re.match(r'^[a-zA-Z0-9_.-]+$', repo):
+        return jsonify({'error': 'Invalid repo name — alphanumeric, hyphens, underscores, dots only'}), 400
 
     try:
         database.add_github_repo(repo_id, owner, repo)
@@ -77,7 +82,6 @@ def api_add_repo():
 @monitor_bp.route('/api/monitor/repos/<repo_id>', methods=['DELETE'])
 @admin_required
 def api_delete_repo(repo_id: str):
-    import re
     if not re.match(r'^[a-zA-Z0-9_-]+$', repo_id):
         return jsonify({'error': 'Invalid repo id'}), 400
     if not database.delete_github_repo(repo_id):

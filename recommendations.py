@@ -64,13 +64,14 @@ def run_rule_checks(projects: list, telemetry: list, recent_failures: int) -> li
             f"Average over last 5 readings: {avg:.1f}%"
         ))
 
-    # RAM check — critical if any reading above 90% (checks all telemetry, not just recent 5)
-    if telemetry and any(r['ram_usage'] > 90 for r in telemetry):
-        max_ram = max(r['ram_usage'] for r in telemetry)
+    # RAM check — critical if any of the last 5 readings above 90%
+    recent = telemetry[:5]
+    if recent and any(r['ram_usage'] > 90 for r in recent):
+        max_ram = max(r['ram_usage'] for r in recent)
         recs.append(_rec(
             'rule', 'critical',
             'RAM usage critically high',
-            f"Peak: {max_ram:.1f}%"
+            f"Peak over last 5 readings: {max_ram:.1f}%"
         ))
 
     # Auth: failed login spike
@@ -93,6 +94,7 @@ def run_ai_checks(snapshot: dict, api_key: str) -> list:
     snapshot keys: services, github, telemetry_avg (cpu_avg, ram_avg)
     """
     try:
+        import config as _config
         client = anthropic.Anthropic(api_key=api_key)
 
         prompt = (
@@ -104,7 +106,7 @@ def run_ai_checks(snapshot: dict, api_key: str) -> list:
         )
 
         response = client.messages.create(
-            model='claude-haiku-4-5-20251001',
+            model=_config.AI_MODEL,
             max_tokens=300,
             messages=[{'role': 'user', 'content': prompt}]
         )

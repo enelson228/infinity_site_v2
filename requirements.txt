@@ -2,6 +2,6 @@ Flask==3.0.0
 Flask-Login==0.6.3
 Werkzeug==3.0.1
 psutil==6.1.1
-anthropic
+anthropic>=0.49,<2.0
 pytest
 pytest-flask

@@ -49,6 +49,9 @@ UPLOAD_ALLOWED_EXTENSIONS = {
 # GitHub API token for monitor dashboard (optional — GitHub panel disabled if missing)
 GITHUB_TOKEN = os.environ.get('GITHUB_TOKEN', '')
 
+# AI model for monitor recommendations (optional override)
+AI_MODEL = os.environ.get('AI_MODEL', 'claude-haiku-4-5-20251001')
+
 # Session cookie security
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = 'Lax'
