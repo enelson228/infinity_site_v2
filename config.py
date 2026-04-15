@@ -26,9 +26,6 @@ CLAUDE_PASSWORD_HASH = _required_env('CLAUDE_PASSWORD_HASH')
 # Anthropic API key (required)
 ANTHROPIC_API_KEY = _required_env('ANTHROPIC_API_KEY')
 
-# Cesium Ion token for overwatch globe (optional — limits terrain/imagery if missing)
-CESIUM_ION_TOKEN = os.environ.get('CESIUM_ION_TOKEN', '')
-
 # Trusted reverse proxy count for accurate client IP (set to 1 if behind Nginx/Caddy)
 TRUSTED_PROXIES = int(os.environ.get('TRUSTED_PROXIES', '1'))
 
@@ -48,6 +45,10 @@ UPLOAD_ALLOWED_EXTENSIONS = {
 
 # GitHub API token for monitor dashboard (optional — GitHub panel disabled if missing)
 GITHUB_TOKEN = os.environ.get('GITHUB_TOKEN', '')
+
+# RunPod serverless image generation (optional — Forge disabled if missing)
+RUNPOD_API_KEY = os.environ.get('RUNPOD_API_KEY', '')
+SD_ENDPOINT_ID = os.environ.get('SD_ENDPOINT_ID', '')
 
 # AI model for monitor recommendations (optional override)
 AI_MODEL = os.environ.get('AI_MODEL', 'claude-haiku-4-5-20251001')
