@@ -1,0 +1,291 @@
+{% extends "base.html" %}
+
+{% block title %}Authentication Gateway{% endblock %}
+
+{% block content %}
+<div class="login-container">
+    <div class="login-box auth-gateway" id="auth-box" style="display: none;">
+        <div class="login-header">
+            <div class="auth-icon-wrap">
+                <svg class="auth-lock-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+            </div>
+            <div class="section-label" style="color: var(--reach-orange);">RESTRICTED ACCESS</div>
+            <h2 style="letter-spacing: 0.2em; color: var(--reach-amber); text-shadow: 0 0 10px rgba(246, 166, 35, 0.4);">INFINITY GATEWAY</h2>
+            <p style="font-family: var(--font-mono); font-size: 0.75rem; text-transform: uppercase;">Provide Identification Credentials</p>
+        </div>
+
+        <form id="login-form">
+            <div class="form-group auth-group">
+                <label class="form-label auth-label" for="username">OPERATIVE ID</label>
+                <input
+                    type="text"
+                    id="username"
+                    class="form-input auth-input"
+                    placeholder="Enter ID sequence..."
+                    autocomplete="username"
+                    required
+                >
+            </div>
+            <div class="form-group auth-group">
+                <label class="form-label auth-label" for="password">PASSCODE</label>
+                <input
+                    type="password"
+                    id="password"
+                    class="form-input auth-input"
+                    placeholder="Enter passcode..."
+                    autocomplete="current-password"
+                    required
+                >
+            </div>
+
+            <div class="login-error auth-error" id="login-error">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 4px;">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+                <span>CREDENTIALS REJECTED</span>
+            </div>
+
+            <button type="submit" class="btn btn-primary auth-btn" style="width: 100%; justify-content: center; letter-spacing: 0.2em;">
+                INITIALIZE HANDSHAKE
+            </button>
+        </form>
+    </div>
+
+    <!-- Boot Sequence Overlay -->
+    <div id="boot-sequence" class="boot-sequence">
+        <div class="boot-terminal" id="boot-terminal"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Cinematic Boot Sequence
+const bootTerminal = document.getElementById('boot-terminal');
+const authBox = document.getElementById('auth-box');
+const bootOverlay = document.getElementById('boot-sequence');
+
+const bootLines = [
+    "INITIALIZING KINETIC_FORCE PROTOCOL...",
+    "ESTABLISHING SECURE CONNECTION...",
+    "VERIFYING ENCRYPTION KEYS...",
+    "NODE HANDSHAKE: SUCCESS",
+    "AWAITING OPERATIVE IDENTIFICATION."
+];
+
+async function runBootSequence() {
+    if (sessionStorage.getItem('skipBoot')) {
+        bootOverlay.style.display = 'none';
+        authBox.style.display = 'block';
+        authBox.classList.add('auth-fade-in');
+        return;
+    }
+
+    for (let i = 0; i < bootLines.length; i++) {
+        const line = document.createElement('div');
+        line.className = 'boot-line';
+        line.textContent = `> ${bootLines[i]}`;
+        bootTerminal.appendChild(line);
+        await new Promise(r => setTimeout(r, 400 + Math.random() * 300));
+    }
+    
+    await new Promise(r => setTimeout(r, 600));
+    bootOverlay.style.opacity = '0';
+    
+    setTimeout(() => {
+        bootOverlay.style.display = 'none';
+        authBox.style.display = 'block';
+        authBox.classList.add('auth-fade-in');
+        sessionStorage.setItem('skipBoot', 'true');
+    }, 500);
+}
+
+runBootSequence();
+
+// Login handling
+document.getElementById('login-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+    const errorEl = document.getElementById('login-error');
+    const submitBtn = document.querySelector('.auth-btn');
+
+    submitBtn.textContent = 'VERIFYING...';
+    submitBtn.style.opacity = '0.7';
+    submitBtn.disabled = true;
+
+    try {
+        const response = await fetch('{{ url_for("auth.api_login") }}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            submitBtn.textContent = 'ACCESS GRANTED';
+            submitBtn.style.background = 'var(--reach-cyan)';
+            submitBtn.style.color = 'var(--reach-slate)';
+            setTimeout(() => {
+                const urlParams = new URLSearchParams(window.location.search);
+                const next = urlParams.get('next') || '/';
+                window.location.href = next;
+            }, 600);
+        } else {
+            errorEl.querySelector('span').textContent = data.error || 'CREDENTIALS REJECTED';
+            errorEl.classList.add('visible');
+            document.getElementById('password').value = '';
+            document.getElementById('password').focus();
+            
+            submitBtn.textContent = 'INITIALIZE HANDSHAKE';
+            submitBtn.style.opacity = '1';
+            submitBtn.disabled = false;
+            
+            // Shake effect
+            authBox.classList.add('auth-shake');
+            setTimeout(() => authBox.classList.remove('auth-shake'), 400);
+        }
+    } catch (error) {
+        errorEl.querySelector('span').textContent = 'CONNECTION FAILED';
+        errorEl.classList.add('visible');
+        submitBtn.textContent = 'INITIALIZE HANDSHAKE';
+        submitBtn.style.opacity = '1';
+        submitBtn.disabled = false;
+    }
+});
+
+// Clear error on input
+['username', 'password'].forEach(id => {
+    document.getElementById(id).addEventListener('input', () => {
+        document.getElementById('login-error').classList.remove('visible');
+    });
+});
+</script>
+
+<style>
+/* Cinematic Auth Styles */
+.auth-gateway {
+    background: rgba(13, 17, 23, 0.85);
+    border: 1px solid rgba(246, 166, 35, 0.4);
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.8), inset 0 0 20px rgba(246, 166, 35, 0.05);
+    backdrop-filter: blur(10px);
+}
+
+.auth-gateway::before, .auth-gateway::after {
+    border-color: var(--reach-orange);
+}
+
+.auth-icon-wrap {
+    display: flex;
+    justify-content: center;
+    margin-bottom: var(--spacing-md);
+    color: var(--reach-amber);
+    animation: pulseLock 3s infinite;
+}
+
+@keyframes pulseLock {
+    0%, 100% { filter: drop-shadow(0 0 5px rgba(246, 166, 35, 0.4)); }
+    50% { filter: drop-shadow(0 0 15px rgba(246, 166, 35, 0.8)); }
+}
+
+.auth-label {
+    color: var(--reach-amber);
+    opacity: 0.8;
+}
+
+.auth-input {
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(74, 85, 104, 0.5);
+    color: var(--reach-cyan);
+    letter-spacing: 0.1em;
+}
+
+.auth-input:focus {
+    border-color: var(--reach-cyan);
+    box-shadow: 0 0 10px rgba(34, 211, 238, 0.2);
+}
+
+.auth-error {
+    background: rgba(232, 93, 4, 0.1);
+    border: 1px solid rgba(232, 93, 4, 0.4);
+    padding: var(--spacing-sm);
+    display: none;
+    align-items: center;
+    color: var(--reach-orange);
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    margin-bottom: var(--spacing-lg);
+}
+
+.auth-error.visible {
+    display: flex;
+    animation: flashError 0.5s;
+}
+
+@keyframes flashError {
+    0%, 50%, 100% { opacity: 1; }
+    25%, 75% { opacity: 0.4; }
+}
+
+.auth-fade-in {
+    animation: authFadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes authFadeIn {
+    from { opacity: 0; transform: scale(0.95) translateY(20px); filter: blur(5px); }
+    to { opacity: 1; transform: scale(1) translateY(0); filter: blur(0); }
+}
+
+.auth-shake {
+    animation: authShake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+}
+
+@keyframes authShake {
+    10%, 90% { transform: translate3d(-2px, 0, 0); }
+    20%, 80% { transform: translate3d(4px, 0, 0); }
+    30%, 50%, 70% { transform: translate3d(-8px, 0, 0); }
+    40%, 60% { transform: translate3d(8px, 0, 0); }
+}
+
+/* Boot Sequence */
+.boot-sequence {
+    position: fixed;
+    inset: 0;
+    background: var(--reach-slate);
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: var(--spacing-3xl);
+    transition: opacity 0.5s ease;
+}
+
+.boot-terminal {
+    max-width: 600px;
+    margin: 0 auto;
+    width: 100%;
+    font-family: var(--font-mono);
+    color: var(--reach-cyan);
+    font-size: 0.85rem;
+    line-height: 1.8;
+    text-shadow: 0 0 5px rgba(34, 211, 238, 0.5);
+}
+
+.boot-line {
+    opacity: 0;
+    animation: typeLine 0.1s forwards;
+}
+
+@keyframes typeLine {
+    to { opacity: 1; }
+}
+</style>
+{% endblock %}

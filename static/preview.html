@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>INFINITY — UI/UX Preview</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* Preview-specific overrides — keeps each section visible without routes */
+        .preview-section {
+            border-bottom: 1px solid rgba(74, 85, 104, 0.15);
+            padding-bottom: var(--spacing-3xl);
+            margin-bottom: var(--spacing-3xl);
+        }
+        .preview-label {
+            font-family: var(--font-mono);
+            font-size: 0.6rem;
+            color: rgba(246,166,35,0.5);
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            margin-bottom: var(--spacing-lg);
+            padding: 4px 8px;
+            border: 1px solid rgba(246,166,35,0.2);
+            display: inline-block;
+        }
+        body { padding-bottom: 80px; }
+    </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav" id="nav">
+    <div class="nav-container">
+        <div style="display: flex; align-items: center; gap: var(--spacing-sm);">
+            <a href="#" class="nav-logo" style="letter-spacing: 0.15em; text-shadow: 0 0 10px rgba(34, 211, 238, 0.4);">INFINITY</a>
+            <div class="nav-datalink-indicator">
+                <span class="blinking-dot" style="background: var(--reach-amber); width: 4px; height: 4px; display: inline-block;"></span>
+                <span style="font-family: var(--font-mono); font-size: 0.5rem; color: var(--reach-amber); letter-spacing: 0.2em;">DATALINK ACTIVE</span>
+            </div>
+        </div>
+        <ul class="nav-links" id="nav-links">
+            <li><a href="#" class="nav-link active">Home</a></li>
+            <li><a href="#" class="nav-link">Projects</a></li>
+            <li><a href="#" class="nav-link">Telemetry</a></li>
+            <li><a href="#" class="nav-link">Uplink Cache</a></li>
+        </ul>
+    </div>
+</nav>
+
+<main>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SECTION 1: HERO -->
+<!-- ═══════════════════════════════════════════════ -->
+<section class="hero" style="min-height: 60vh;">
+    <div class="hero-background"></div>
+    <div class="hero-grid"></div>
+    <div class="hero-content">
+        <div class="hero-badge">UNSC Network Terminal — MJOLNIR GEN3</div>
+        <h1 class="hero-title">INFINITY</h1>
+        <p class="hero-subtitle">Homelab Command Center & Infrastructure Controller</p>
+        <div class="hero-actions">
+            <a href="#" class="btn btn-primary">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect>
+                </svg>
+                Infrastructure Scan
+            </a>
+            <a href="#" class="btn btn-secondary">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line>
+                </svg>
+                AI Terminal
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SECTION 2: HOME DASHBOARD -->
+<!-- ═══════════════════════════════════════════════ -->
+<section class="container preview-section" style="padding-top: var(--spacing-3xl);">
+    <div class="preview-label">// Home Dashboard</div>
+    <div class="home-dashboard">
+
+        <!-- Left col: stats + quick links -->
+        <div class="home-col-stats">
+            <div class="section-label">System Diagnostics</div>
+            <div class="status-grid-vertical">
+                <div class="status-panel">
+                    <div class="panel-header">
+                        <span class="panel-title">Infrastructure Health</span>
+                        <div class="panel-indicator"></div>
+                    </div>
+                    <div class="panel-value">8 / 9</div>
+                    <div class="panel-label">Nodes Online</div>
+                </div>
+                <div class="status-panel">
+                    <div class="panel-header"><span class="panel-title">CPU Load</span></div>
+                    <div class="panel-value">42%</div>
+                    <div class="metric-bar" style="height: 4px; margin-top: 8px;">
+                        <div class="metric-bar-fill" style="width: 42%"></div>
+                    </div>
+                </div>
+                <div class="status-panel">
+                    <div class="panel-header"><span class="panel-title">Memory Allocation</span></div>
+                    <div class="panel-value">71%</div>
+                    <div class="metric-bar warn" style="height: 4px; margin-top: 8px;">
+                        <div class="metric-bar-fill" style="width: 71%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-label" style="margin-top: var(--spacing-xl);">Quick Access</div>
+            <div class="quick-links">
+                <a href="#" class="quick-link">
+                    <div class="quick-link-icon">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                    </div>
+                    <span class="quick-link-text">Live Telemetry</span>
+                </a>
+                <a href="#" class="quick-link">
+                    <div class="quick-link-icon">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                    </div>
+                    <span class="quick-link-text">Overwatch Grid</span>
+                </a>
+                <a href="#" class="quick-link">
+                    <div class="quick-link-icon">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                    </div>
+                    <span class="quick-link-text">Uplink Cache</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Right col: intel feed + tactical -->
+        <div class="home-col-feed">
+            <div class="section-label">Intelligence Feed</div>
+            <div class="intel-feed">
+                <div class="intel-feed-header">
+                    <span>EVENT_LOG</span>
+                    <span>SOURCE: MJOLNIR_SITE</span>
+                </div>
+                <div class="intel-feed-body">
+                    <div class="intel-line success"><span class="intel-time">[14:32:01]</span><span class="intel-text">SYSTEM CORE ONLINE</span></div>
+                    <div class="intel-line"><span class="intel-time">[14:32:02]</span><span class="intel-text">ESTABLISHING SECURE UPLINK...</span></div>
+                    <div class="intel-line success"><span class="intel-time">[14:32:03]</span><span class="intel-text">ACCESS GRANTED: KINETIC_FORCE</span></div>
+                    <div class="intel-line"><span class="intel-time">[14:32:10]</span><span class="intel-text">TELEMETRY NODE CONNECTED: REACH-07</span></div>
+                    <div class="intel-line warn"><span class="intel-time">[14:32:15]</span><span class="intel-text">WARNING: NODE REACH-04 LATENCY HIGH</span></div>
+                    <div class="intel-line"><span class="intel-time">[14:32:22]</span><span class="intel-text">FILE UPLINK: OPERATION_TALON.PDF</span></div>
+                    <div class="intel-line success"><span class="intel-time">[14:32:30]</span><span class="intel-text">AUTHENTICATION: ADMIN SESSION VERIFIED</span></div>
+                    <div class="intel-line"><span class="intel-time">[14:32:45]</span><span class="intel-text">SCANNING INFRASTRUCTURE: 9 NODES</span></div>
+                </div>
+                <div class="intel-feed-footer">
+                    <span class="blinking-dot"></span> SECURE CONNECTION ACTIVE
+                </div>
+            </div>
+
+            <div class="section-label" style="margin-top: var(--spacing-xl);">Tactical Grid Preview</div>
+            <div class="tactical-preview">
+                <div class="tactical-overlay">
+                    <div class="tactical-scanline"></div>
+                    <div class="tactical-coords">40.7128° N, 74.0060° W</div>
+                    <div class="tactical-label">SECTOR: NEW YORK</div>
+                </div>
+                <div class="tactical-map-placeholder">
+                    <svg viewBox="0 0 400 200" preserveAspectRatio="none">
+                        <defs><radialGradient id="grd" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="rgba(34,211,238,0.08)"/><stop offset="100%" stop-color="transparent"/></radialGradient></defs>
+                        <rect width="400" height="200" fill="url(#grd)"/>
+                        <path d="M0,100 Q100,50 200,100 T400,100" stroke="rgba(34,211,238,0.2)" fill="none" stroke-width="1"/>
+                        <circle cx="200" cy="100" r="40" stroke="rgba(34,211,238,0.3)" fill="none" stroke-width="1"/>
+                        <circle cx="200" cy="100" r="65" stroke="rgba(34,211,238,0.1)" fill="none" stroke-width="1"/>
+                        <circle cx="200" cy="100" r="85" stroke="rgba(34,211,238,0.06)" fill="none" stroke-width="1"/>
+                        <line x1="200" y1="0" x2="200" y2="200" stroke="rgba(34,211,238,0.08)" stroke-width="1"/>
+                        <line x1="0" y1="100" x2="400" y2="100" stroke="rgba(34,211,238,0.08)" stroke-width="1"/>
+                        <circle cx="200" cy="100" r="4" fill="var(--reach-cyan)" opacity="0.7"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SECTION 3: TERMINAL -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="container preview-section">
+    <div class="preview-label">// AI Terminal</div>
+    <div class="terminal-panel" style="height: 420px;">
+        <div class="terminal-header">
+            <div class="terminal-header-left">
+                <span class="terminal-indicator"></span>
+                <span class="terminal-title">INFINITY TERMINAL</span>
+                <span class="terminal-subtitle">// MJOLNIR ARMORY SYSTEMS</span>
+            </div>
+            <div class="terminal-vitals">
+                <div class="vital-item">CPU: <span>42%</span></div>
+                <div class="vital-item">RAM: <span>71%</span></div>
+            </div>
+            <button class="terminal-logout-btn">LOGOUT</button>
+        </div>
+        <div class="terminal-output">
+            <div class="terminal-msg-boot">INFINITY TERMINAL v2.1.0 — MJOLNIR GEN3 INTERFACE
+UNSC CLEARANCE LEVEL: ADMINISTRATOR
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Type 'help' for available commands.</div>
+            <div class="terminal-msg-user">INFINITY &gt; what is the status of reach-04?</div>
+            <div class="terminal-msg-ai"><span class="terminal-ai-label">◈ INFINITY AI</span><span class="terminal-ai-content">REACH-04 STATUS: DEGRADED
+Node is online but reporting elevated latency (280ms avg vs 12ms baseline).
+Recommended action: Inspect network path or restart service daemon.
+Last healthy ping: 14:29:07 UTC</span></div>
+            <div class="terminal-cursor">█</div>
+        </div>
+        <div class="terminal-input-bar">
+            <span class="terminal-prompt">INFINITY &gt;</span>
+            <input type="text" placeholder="Type your query..." style="flex:1;background:transparent;border:none;outline:none;color:var(--reach-amber);font-family:var(--font-mono);font-size:0.875rem;caret-color:var(--reach-amber);">
+            <button id="terminal-send">SEND</button>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SECTION 4: UPLINK CACHE -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="container preview-section">
+    <div class="preview-label">// Uplink Cache</div>
+
+    <header class="page-header" style="border-bottom: 1px solid rgba(34, 211, 238, 0.2); margin-bottom: var(--spacing-xl);">
+        <div class="section-label" style="color: var(--reach-cyan);">Secure Cryptographic Data Vault</div>
+        <h1 class="page-title" style="color: var(--reach-cyan); text-shadow: 0 0 10px rgba(34, 211, 238, 0.3);">Uplink Cache</h1>
+        <p class="page-description">Upload and download heavily encrypted files through the UNSC network.</p>
+    </header>
+
+    <section class="uplink-section upload" style="border-color: rgba(246,166,35,0.2);">
+        <div class="section-header">
+            <div class="section-title">
+                <div class="section-title-icon" style="box-shadow: 0 0 8px rgba(246,166,35,0.2);">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                </div>
+                <h3 style="color: var(--reach-amber); letter-spacing: 0.15em;">ENCRYPT & UPLOAD</h3>
+            </div>
+        </div>
+        <div class="drop-zone" style="border-color: rgba(246,166,35,0.25);">
+            <div class="drop-zone-icon">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color: var(--reach-amber);"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+            </div>
+            <p class="drop-zone-text" style="font-family: var(--font-mono); text-transform: uppercase; font-size: 0.8rem;">Awaiting Payload Injection...</p>
+            <p class="drop-zone-hint">Drag files or <span style="color: var(--reach-amber); cursor:pointer;">INITIALIZE BROWSER</span></p>
+        </div>
+    </section>
+
+    <section class="uplink-section download" style="border-color: rgba(34,211,238,0.2);">
+        <div class="section-header">
+            <div class="section-title">
+                <div class="section-title-icon" style="background: rgba(34,211,238,0.08); color: var(--reach-cyan); box-shadow: 0 0 8px rgba(34,211,238,0.15);">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                </div>
+                <h3 style="color: var(--reach-cyan); letter-spacing: 0.15em;">DECRYPT & DOWNLOAD</h3>
+            </div>
+        </div>
+        <div class="vault-file-list" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(300px,1fr)); gap: var(--spacing-md);">
+            <div class="file-item vault-file-item" style="opacity:1; animation:none; flex-direction:column; align-items:stretch; padding: var(--spacing-lg);">
+                <div style="display:flex; align-items:center; gap:var(--spacing-md); margin-bottom:var(--spacing-md);">
+                    <div class="vault-icon" style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;background:rgba(34,211,238,0.08);color:var(--reach-cyan);border:1px solid rgba(34,211,238,0.2);">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                    </div>
+                    <div>
+                        <div class="file-name">OPERATION_TALON.pdf</div>
+                        <div class="file-meta"><span>2.4 MB</span><span>2026-04-10</span></div>
+                    </div>
+                </div>
+                <div class="file-actions" style="display:flex; gap:var(--spacing-sm); border-top:1px solid rgba(74,85,104,0.2); padding-top:var(--spacing-md);">
+                    <button class="file-btn vault-btn" style="flex:1; justify-content:center; display:flex; align-items:center; gap:4px;">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline></svg> DECRYPT
+                    </button>
+                    <button class="file-btn vault-btn-danger" style="flex:1; justify-content:center; display:flex; align-items:center; gap:4px; border:1px solid rgba(232,93,4,0.2); color:var(--reach-orange); background:rgba(232,93,4,0.04); font-family:var(--font-mono); font-size:0.7rem; cursor:pointer; padding:var(--spacing-xs) var(--spacing-sm);">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14H6L5 6"></path></svg> PURGE
+                    </button>
+                </div>
+            </div>
+            <div class="file-item vault-file-item" style="opacity:1; animation:none; flex-direction:column; align-items:stretch; padding: var(--spacing-lg);">
+                <div style="display:flex; align-items:center; gap:var(--spacing-md); margin-bottom:var(--spacing-md);">
+                    <div class="vault-icon" style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;background:rgba(34,211,238,0.08);color:var(--reach-cyan);border:1px solid rgba(34,211,238,0.2);">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line></svg>
+                    </div>
+                    <div>
+                        <div class="file-name">MJOLNIR_SPECS_V3.xlsx</div>
+                        <div class="file-meta"><span>890 KB</span><span>2026-04-09</span></div>
+                    </div>
+                </div>
+                <div class="file-actions" style="display:flex; gap:var(--spacing-sm); border-top:1px solid rgba(74,85,104,0.2); padding-top:var(--spacing-md);">
+                    <button class="file-btn vault-btn" style="flex:1; justify-content:center; display:flex; align-items:center; gap:4px;">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline></svg> DECRYPT
+                    </button>
+                    <button class="file-btn vault-btn-danger" style="flex:1; justify-content:center; display:flex; align-items:center; gap:4px; border:1px solid rgba(232,93,4,0.2); color:var(--reach-orange); background:rgba(232,93,4,0.04); font-family:var(--font-mono); font-size:0.7rem; cursor:pointer; padding:var(--spacing-xs) var(--spacing-sm);">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14H6L5 6"></path></svg> PURGE
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SECTION 5: BUTTONS & COMPONENTS -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="container preview-section">
+    <div class="preview-label">// Components</div>
+    <div style="display:flex; flex-wrap:wrap; gap:var(--spacing-md); align-items:center; margin-bottom: var(--spacing-xl);">
+        <button class="btn btn-primary">Primary Action</button>
+        <button class="btn btn-secondary">Secondary Action</button>
+        <button class="btn btn-primary" style="opacity:0.5; cursor:not-allowed;" disabled>Disabled</button>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px,1fr)); gap: var(--spacing-md);">
+        <div class="status-panel">
+            <div class="panel-header"><span class="panel-title">Panel with Indicator</span><div class="panel-indicator"></div></div>
+            <div class="panel-value" style="color: var(--reach-cyan);">ONLINE</div>
+            <div class="panel-label">System Ready</div>
+        </div>
+        <div class="status-panel">
+            <div class="panel-header"><span class="panel-title">Disk Usage</span></div>
+            <div class="panel-value">83%</div>
+            <div class="metric-bar critical" style="height:4px; margin-top:8px;"><div class="metric-bar-fill" style="width:83%"></div></div>
+            <div class="panel-label">Critical threshold</div>
+        </div>
+        <div class="login-box" style="position:relative; margin:0;">
+            <div class="login-header">
+                <h2>AUTHENTICATION</h2>
+                <p>Enter your credentials to access</p>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Access Code</label>
+                <input type="password" class="form-input" placeholder="••••••••">
+            </div>
+            <button class="btn btn-primary" style="width:100%;">AUTHENTICATE</button>
+        </div>
+    </div>
+</div>
+
+</main>
+
+<!-- Global Status Bar -->
+<div class="status-bar">
+    <div class="status-item">
+        <span class="status-dot"></span>
+        <span class="label">SYSTEM:</span>
+        <span class="value" style="color: var(--reach-cyan);">ACTIVE</span>
+    </div>
+    <div class="status-item"><span class="label">LOAD:</span><span class="value" style="color:var(--reach-amber);">42%</span></div>
+    <div class="status-item"><span class="label">RAM:</span><span class="value" style="color:var(--reach-amber);">71%</span></div>
+    <div class="status-item" style="margin-left:auto;"><span class="label">USER:</span><span class="value">KINETIC_FORCE</span></div>
+    <div class="status-item"><span class="label">SEC:</span><span class="value" style="color:var(--reach-orange);">ADMIN</span></div>
+</div>
+
+<script>
+    // Nav scroll effect
+    window.addEventListener('scroll', () => {
+        document.getElementById('nav').classList.toggle('scrolled', window.scrollY > 10);
+    });
+</script>
+</body>
+</html>

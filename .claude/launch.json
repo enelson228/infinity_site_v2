@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "Flask Dev Server",
+      "runtimeExecutable": "doppler",
+      "runtimeArgs": ["run", "--project", "mjolinr_server", "--config", "prd", "--", "/Users/ericnelson/Projects/infinity_site_v2/venv/bin/python", "app.py"],
+      "port": 5173
+    },
+    {
+      "name": "Flask CLI",
+      "runtimeExecutable": "doppler",
+      "runtimeArgs": ["run", "--project", "mjolinr_server", "--config", "prd", "--", "flask", "run", "--port", "5000"],
+      "port": 5000
+    }
+  ]
+}
