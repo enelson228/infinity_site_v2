@@ -115,11 +115,16 @@ def api_forge_status(job_id):
         if not b64_image:
             return jsonify({'error': 'No image in response', 'status': 'FAILED'}), 502
 
+        # Strip data URL prefix if worker returns "data:image/png;base64,<data>"
+        if isinstance(b64_image, str) and b64_image.startswith('data:'):
+            b64_image = b64_image.split(',', 1)[1]
+
         filename = f'{job_id}.png'
         filepath = os.path.join(_FORGE_OUTPUTS, filename)
 
         try:
-            image_bytes = base64.b64decode(b64_image)
+            # Fix missing padding (some workers omit trailing '=' characters)
+            image_bytes = base64.b64decode(b64_image + '=' * (-len(b64_image) % 4))
             os.makedirs(_FORGE_OUTPUTS, exist_ok=True)
             with open(filepath, 'wb') as f:
                 f.write(image_bytes)

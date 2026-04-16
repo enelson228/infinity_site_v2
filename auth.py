@@ -52,6 +52,8 @@ def login_required(f):
         user = database.get_user_by_id(int(user_id))
         if not user or user['disabled']:
             session.clear()
+            if request.is_json or request.path.startswith('/api/'):
+                return jsonify({'error': 'Session expired'}), 401
             return redirect(url_for('auth.login', next=request.path))
 
         return f(*args, **kwargs)

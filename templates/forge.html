@@ -119,6 +119,7 @@ document.getElementById('forge-generate-btn')?.addEventListener('click', async (
       headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
       body: JSON.stringify({ prompt, negative_prompt: negative }),
     });
+    if (resp.status === 401) { showError('Session expired — please reload and log in again.'); setGenerating(false); return; }
     const data = await resp.json();
     if (!resp.ok) { showError(data.error || 'Generation failed.'); setGenerating(false); return; }
     pollStatus(data.job_id, prompt);
