@@ -37,7 +37,7 @@
 
             <ul class="nav-links" id="nav-links">
                 <li><a href="{{ url_for('home') }}" class="nav-link{% if request.endpoint == 'home' %} active{% endif %}">Home</a></li>
-                <li><a href="{{ url_for('projects.projects') }}" class="nav-link{% if request.endpoint in ['projects.projects', 'projects.project_rowboat'] %} active{% endif %}">Projects</a></li>
+                <li><a href="{{ url_for('projects.projects') }}" class="nav-link{% if request.endpoint == 'projects.projects' %} active{% endif %}">Projects</a></li>
                 <li><a href="{{ url_for('telemetry.telemetry') }}" class="nav-link{% if request.endpoint == 'telemetry.telemetry' %} active{% endif %}">Telemetry</a></li>
                 <li><a href="{{ url_for('uplink.uplink') }}" class="nav-link{% if request.endpoint in ['uplink.uplink', 'auth.uplink_login'] %} active{% endif %}">Uplink Cache</a></li>
                 <li><a href="{{ url_for('forge.forge') }}" class="nav-link{% if request.endpoint == 'forge.forge' %} active{% endif %}">Forge</a></li>

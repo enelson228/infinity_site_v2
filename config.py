@@ -26,7 +26,6 @@ CLAUDE_PASSWORD_HASH = _required_env('CLAUDE_PASSWORD_HASH')
 # Anthropic API key (required)
 ANTHROPIC_API_KEY = _required_env('ANTHROPIC_API_KEY')
 
-# Cesium Ion token for overwatch globe (optional — limits terrain/imagery if missing)
 CESIUM_ION_TOKEN = os.environ.get('CESIUM_ION_TOKEN', '')
 
 # Trusted reverse proxy count for accurate client IP (set to 1 if behind Nginx/Caddy)
