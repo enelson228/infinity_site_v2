@@ -66,7 +66,7 @@
 
   <div id="forge-gallery" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--spacing-md);">
     {% for img in images %}
-    <div class="forge-card" data-id="{{ img.id }}" style="background: rgba(0,0,0,0.4); border: 1px solid rgba(34,211,238,0.15); overflow: hidden;">
+    <div class="forge-card" data-id="{{ img.id }}" style="background: rgba(21,25,42,0.85); border: 1px solid rgba(34,211,238,0.15); border-radius: 10px; overflow: hidden;">
       <img src="/static/forge_outputs/{{ img.filename }}" alt="Generated image" loading="lazy"
            style="width: 100%; display: block; aspect-ratio: 1; object-fit: cover;">
       <div style="padding: 10px 12px;">
@@ -175,7 +175,7 @@ function prependImageCard(imageId, imageUrl, prompt) {
   const card = document.createElement('div');
   card.className = 'forge-card';
   card.dataset.id = imageId;
-  card.style.cssText = 'background:rgba(0,0,0,0.4);border:1px solid rgba(34,211,238,0.15);overflow:hidden;';
+  card.style.cssText = 'background:rgba(21,25,42,0.85);border:1px solid rgba(34,211,238,0.15);border-radius:10px;overflow:hidden;';
   card.innerHTML = `
     <img src="${imageUrl}" alt="Generated image" style="width:100%;display:block;aspect-ratio:1;object-fit:cover;">
     <div style="padding:10px 12px;">

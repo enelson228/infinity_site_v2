@@ -90,17 +90,7 @@
                     </div>
                     <span class="quick-link-text">Live Telemetry</span>
                 </a>
-                <a href="{{ url_for('overwatch.overwatch') }}" class="quick-link">
-                    <div class="quick-link-icon">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="12" cy="12" r="10"></circle>
-                            <line x1="2" y1="12" x2="22" y2="12"></line>
-                            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
-                        </svg>
-                    </div>
-                    <span class="quick-link-text">Overwatch Grid</span>
-                </a>
-                <a href="{{ url_for('uplink.uplink') }}" class="quick-link">
+<a href="{{ url_for('uplink.uplink') }}" class="quick-link">
                     <div class="quick-link-icon">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -113,38 +103,52 @@
             </div>
         </div>
 
-        <!-- Right Column: Live Feed & Map -->
+        <!-- Right Column: Node Info -->
         <div class="home-col-feed">
-            <div class="section-label">Intelligence Feed</div>
-            <div class="intel-feed">
-                <div class="intel-feed-header">
-                    <span>EVENT_LOG</span>
-                    <span>SOURCE: MJOLNIR_SITE</span>
-                </div>
-                <div id="intel-feed-body" class="intel-feed-body">
-                    <div class="intel-line">INITIALIZING INTEL FEED...</div>
-                </div>
-                <div class="intel-feed-footer">
-                    <span class="blinking-dot"></span> SECURE CONNECTION ACTIVE
-                </div>
-            </div>
+            <div class="section-label" style="margin-top: var(--spacing-xl);">Node Intelligence</div>
+            <div class="status-panel" style="padding: var(--spacing-lg);">
 
-            <div class="section-label" style="margin-top: var(--spacing-xl);">Tactical Grid Preview</div>
-            <div class="tactical-preview">
-                <div class="tactical-overlay">
+                <!-- Radar + coords -->
+                <div style="position: relative; margin-bottom: var(--spacing-md); height: 120px; overflow: hidden; border-radius: 6px; background: rgba(0,0,0,0.3);">
                     <div class="tactical-scanline"></div>
-                    <div class="tactical-coords">40.7128° N, 74.0060° W</div>
-                    <div class="tactical-label">SECTOR: NEW YORK</div>
-                </div>
-                <div class="tactical-map-placeholder">
-                    <!-- This represents the overwatch view -->
-                    <svg viewBox="0 0 400 200" preserveAspectRatio="none">
-                        <path d="M0,100 Q100,50 200,100 T400,100" stroke="rgba(34, 211, 238, 0.2)" fill="none" stroke-width="1"/>
-                        <circle cx="200" cy="100" r="40" stroke="rgba(34, 211, 238, 0.3)" fill="none" stroke-width="1"/>
-                        <circle cx="200" cy="100" r="60" stroke="rgba(34, 211, 238, 0.1)" fill="none" stroke-width="1"/>
-                        <line x1="200" y1="0" x2="200" y2="200" stroke="rgba(34, 211, 238, 0.1)" stroke-width="1"/>
-                        <line x1="0" y1="100" x2="400" y2="100" stroke="rgba(34, 211, 238, 0.1)" stroke-width="1"/>
+                    <svg viewBox="0 0 400 120" preserveAspectRatio="none" style="width:100%;height:100%;">
+                        <circle cx="200" cy="60" r="50" stroke="rgba(34,211,238,0.15)" fill="none" stroke-width="1"/>
+                        <circle cx="200" cy="60" r="30" stroke="rgba(34,211,238,0.2)" fill="none" stroke-width="1"/>
+                        <circle cx="200" cy="60" r="10" stroke="rgba(34,211,238,0.35)" fill="none" stroke-width="1"/>
+                        <line x1="200" y1="0" x2="200" y2="120" stroke="rgba(34,211,238,0.08)" stroke-width="1"/>
+                        <line x1="0" y1="60" x2="400" y2="60" stroke="rgba(34,211,238,0.08)" stroke-width="1"/>
+                        <circle cx="200" cy="60" r="3" fill="var(--reach-cyan)" style="filter:drop-shadow(0 0 4px var(--reach-cyan))"/>
                     </svg>
+                    <div style="position:absolute;bottom:8px;left:10px;font-family:var(--font-mono);font-size:0.55rem;color:rgba(34,211,238,0.5);letter-spacing:0.1em;" id="node-coords">— ° N, — ° W</div>
+                    <div style="position:absolute;top:8px;right:10px;font-family:var(--font-mono);font-size:0.55rem;color:rgba(34,211,238,0.4);letter-spacing:0.1em;">SECTOR: ACTIVE</div>
+                </div>
+
+                <!-- Node data rows -->
+                <div class="metric-details">
+                    <div class="metric-detail-row">
+                        <span class="metric-detail-label">NODE ID</span>
+                        <span class="metric-detail-value" style="color:var(--reach-cyan);">INFINITY-VPS-01</span>
+                    </div>
+                    <div class="metric-detail-row">
+                        <span class="metric-detail-label">HOSTNAME</span>
+                        <span class="metric-detail-value" id="node-hostname">—</span>
+                    </div>
+                    <div class="metric-detail-row">
+                        <span class="metric-detail-label">IP ADDRESS</span>
+                        <span class="metric-detail-value" style="color:var(--reach-cyan);" id="node-ip">—</span>
+                    </div>
+                    <div class="metric-detail-row">
+                        <span class="metric-detail-label">UPTIME</span>
+                        <span class="metric-detail-value" id="node-uptime">—</span>
+                    </div>
+                    <div class="metric-detail-row">
+                        <span class="metric-detail-label">DISK ( / )</span>
+                        <span class="metric-detail-value" id="node-disk">—</span>
+                    </div>
+                    <div class="metric-detail-row">
+                        <span class="metric-detail-label">NET RX / TX</span>
+                        <span class="metric-detail-value" id="node-net">—</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -155,37 +159,16 @@
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/boot.js') }}"></script>
 <script>
-    const intelFeedBody = document.getElementById('intel-feed-body');
     const healthIndicator = document.getElementById('health-indicator');
-
-    function addIntelLine(text, type = 'info') {
-        const line = document.createElement('div');
-        line.className = `intel-line ${type}`;
-        const time = new Date().toLocaleTimeString('en-GB', { hour12: false });
-        line.innerHTML = `<span class="intel-time">[${time}]</span> <span class="intel-text">${text.toUpperCase()}</span>`;
-        intelFeedBody.appendChild(line);
-        intelFeedBody.scrollTop = intelFeedBody.scrollHeight;
-        
-        // Keep only last 20 lines
-        while (intelFeedBody.children.length > 20) {
-            intelFeedBody.removeChild(intelFeedBody.firstChild);
-        }
-    }
-
-    // Initial boot sequence
-    setTimeout(() => addIntelLine('SYSTEM CORE ONLINE', 'success'), 500);
-    setTimeout(() => addIntelLine('ESTABLISHING SECURE UPLINK...', 'info'), 1000);
-    setTimeout(() => addIntelLine('ACCESS GRANTED: KINETIC_FORCE', 'success'), 1500);
 
     let homeIntervalId = null;
 
     // Update Metrics
     async function updateHomeStats() {
         try {
-            const [telemetryRes, projectsRes, auditRes] = await Promise.all([
+            const [telemetryRes, projectsRes] = await Promise.all([
                 fetch('/api/telemetry'),
                 fetch('/api/projects'),
-                fetch('/api/telemetry/audit')
             ]);
 
             if (telemetryRes.status === 401) {
@@ -195,24 +178,38 @@
                 document.getElementById('active-services').textContent = `SECURED`;
                 healthIndicator.style.background = 'var(--text-secondary)';
                 healthIndicator.style.boxShadow = 'none';
-                
-                if (intelFeedBody.children.length < 5) {
-                    intelFeedBody.innerHTML = '';
-                    addIntelLine('AUTHENTICATION REQUIRED FOR TELEMETRY', 'warn');
-                    addIntelLine('AWAITING SECURE CREDENTIALS...', 'info');
-                }
                 return;
             }
 
             const telemetry = await telemetryRes.json();
             const projectsData = await projectsRes.json();
-            const auditData = await auditRes.json();
 
             // Stats
             document.getElementById('home-cpu-val').textContent = `${telemetry.cpu.percent}%`;
             document.getElementById('home-cpu-bar').style.width = `${telemetry.cpu.percent}%`;
             document.getElementById('home-ram-val').textContent = `${telemetry.ram.percent}%`;
             document.getElementById('home-ram-bar').style.width = `${telemetry.ram.percent}%`;
+
+            // Node intelligence panel
+            if (telemetry.node) {
+                document.getElementById('node-hostname').textContent = telemetry.node.hostname || '—';
+                const ips = (telemetry.node.addresses || []).map(a => a.ip);
+                document.getElementById('node-ip').textContent = ips.length ? ips.join(' / ') : '—';
+            }
+            // Uptime
+            const u = telemetry.uptime_seconds;
+            const ud = Math.floor(u / 86400), uh = Math.floor((u % 86400) / 3600), um = Math.floor((u % 3600) / 60);
+            document.getElementById('node-uptime').textContent =
+                (ud ? ud + 'd ' : '') + (uh ? uh + 'h ' : '') + um + 'm';
+            // Disk
+            const diskPct = telemetry.disk.percent;
+            const diskUsed = (telemetry.disk.used / 1e9).toFixed(1);
+            const diskTotal = (telemetry.disk.total / 1e9).toFixed(1);
+            document.getElementById('node-disk').textContent = `${diskPct}%  (${diskUsed} / ${diskTotal} GB)`;
+            // Network totals
+            const rx = (telemetry.network.bytes_recv / 1e9).toFixed(2);
+            const tx = (telemetry.network.bytes_sent / 1e9).toFixed(2);
+            document.getElementById('node-net').textContent = `${rx} GB / ${tx} GB`;
 
             const onlineCount = projectsData.projects.filter(p => p.status === 'online').length;
             document.getElementById('active-services').textContent = `${onlineCount} / ${projectsData.projects.length}`;
@@ -226,17 +223,6 @@
             } else {
                 healthIndicator.style.background = 'var(--status-offline)';
                 healthIndicator.style.boxShadow = '0 0 10px var(--status-offline)';
-            }
-
-            // Audit Feed
-            if (auditData.events && auditData.events.length > 0) {
-                // Clear initial if we have real data
-                if (intelFeedBody.children.length < 5) intelFeedBody.innerHTML = '';
-                
-                auditData.events.slice(0, 10).reverse().forEach(ev => {
-                    let msg = `${ev.event_type}: ${ev.detail || 'SYSTEM EVENT'}`;
-                    addIntelLine(msg);
-                });
             }
 
         } catch (e) {

@@ -35,29 +35,33 @@ function createProjectCard(project) {
     const clickAction = project.detail_url
         ? `window.location.href='${project.detail_url}'`
         : `window.open('${project.url}', '_blank')`;
-    
-    const latency = project.response_time ? `<span class="latency-badge">${project.response_time}ms</span>` : '';
-    const heartbeat = `<span class="heartbeat ${project.status}"></span>`;
+
+    const viewHref = project.detail_url || project.url;
+    const viewTarget = project.detail_url ? '' : 'target="_blank"';
+
+    let dateStr = 'NEVER';
+    if (project.last_ping) {
+        const d = new Date(project.last_ping);
+        dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).toUpperCase();
+    }
 
     return `
         <article class="project-card" onclick="${clickAction}">
             <div class="project-header">
                 <div class="project-icon">${getProjectIcon(project.icon)}</div>
-                <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
-                    <span class="project-status ${project.status}">${heartbeat} ${project.status.toUpperCase()}</span>
-                    ${latency}
-                </div>
+                <span class="project-status ${project.status}">${project.status.toUpperCase()}</span>
             </div>
             <h3 class="project-name">${project.name}</h3>
             <p class="project-description">${project.description}</p>
             <div class="project-meta">
                 <span>
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="10"/>
                         <polyline points="12 6 12 12 16 14"/>
                     </svg>
-                    ${project.last_ping ? 'PINGED: ' + project.last_ping.split('T')[1].split('.')[0] : 'NEVER'}
+                    ${dateStr}
                 </span>
+                <a href="${viewHref}" ${viewTarget} onclick="event.stopPropagation()" class="project-view-link">VIEW DETAILS →</a>
             </div>
         </article>
     `;

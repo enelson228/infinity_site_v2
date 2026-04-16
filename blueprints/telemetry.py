@@ -1,3 +1,4 @@
+import socket
 import time
 import psutil
 from flask import Blueprint, render_template, jsonify
@@ -64,8 +65,26 @@ def api_telemetry():
             'fifteen': round(load_avg[2], 2),
         },
         'timestamp': time.time(),
-        'history': history
+        'history': history,
+        'node': _get_node_info(),
     })
+
+
+def _get_node_info():
+    hostname = socket.gethostname()
+    # Collect non-loopback IPv4 addresses
+    addrs = []
+    try:
+        for iface, iface_addrs in psutil.net_if_addrs().items():
+            for addr in iface_addrs:
+                if addr.family == socket.AF_INET and not addr.address.startswith('127.'):
+                    addrs.append({'iface': iface, 'ip': addr.address})
+    except Exception:
+        pass
+    return {
+        'hostname': hostname,
+        'addresses': addrs,
+    }
 
 @telemetry_bp.route('/api/telemetry/audit')
 @telemetry_auth_required

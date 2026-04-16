@@ -62,6 +62,7 @@
                         <span class="metric-detail-label">FREQ</span>
                         <span class="metric-detail-value" id="cpu-freq">—</span>
                     </div>
+                    <div class="metric-detail-row"><span class="metric-detail-label">MAX FREQ</span><span class="metric-detail-value" id="cpu-freq-max">—</span></div>
                 </div>
             </div>
 
@@ -90,6 +91,7 @@
                         <span class="metric-detail-label">USED</span>
                         <span class="metric-detail-value" id="ram-used">—</span>
                     </div>
+                    <div class="metric-detail-row"><span class="metric-detail-label">AVAILABLE</span><span class="metric-detail-value" id="ram-available">—</span></div>
                     <div class="metric-detail-row">
                         <span class="metric-detail-label">TOTAL</span>
                         <span class="metric-detail-value" id="ram-total">—</span>
@@ -117,6 +119,7 @@
                         <span class="metric-detail-label">USED</span>
                         <span class="metric-detail-value" id="disk-used">—</span>
                     </div>
+                    <div class="metric-detail-row"><span class="metric-detail-label">FREE</span><span class="metric-detail-value" id="disk-free">—</span></div>
                     <div class="metric-detail-row">
                         <span class="metric-detail-label">TOTAL</span>
                         <span class="metric-detail-value" id="disk-total">—</span>
@@ -142,6 +145,7 @@
                         <div class="network-total" id="net-tx-total">—</div>
                     </div>
                 </div>
+                <div class="metric-details" style="margin-top: var(--spacing-sm); border-top: 1px solid rgba(74,85,104,0.25); padding-top: var(--spacing-sm);"><div class="metric-detail-row"><span class="metric-detail-label">PKTS RX</span><span class="metric-detail-value" id="net-pkts-rx">—</span></div><div class="metric-detail-row"><span class="metric-detail-label">PKTS TX</span><span class="metric-detail-value" id="net-pkts-tx">—</span></div></div>
             </div>
 
             <!-- System Card -->
@@ -174,13 +178,25 @@
                 <span class="panel-title">AI Context</span>
                 <span class="ai-panel-dot"></span>
             </div>
-            <div class="ai-model-name">Claude Sonnet 3.5</div>
-            <div class="ai-model-id">claude-3-5-sonnet-20241022</div>
+            <div class="ai-model-name">Claude Sonnet 4.6</div>
+            <div class="ai-model-id">claude-sonnet-4-6</div>
 
             <div class="ai-fields">
                 <div class="ai-field-row">
                     <span class="ai-field-label">PROVIDER</span>
                     <span class="ai-field-value">Anthropic</span>
+                </div>
+                <div class="ai-field-row">
+                    <span class="ai-field-label">MODEL ID</span>
+                    <span class="ai-field-value" style="color: var(--reach-cyan);">claude-sonnet-4-6</span>
+                </div>
+                <div class="ai-field-row">
+                    <span class="ai-field-label">TYPE</span>
+                    <span class="ai-field-value">Language Model</span>
+                </div>
+                <div class="ai-field-row">
+                    <span class="ai-field-label">CONTEXT</span>
+                    <span class="ai-field-value">200K tokens</span>
                 </div>
                 <div class="ai-field-row">
                     <span class="ai-field-label">STATUS</span>
@@ -191,6 +207,10 @@
                 </div>
             </div>
 
+            <div class="ai-panel-divider"></div>
+
+            <div class="section-label" style="margin-bottom: var(--spacing-sm);">Active Sessions</div>
+            <div id="active-sessions-count" style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-secondary); letter-spacing: 0.05em;">No active sessions.</div>
             <div class="ai-panel-divider"></div>
 
             <div class="section-label">Live Audit Feed</div>

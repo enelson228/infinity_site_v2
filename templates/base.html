@@ -54,7 +54,8 @@
         {% block content %}{% endblock %}
     </main>
 
-    <!-- Global Status Bar -->
+    <!-- Global Status Bar (admin only) -->
+    {% if session.get('role') == 'admin' %}
     <div class="status-bar" style="border-top: 1px solid rgba(246, 166, 35, 0.3); background: rgba(10, 14, 20, 0.95);">
         <div class="status-item">
             <span class="status-dot" style="background: var(--reach-cyan); box-shadow: 0 0 5px var(--reach-cyan);"></span>
@@ -78,6 +79,7 @@
             <span class="value" style="color: var(--reach-orange);">{{ session.get('role', 'NONE').upper() }}</span>
         </div>
     </div>
+    {% endif %}
 
     <!-- Footer -->
     <footer class="footer" style="background: rgba(8, 10, 16, 0.97); border-top: 1px solid rgba(34, 211, 238, 0.1); padding: 10px 0; margin-bottom: 28px;">

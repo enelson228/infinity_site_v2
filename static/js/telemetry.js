@@ -89,12 +89,14 @@ function updateCpu(cpu) {
     document.getElementById('cpu-freq').textContent = cpu.freq_current !== null
         ? cpu.freq_current + ' MHz'
         : '—';
+    const freqMaxEl = document.getElementById('cpu-freq-max'); if (freqMaxEl) freqMaxEl.textContent = cpu.freq_max !== null ? cpu.freq_max + ' MHz' : '—';
 }
 
 function updateRam(ram) {
     scrambleValue(document.getElementById('ram-percent'), String(ram.percent));
     setBar('ram-bar', 'ram-bar-fill', ram.percent);
     document.getElementById('ram-used').textContent = formatBytes(ram.used);
+    const ramAvailEl = document.getElementById('ram-available'); if (ramAvailEl) ramAvailEl.textContent = formatBytes(ram.available);
     document.getElementById('ram-total').textContent = formatBytes(ram.total);
 }
 
@@ -102,6 +104,7 @@ function updateDisk(disk) {
     scrambleValue(document.getElementById('disk-percent'), String(disk.percent));
     setBar('disk-bar', 'disk-bar-fill', disk.percent);
     document.getElementById('disk-used').textContent = formatBytes(disk.used);
+    const diskFreeEl = document.getElementById('disk-free'); if (diskFreeEl) diskFreeEl.textContent = formatBytes(disk.free);
     document.getElementById('disk-total').textContent = formatBytes(disk.total);
 }
 
@@ -118,6 +121,9 @@ function updateNetwork(network, timestamp) {
             document.getElementById('net-tx-rate').textContent = formatBytesPerSec(Math.max(0, txRate));
         }
     }
+
+    const pktsRxEl = document.getElementById('net-pkts-rx'); if (pktsRxEl) pktsRxEl.textContent = network.packets_recv?.toLocaleString() ?? '—';
+    const pktsTxEl = document.getElementById('net-pkts-tx'); if (pktsTxEl) pktsTxEl.textContent = network.packets_sent?.toLocaleString() ?? '—';
 
     prevNet = network;
     prevTimestamp = timestamp;
