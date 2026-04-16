@@ -8,9 +8,6 @@ projects_bp = Blueprint('projects', __name__)
 def projects():
     return render_template('projects.html')
 
-@projects_bp.route('/projects/rowboat')
-def project_rowboat():
-    return render_template('project_rowboat.html')
 
 @projects_bp.route('/api/projects')
 def api_projects():
