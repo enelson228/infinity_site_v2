@@ -1,0 +1,1360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>COMS-UPLINK // Radio & Spectrum Training | INFINITY</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:    #15192a;
+  --bg2:   #1a1f2e;
+  --bg3:   #252c3d;
+  --panel: #1a1f2e;
+  --panel2:#252c3d;
+  --teal:  #22d3ee;
+  --teal2: #0ea5e9;
+  --teal-dim:  rgba(34, 211, 238, 0.12);
+  --teal-dim2: rgba(34, 211, 238, 0.06);
+  --orange:    #c4862a;
+  --orange-dim:rgba(196, 134, 42, 0.15);
+  --blue:      #4fc3f7;
+  --blue-dim:  rgba(79, 195, 247, 0.1);
+  --green:     #69f0ae;
+  --green-dim: rgba(105, 240, 174, 0.1);
+  --text:  #e2e8f0;
+  --text2: #8b99b4;
+  --text3: #5a6480;
+  --border:  rgba(34, 211, 238, 0.18);
+  --border2: rgba(74, 85, 104, 0.25);
+  --font-display: 'Rajdhani', sans-serif;
+  --font-mono:    'JetBrains Mono', monospace;
+  --font-body:    'Inter', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Scanline overlay */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px);
+  pointer-events: none;
+  z-index: 1000;
+}
+
+/* Grid background */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(34,211,238,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(34,211,238,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.app { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; padding: 0 20px 60px; }
+
+/* Header */
+header {
+  padding: 32px 0 24px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 28px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+.header-left {}
+.unit-tag {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--teal);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.unit-tag::before {
+  content: '';
+  display: inline-block;
+  width: 20px;
+  height: 1px;
+  background: var(--teal);
+}
+h1 {
+  font-family: var(--font-display);
+  font-size: 42px;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  text-shadow: 0 0 20px rgba(34, 211, 238, 0.2);
+}
+h1 span { color: var(--orange); }
+.header-sub {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text2);
+  margin-top: 8px;
+  letter-spacing: 1px;
+}
+.signal-icon {
+  width: 64px;
+  height: 64px;
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+/* Nav */
+nav {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  border-radius: 4px;
+  padding: 6px;
+}
+nav button {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 8px 14px;
+  border-radius: 2px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text2);
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+nav button:hover { color: var(--teal); border-color: var(--border); }
+nav button.active {
+  background: var(--teal-dim);
+  color: var(--teal);
+  border-color: var(--border);
+}
+
+/* Sections */
+.section { display: none; animation: fadeIn 0.3s ease; }
+.section.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+/* Section header */
+.sec-header { margin-bottom: 20px; }
+.sec-tag {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--orange);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+h2 {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 600;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  line-height: 1.1;
+}
+.sec-sub {
+  font-size: 14px;
+  color: var(--text2);
+  margin-top: 8px;
+  line-height: 1.7;
+  max-width: 600px;
+}
+
+/* Cards */
+.card {
+  background: var(--panel);
+  border: 1px solid var(--border2);
+  border-radius: 4px;
+  padding: 16px 20px;
+  margin-bottom: 12px;
+  position: relative;
+  overflow: hidden;
+}
+.card::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 2px;
+  background: var(--teal);
+  opacity: 0.5;
+}
+.card.orange::before { background: var(--orange); }
+.card.blue::before { background: var(--blue); }
+.card.green::before { background: var(--green); }
+.card-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--teal);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.card.orange .card-label { color: var(--orange); }
+.card.blue .card-label { color: var(--blue); }
+.card.green .card-label { color: var(--green); }
+.card-title {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.card-body { font-size: 13px; color: var(--text2); line-height: 1.7; }
+.card-body strong { color: var(--text); font-weight: 500; }
+
+/* Grid */
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 12px; }
+
+/* Steps */
+.steps { margin-bottom: 12px; }
+.step {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  padding: 14px 16px;
+  background: var(--panel);
+  border: 1px solid var(--border2);
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+.step-num {
+  width: 28px; height: 28px;
+  border-radius: 2px;
+  background: var(--teal-dim);
+  border: 1px solid var(--border);
+  color: var(--teal);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.step-body { font-size: 13px; color: var(--text2); line-height: 1.7; padding-top: 4px; }
+.step-body strong { color: #fff; font-weight: 500; }
+
+/* Slider controls */
+.ctrl-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.ctrl-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text2);
+  letter-spacing: 1px;
+  min-width: 70px;
+  text-transform: uppercase;
+}
+input[type=range] {
+  flex: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  background: var(--panel2);
+  border-radius: 2px;
+  outline: none;
+  border: 1px solid var(--border2);
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px; height: 16px;
+  background: var(--teal);
+  border-radius: 2px;
+  cursor: pointer;
+  box-shadow: 0 0 8px rgba(34,211,238,0.4);
+}
+.ctrl-val {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--teal);
+  min-width: 90px;
+  text-align: right;
+}
+
+/* Spectrum bar */
+.spectrum-bar {
+  position: relative;
+  height: 36px;
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 6px;
+  background: linear-gradient(to right, #534AB7, #1D9E75, #EF9F27, #D85A30, #D4537E);
+  border: 1px solid var(--border);
+}
+.spec-marker {
+  position: absolute; top: 0; bottom: 0;
+  width: 2px;
+  background: #fff;
+  transition: left 0.1s;
+  box-shadow: 0 0 6px rgba(255,255,255,0.8);
+}
+.spectrum-labels {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text3);
+  margin-bottom: 16px;
+  letter-spacing: 0.5px;
+}
+
+/* Display panel */
+.display-panel {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+.dp-name {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--teal);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+.dp-detail {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text2);
+  margin-top: 4px;
+  letter-spacing: 0.5px;
+}
+.wave-svg { width: 100%; height: 48px; margin: 10px 0 4px; display: block; }
+
+/* Math result */
+.math-result {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.math-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border2);
+  font-size: 13px;
+}
+.math-row:last-child { border-bottom: none; }
+.math-key { font-family: var(--font-mono); color: var(--text2); font-size: 11px; letter-spacing: 1px; text-transform: uppercase; }
+.math-val { font-family: var(--font-mono); color: var(--teal); font-size: 14px; font-weight: 500; }
+
+/* Formula display */
+.formula-box {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 20px;
+  text-align: center;
+  margin: 14px 0;
+}
+.formula {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 600;
+  color: #fff;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
+.formula em { color: var(--teal); font-style: normal; }
+.formula-note {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text2);
+  margin-top: 8px;
+  letter-spacing: 1px;
+}
+
+/* Build signal */
+.use-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+.use-card {
+  background: var(--panel);
+  border: 1px solid var(--border2);
+  border-radius: 4px;
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.use-card:hover { border-color: var(--border); background: var(--panel2); }
+.use-card.selected { border-color: var(--teal); background: var(--teal-dim); }
+.use-card .uc-title {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 3px;
+}
+.use-card .uc-desc { font-size: 12px; color: var(--text2); }
+.mod-row { display: flex; gap: 8px; margin-bottom: 14px; }
+.mod-btn {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 2px;
+  padding: 8px 18px;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text2);
+  cursor: pointer;
+  border-radius: 2px;
+  transition: all 0.2s;
+}
+.mod-btn:hover { color: var(--teal); border-color: var(--teal); }
+.mod-btn.active { background: var(--teal-dim); color: var(--teal); border-color: var(--teal); }
+.signal-result {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 16px;
+  font-size: 13px;
+  color: var(--text2);
+  line-height: 1.7;
+  display: none;
+}
+.signal-result strong { color: var(--teal); font-weight: 500; }
+
+/* Timeline */
+.timeline { padding-left: 20px; position: relative; }
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 6px; top: 8px; bottom: 8px;
+  width: 1px;
+  background: var(--border);
+}
+.tl-item { position: relative; margin-bottom: 20px; }
+.tl-dot {
+  position: absolute;
+  left: -18px; top: 5px;
+  width: 8px; height: 8px;
+  border-radius: 1px;
+  background: var(--teal);
+  box-shadow: 0 0 6px rgba(34,211,238,0.5);
+}
+.tl-year {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--orange);
+  letter-spacing: 2px;
+  margin-bottom: 3px;
+}
+.tl-title {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 600;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+}
+.tl-body { font-size: 13px; color: var(--text2); line-height: 1.6; }
+
+/* Quiz */
+.quiz-progress {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text2);
+  letter-spacing: 1px;
+  margin-bottom: 14px;
+}
+.progress-bar {
+  height: 2px;
+  background: var(--panel2);
+  border-radius: 1px;
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  background: var(--teal);
+  transition: width 0.4s ease;
+  box-shadow: 0 0 6px rgba(34,211,238,0.6);
+}
+.quiz-q {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 500;
+  color: #fff;
+  line-height: 1.4;
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.quiz-opts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+.quiz-opts button {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  text-align: left;
+  padding: 12px 14px;
+  background: var(--panel);
+  border: 1px solid var(--border2);
+  color: var(--text2);
+  cursor: pointer;
+  border-radius: 2px;
+  transition: all 0.15s;
+  letter-spacing: 0.5px;
+  line-height: 1.5;
+}
+.quiz-opts button:hover { border-color: var(--border); color: var(--text); background: var(--panel2); }
+.quiz-opts button.correct { background: var(--green-dim); border-color: var(--green); color: var(--green); }
+.quiz-opts button.wrong { background: var(--orange-dim); border-color: var(--orange); color: var(--orange); }
+.feedback {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-left: 2px solid var(--teal);
+  border-radius: 2px;
+  padding: 12px 14px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text2);
+  line-height: 1.7;
+  margin-bottom: 14px;
+  letter-spacing: 0.3px;
+}
+.feedback.correct { border-left-color: var(--green); }
+.feedback.wrong { border-left-color: var(--orange); }
+
+/* Buttons */
+.btn {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 9px 18px;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text2);
+  cursor: pointer;
+  border-radius: 2px;
+  transition: all 0.2s;
+  margin-right: 8px;
+  margin-top: 6px;
+}
+.btn:hover { border-color: var(--teal); color: var(--teal); }
+.btn-teal {
+  background: var(--teal-dim);
+  border-color: var(--teal);
+  color: var(--teal);
+}
+.btn-teal:hover { background: rgba(34,211,238,0.2); }
+
+/* Score */
+.score-wrap { text-align: center; padding: 40px 20px; }
+.score-num {
+  font-family: var(--font-display);
+  font-size: 72px;
+  font-weight: 700;
+  color: var(--teal);
+  line-height: 1;
+  text-shadow: 0 0 30px rgba(34,211,238,0.3);
+}
+.score-denom { font-family: var(--font-display); font-size: 36px; color: var(--text3); }
+.score-msg {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text2);
+  letter-spacing: 2px;
+  margin-top: 10px;
+  text-transform: uppercase;
+}
+
+/* Footer */
+.sec-footer {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border2);
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* Site nav */
+.site-nav {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 20px;
+  background: rgba(26, 31, 46, 0.97);
+  border-bottom: 1px solid rgba(34, 211, 238, 0.15);
+}
+.site-nav-back {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--teal);
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+.site-nav-back:hover { opacity: 0.7; }
+.site-nav-crumb {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  color: var(--text3);
+  text-transform: uppercase;
+}
+.site-nav-brand {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.site-nav-brand-name {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  color: rgba(34, 211, 238, 0.6);
+}
+.site-nav-brand-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--orange);
+  box-shadow: 0 0 5px var(--orange);
+  animation: pulse-dot 2s infinite;
+}
+.site-nav-brand-status {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--orange);
+  letter-spacing: 0.2em;
+}
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+@media (max-width: 600px) {
+  h1 { font-size: 28px; }
+  .grid2, .use-grid, .quiz-opts { grid-template-columns: 1fr; }
+  nav button { font-size: 10px; padding: 6px 8px; }
+  .site-nav-brand { display: none; }
+}
+</style>
+</head>
+<body>
+<div class="site-nav">
+  <a href="/projects" class="site-nav-back">← PROJECTS</a>
+  <span class="site-nav-crumb">// COMS-UPLINK · TRAINING MODULE 04</span>
+  <div class="site-nav-brand">
+    <div class="site-nav-brand-dot"></div>
+    <span class="site-nav-brand-status">DATALINK ACTIVE</span>
+    <span class="site-nav-brand-name">INFINITY</span>
+  </div>
+</div>
+<div class="app">
+
+  <header>
+    <div class="header-left">
+      <div class="unit-tag">UNSC Naval Intelligence · Field Training</div>
+      <h1>COMS-<span>UPLINK</span></h1>
+      <div class="header-sub">MODULE 04 // ELECTROMAGNETIC SPECTRUM &amp; RADIO SYSTEMS // GRADE 6</div>
+    </div>
+    <svg class="signal-icon" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="32" cy="44" r="4" fill="#22d3ee"/>
+      <path d="M20 36 Q32 24 44 36" stroke="#22d3ee" stroke-width="2" fill="none" opacity="0.7"/>
+      <path d="M12 28 Q32 10 52 28" stroke="#22d3ee" stroke-width="1.5" fill="none" opacity="0.4"/>
+      <path d="M4 20 Q32 -4 60 20" stroke="#22d3ee" stroke-width="1" fill="none" opacity="0.2"/>
+      <line x1="32" y1="44" x2="32" y2="56" stroke="#22d3ee" stroke-width="2"/>
+    </svg>
+  </header>
+
+  <nav id="mainNav">
+    <button class="active" onclick="showSection('spectrum')">01 · Spectrum</button>
+    <button onclick="showSection('howwork')">02 · How it works</button>
+    <button onclick="showSection('explorer')">03 · Explorer</button>
+    <button onclick="showSection('wavelength')">04 · Wave math</button>
+    <button onclick="showSection('builder')">05 · Build signal</button>
+    <button onclick="showSection('history')">06 · History</button>
+    <button onclick="showSection('antenna')">07 · Antenna</button>
+    <button onclick="showSection('propagation')">08 · Propagation</button>
+    <button onclick="showSection('encoding')">09 · Encoding</button>
+    <button onclick="showSection('noise')">10 · Noise</button>
+    <button onclick="showSection('quiz')">11 · Quiz</button>
+  </nav>
+
+  <!-- SECTION 1: SPECTRUM -->
+  <div id="spectrum" class="section active">
+    <div class="sec-header">
+      <div class="sec-tag">Briefing 01 // Core Concepts</div>
+      <h2>The Radio Spectrum</h2>
+      <p class="sec-sub">The radio spectrum is a range of invisible energy waves that travel through the air at the speed of light. Every wireless device — from your radio to your phone — uses a slice of it.</p>
+    </div>
+    <div class="card">
+      <div class="card-label">// Key Concept</div>
+      <div class="card-title">Frequency = how fast a wave wiggles</div>
+      <div class="card-body">Imagine shaking a jump rope slowly — that's a low frequency. Shake it fast — that's a high frequency. Radio waves work the same way. We measure frequency in <strong>Hertz (Hz)</strong>. 1 Hz means one full wave per second.</div>
+    </div>
+    <div class="card orange">
+      <div class="card-label">// Field Analogy</div>
+      <div class="card-title">Like lanes on a highway</div>
+      <div class="card-body">The spectrum is like a highway with thousands of lanes. Each "lane" is a different frequency. FM radio, cell phones, Wi-Fi, and satellites all use different lanes so their signals don't collide.</div>
+    </div>
+    <div class="grid2">
+      <div class="card" style="margin-bottom:0;">
+        <div class="card-label">// AM Radio</div>
+        <div class="card-title">530–1700 kHz</div>
+        <div class="card-body" style="font-size:12px;">Long range, penetrates buildings. Used for talk radio and news.</div>
+      </div>
+      <div class="card blue" style="margin-bottom:0;">
+        <div class="card-label">// FM Radio</div>
+        <div class="card-title">88–108 MHz</div>
+        <div class="card-body" style="font-size:12px;">Better sound quality, shorter range. Music stations.</div>
+      </div>
+      <div class="card green" style="margin-bottom:0;">
+        <div class="card-label">// Wi-Fi</div>
+        <div class="card-title">2.4 / 5 GHz</div>
+        <div class="card-body" style="font-size:12px;">Very high frequency, great for fast data. Home internet.</div>
+      </div>
+      <div class="card orange" style="margin-bottom:0;">
+        <div class="card-label">// Cell Phones</div>
+        <div class="card-title">700 MHz – 3.5 GHz</div>
+        <div class="card-body" style="font-size:12px;">Wide range for calls, texts, and mobile data.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 2: HOW IT WORKS -->
+  <div id="howwork" class="section">
+    <div class="sec-header">
+      <div class="sec-tag">Briefing 02 // Transmission Protocol</div>
+      <h2>How Radios Work</h2>
+      <p class="sec-sub">A radio transmits information by encoding it onto a wave — like writing a message on a wave and sending it through the air at the speed of light.</p>
+    </div>
+    <div class="steps">
+      <div class="step"><div class="step-num">01</div><div class="step-body"><strong>Generate a carrier wave.</strong> A transmitter produces a radio wave at a specific frequency. This is the empty "carrier" that will hold your message.</div></div>
+      <div class="step"><div class="step-num">02</div><div class="step-body"><strong>Modulate the signal.</strong> Your voice or music is layered onto the carrier wave. AM changes the wave's <em>height</em> (amplitude). FM changes the wave's <em>speed</em> (frequency).</div></div>
+      <div class="step"><div class="step-num">03</div><div class="step-body"><strong>Transmit via antenna.</strong> The antenna broadcasts the wave outward in all directions at 300,000,000 meters per second — the speed of light.</div></div>
+      <div class="step"><div class="step-num">04</div><div class="step-body"><strong>Receive and decode.</strong> A receiving antenna captures the wave. Your radio tunes to the correct frequency and strips the carrier away, leaving only the original audio.</div></div>
+    </div>
+    <div class="card orange">
+      <div class="card-label">// AM vs FM</div>
+      <div class="card-title">Two types of modulation</div>
+      <div class="card-body">
+        <strong>AM (Amplitude Modulation)</strong> — Changes the wave's height to carry information. Travels farther but picks up interference and static.<br><br>
+        <strong>FM (Frequency Modulation)</strong> — Changes the wave's wiggle speed. Much clearer audio, but shorter range through hills and buildings.
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 3: EXPLORER -->
+  <div id="explorer" class="section">
+    <div class="sec-header">
+      <div class="sec-tag">Briefing 03 // Spectrum Scan</div>
+      <h2>Frequency Explorer</h2>
+      <p class="sec-sub">Drag the slider to scan across the electromagnetic spectrum and identify what uses each frequency band.</p>
+    </div>
+    <div class="spectrum-bar"><div class="spec-marker" id="marker" style="left:10%;"></div></div>
+    <div class="spectrum-labels"><span>AM (kHz)</span><span>FM/TV (MHz)</span><span>Cell/WiFi (GHz)</span><span>Satellite</span></div>
+    <div class="ctrl-row">
+      <span class="ctrl-label">Scan</span>
+      <input type="range" min="0" max="100" value="10" id="freqSlider" oninput="updateExplorer(this.value)" step="1">
+      <span class="ctrl-val" id="freqLabel">530 kHz</span>
+    </div>
+    <div class="display-panel">
+      <div class="dp-name" id="sigName">AM Radio</div>
+      <div class="dp-detail" id="sigDetail">Range: 530–1700 kHz · Long-range, penetrates buildings well</div>
+      <svg class="wave-svg" id="waveViz" viewBox="0 0 300 48" preserveAspectRatio="none"></svg>
+    </div>
+    <div class="card green">
+      <div class="card-label">// Intel</div>
+      <div class="card-body" id="funFactBody">AM signals can bounce off the ionosphere at night, letting you receive stations from hundreds of miles away.</div>
+    </div>
+  </div>
+
+  <!-- SECTION 4: WAVE MATH -->
+  <div id="wavelength" class="section">
+    <div class="sec-header">
+      <div class="sec-tag">Briefing 04 // Signal Mathematics</div>
+      <h2>Wave Math</h2>
+      <p class="sec-sub">Every radio wave has a frequency and a wavelength. They're connected by a fundamental physics formula you can use right now.</p>
+    </div>
+    <div class="formula-box">
+      <div class="formula"><em>λ</em> = c ÷ f</div>
+      <div class="formula-note">Wavelength = Speed of Light ÷ Frequency · c = 300,000,000 m/s</div>
+    </div>
+    <div class="card">
+      <div class="card-body">As frequency goes <strong>up</strong>, wavelength goes <strong>down</strong> — they are inversely proportional. A Wi-Fi signal at 2.4 GHz has a wavelength of about 12 cm. An AM radio wave at 1 MHz is 300 meters long.</div>
+    </div>
+    <div class="ctrl-row" style="margin-top:16px;">
+      <span class="ctrl-label">Frequency</span>
+      <input type="range" min="0" max="100" value="10" id="mathSlider" oninput="updateMath(this.value)" step="1">
+      <span class="ctrl-val" id="mathFreqLabel">100 MHz</span>
+    </div>
+    <div class="math-result" id="mathResult"></div>
+    <div class="card green" style="margin-top:12px;">
+      <div class="card-label">// Field Application</div>
+      <div class="card-title">Antenna size depends on wavelength</div>
+      <div class="card-body">Antennas are designed to be roughly 1/4 the wavelength they receive. That's why AM towers are massive structures and your Wi-Fi router has a tiny stub antenna.</div>
+    </div>
+  </div>
+
+  <!-- SECTION 5: BUILD SIGNAL -->
+  <div id="builder" class="section">
+    <div class="sec-header">
+      <div class="sec-tag">Briefing 05 // Mission Design</div>
+      <h2>Build Your Signal</h2>
+      <p class="sec-sub">Select a mission objective, then choose the right modulation type. Your signal design will be evaluated.</p>
+    </div>
+    <p style="font-family:var(--font-mono);font-size:11px;color:var(--text2);letter-spacing:1px;margin-bottom:10px;text-transform:uppercase;">Step 01 — Select mission type:</p>
+    <div class="use-grid" id="useCaseGrid"></div>
+    <div id="buildStep2" style="display:none;">
+      <p style="font-family:var(--font-mono);font-size:11px;color:var(--text2);letter-spacing:1px;margin-bottom:10px;text-transform:uppercase;">Step 02 — Choose modulation:</p>
+      <div class="mod-row">
+        <button class="mod-btn" id="modAM" onclick="selectMod('AM')">AM</button>
+        <button class="mod-btn" id="modFM" onclick="selectMod('FM')">FM</button>
+        <button class="mod-btn" id="modDigital" onclick="selectMod('Digital')">Digital</button>
+      </div>
+    </div>
+    <div class="signal-result" id="signalResult"></div>
+  </div>
+
+  <!-- SECTION 6: HISTORY -->
+  <div id="history" class="section">
+    <div class="sec-header">
+      <div class="sec-tag">Briefing 06 // Historical Archive</div>
+      <h2>History of Radio</h2>
+      <p class="sec-sub">Radio changed the world — from the first invisible waves predicted on paper to the wireless network powering every device you own.</p>
+    </div>
+    <div class="timeline">
+      <div class="tl-item"><div class="tl-dot"></div><div class="tl-year">// 1864</div><div class="tl-title">Maxwell Predicts Radio Waves</div><div class="tl-body">Scottish physicist James Clerk Maxwell mathematically predicted that invisible electromagnetic waves could travel through space — before anyone had built a machine to make them.</div></div>
+      <div class="tl-item"><div class="tl-dot" style="background:var(--blue);box-shadow:0 0 6px rgba(79,195,247,0.5);"></div><div class="tl-year">// 1888</div><div class="tl-title">Hertz Proves It</div><div class="tl-body">German physicist Heinrich Hertz built a device that actually produced and detected radio waves in a lab. The unit of frequency — the Hertz — is named in his honor.</div></div>
+      <div class="tl-item"><div class="tl-dot" style="background:var(--green);box-shadow:0 0 6px rgba(105,240,174,0.5);"></div><div class="tl-year">// 1895–1901</div><div class="tl-title">Marconi: First Transatlantic Signal</div><div class="tl-body">Italian inventor Guglielmo Marconi sent the first long-distance radio signals. In 1901, he transmitted the letter "S" in Morse code from England to Canada — crossing the Atlantic Ocean. He won the Nobel Prize in 1909.</div></div>
+      <div class="tl-item"><div class="tl-dot" style="background:var(--orange);box-shadow:0 0 6px rgba(196,134,42,0.5);"></div><div class="tl-year">// 1906</div><div class="tl-title">First Voice Broadcast</div><div class="tl-body">Reginald Fessenden broadcast the first-ever human voice and music over radio on Christmas Eve. Sailors with radio receivers on ships were astonished to hear a human voice instead of Morse code.</div></div>
+      <div class="tl-item"><div class="tl-dot"></div><div class="tl-year">// 1920s</div><div class="tl-title">Commercial Radio Begins</div><div class="tl-body">The first commercial radio stations launched across the US. By the late 1920s, millions of families had radio sets in their homes — it was the internet of its day.</div></div>
+      <div class="tl-item"><div class="tl-dot" style="background:var(--orange);box-shadow:0 0 6px rgba(196,134,42,0.5);"></div><div class="tl-year">// 1939–1945</div><div class="tl-title">Radio in World War II</div><div class="tl-body">Radio became critical military infrastructure. Armies used encrypted radio comms, radar was developed to detect enemy aircraft, and civilians relied on broadcasts for wartime news. The BBC broadcast coded messages to resistance fighters in France.</div></div>
+      <div class="tl-item"><div class="tl-dot" style="background:var(--blue);box-shadow:0 0 6px rgba(79,195,247,0.5);"></div><div class="tl-year">// 1933</div><div class="tl-title">FM Radio Invented</div><div class="tl-body">Edwin Armstrong invented FM radio, delivering far clearer audio than AM. Despite intense opposition from the AM broadcasting industry, FM eventually became the standard for music transmission.</div></div>
+      <div class="tl-item"><div class="tl-dot" style="background:var(--green);box-shadow:0 0 6px rgba(105,240,174,0.5);"></div><div class="tl-year">// 1970s – Present</div><div class="tl-title">Wireless Everything</div><div class="tl-body">Radio technology evolved into cell phones, GPS, Wi-Fi, Bluetooth, and satellite communication. Today virtually every device you own uses radio waves to communicate — including the one you may be reading this on.</div></div>
+    </div>
+    <div class="card orange" style="margin-top:16px;">
+      <div class="card-label">// Classified Intel</div>
+      <div class="card-title">Your broadcasts are traveling through space right now</div>
+      <div class="card-body">Radio signals from Earth's earliest TV broadcasts are still traveling outward through space at the speed of light. Signals from the 1940s have now passed over 80 light-years away.</div>
+    </div>
+  </div>
+
+  <!-- SECTION 7: QUIZ -->
+  <div id="quiz" class="section">
+    <div class="sec-header">
+      <div class="sec-tag">Briefing 11 // Field Assessment</div>
+      <h2>Knowledge Check</h2>
+      <p class="sec-sub">Twenty-two questions across all modules. Your performance will be logged.</p>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%;"></div></div>
+    <div id="quizContent"></div>
+  </div>
+
+  <!-- SECTION 8: ANTENNA THEORY -->
+  <div id="antenna" class="section">
+    <div class="sec-header">
+      <div class="sec-tag">Briefing 07 // Antenna Systems</div>
+      <h2>Antenna Theory</h2>
+      <p class="sec-sub">Your radio is only as good as its antenna. UNSC engineers size every antenna to the frequency it broadcasts on — too long or too short and signal strength collapses.</p>
+    </div>
+    <div class="grid2">
+      <div class="card" style="margin-bottom:0;">
+        <div class="card-label">// Core Concept</div>
+        <div class="card-title">The Quarter-Wave Rule</div>
+        <div class="card-body">An antenna works best when its length equals exactly <strong>one quarter of the signal's wavelength</strong>. This lets it resonate with the wave — like a tuning fork vibrating at the right pitch.</div>
+      </div>
+      <div class="card orange" style="margin-bottom:0;">
+        <div class="card-label">// Field Comparison</div>
+        <div class="card-title">Directional vs Omnidirectional</div>
+        <div class="card-body"><strong>Omnidirectional</strong> antennas (like Wi-Fi routers) broadcast in all directions equally. <strong>Directional</strong> antennas (like satellite dishes) focus power into one beam for longer range.</div>
+      </div>
+    </div>
+    <div class="formula-box" style="margin-top:14px;">
+      <div class="formula">Length = <em>c</em> ÷ f ÷ 4</div>
+      <div class="formula-note">Antenna length (m) = Speed of Light ÷ Frequency (Hz) ÷ 4</div>
+    </div>
+    <div class="ctrl-row">
+      <span class="ctrl-label">Band</span>
+      <select id="antSelect" onchange="updateAntenna(this.value)" style="flex:1;background:var(--panel2);border:1px solid var(--border);color:var(--text);font-family:var(--font-mono);font-size:12px;padding:6px 10px;border-radius:2px;outline:none;cursor:pointer;">
+        <option value="0">AM Radio — 1 MHz</option>
+        <option value="1">Shortwave — 10 MHz</option>
+        <option value="2">FM Radio — 100 MHz</option>
+        <option value="3">TV Broadcast — 300 MHz</option>
+        <option value="4">Cell Phone — 1 GHz</option>
+        <option value="5">Wi-Fi 2.4 GHz</option>
+        <option value="6">Wi-Fi 5 GHz</option>
+      </select>
+    </div>
+    <div class="display-panel" style="display:flex;align-items:center;gap:20px;">
+      <svg viewBox="0 0 20 120" width="20" height="120" style="flex-shrink:0;">
+        <rect id="ant-rod" x="9" y="0" width="2" rx="1" fill="#22d3ee" opacity="0.85"/>
+        <rect x="0" y="118" width="20" height="2" rx="1" fill="#22d3ee" opacity="0.4"/>
+      </svg>
+      <div>
+        <div class="dp-name" id="ant-length">75.0 m</div>
+        <div class="dp-detail" id="ant-band">AM Radio · 1 MHz · quarter-wave antenna length</div>
+      </div>
+    </div>
+    <div class="card green" style="margin-top:12px;">
+      <div class="card-label">// Field Intel</div>
+      <div class="card-body">This is why AM radio towers are massive steel structures and your Wi-Fi router has a tiny stub. <strong>Higher frequency = shorter wavelength = smaller antenna.</strong></div>
+    </div>
+  </div>
+
+  <!-- SECTION 9: SIGNAL PROPAGATION -->
+  <div id="propagation" class="section">
+    <div class="sec-header">
+      <div class="sec-tag">Briefing 08 // Signal Propagation</div>
+      <h2>Signal Propagation</h2>
+      <p class="sec-sub">Your signal has to travel through the real world to reach its destination. Terrain, obstacles, and atmosphere all determine what gets through.</p>
+    </div>
+    <div class="grid3">
+      <div class="card" style="margin-bottom:0;">
+        <div class="card-label">// Type 1</div>
+        <div class="card-title">Line of Sight</div>
+        <div class="card-body" style="font-size:12px;">Signal travels in a straight line. Works great in the open. Any obstacle between transmitter and receiver blocks the signal.</div>
+      </div>
+      <div class="card blue" style="margin-bottom:0;">
+        <div class="card-label">// Type 2</div>
+        <div class="card-title">Sky-Wave Bounce</div>
+        <div class="card-body" style="font-size:12px;">Low-frequency signals bounce off the ionosphere — the upper atmosphere — and curve back to Earth, reaching far beyond the horizon.</div>
+      </div>
+      <div class="card orange" style="margin-bottom:0;">
+        <div class="card-label">// Type 3</div>
+        <div class="card-title">Ground Wave</div>
+        <div class="card-body" style="font-size:12px;">Very low frequency signals follow the curve of the Earth's surface. Used by submarines and military systems to communicate underground.</div>
+      </div>
+    </div>
+    <p style="font-family:var(--font-mono);font-size:11px;color:var(--text2);letter-spacing:1px;margin:16px 0 8px;text-transform:uppercase;">Select terrain type:</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;" id="terrainBtns">
+      <button class="mod-btn active" onclick="selectTerrain(0)">Open Field</button>
+      <button class="mod-btn" onclick="selectTerrain(1)">Urban</button>
+      <button class="mod-btn" onclick="selectTerrain(2)">Underground</button>
+      <button class="mod-btn" onclick="selectTerrain(3)">Mountain</button>
+    </div>
+    <div class="display-panel">
+      <div class="dp-name" id="terr-type">Line-of-Sight</div>
+      <div class="dp-detail" id="terr-range">Estimated range: ~50 km · Best for: VHF/UHF (FM, cellular)</div>
+      <div style="font-family:var(--font-mono);font-size:11px;color:var(--text2);margin-top:8px;line-height:1.7;" id="terr-note">Clear path, maximum efficiency. Standard UNSC field comms.</div>
+    </div>
+  </div>
+
+  <!-- SECTION 10: SIGNAL ENCODING -->
+  <div id="encoding" class="section">
+    <div class="sec-header">
+      <div class="sec-tag">Briefing 09 // Signal Encoding</div>
+      <h2>Signal Encoding</h2>
+      <p class="sec-sub">Every word you transmit must be converted into a pattern of signal changes. Understanding encoding is the key to reliable digital communication.</p>
+    </div>
+    <div class="grid2">
+      <div class="card" style="margin-bottom:0;">
+        <div class="card-label">// Concept</div>
+        <div class="card-title">Bits & Baud</div>
+        <div class="card-body">A <strong>bit</strong> is a single 1 or 0. <strong>Baud rate</strong> is how many signal changes happen per second. At 9600 baud, the transmitter switches 9,600 times every second — fast enough to carry text instantly.</div>
+      </div>
+      <div class="card blue" style="margin-bottom:0;">
+        <div class="card-label">// Comparison</div>
+        <div class="card-title">Digital vs Analog</div>
+        <div class="card-body"><strong>Analog</strong> signals carry voice as a continuous wave — noise adds up over distance. <strong>Digital</strong> signals only use two states (on/off), so errors are easy to detect and correct.</div>
+      </div>
+    </div>
+    <div style="margin-top:14px;display:flex;gap:8px;align-items:center;">
+      <input type="text" id="enc-input" maxlength="8" placeholder="Type a letter or word..." style="flex:1;background:var(--panel2);border:1px solid var(--border);color:var(--text);font-family:var(--font-mono);font-size:13px;padding:8px 12px;border-radius:2px;outline:none;" oninput="encodeMessage()">
+    </div>
+    <div class="display-panel" style="margin-top:10px;">
+      <div class="dp-name" id="enc-char" style="font-size:16px;letter-spacing:3px;word-break:break-all;">// ENTER A CHARACTER ABOVE</div>
+      <svg id="enc-wave" viewBox="0 0 200 40" width="100%" height="40" style="margin:10px 0 4px;display:block;"></svg>
+      <div class="dp-detail" id="enc-baud"></div>
+    </div>
+    <div class="card green" style="margin-top:12px;">
+      <div class="card-label">// Field Intel</div>
+      <div class="card-body">ASCII is a standard that assigns each letter, number, and symbol a number from 0–127. The letter <strong>'A'</strong> = 65 = 01000001 in binary. Every character you type is secretly a number.</div>
+    </div>
+  </div>
+
+  <!-- SECTION 11: NOISE & INTERFERENCE -->
+  <div id="noise" class="section">
+    <div class="sec-header">
+      <div class="sec-tag">Briefing 10 // Noise &amp; Interference</div>
+      <h2>Noise &amp; Interference</h2>
+      <p class="sec-sub">All signals face interference. Know your signal-to-noise ratio — or your transmission is lost in the static.</p>
+    </div>
+    <div class="grid2">
+      <div class="card" style="margin-bottom:0;">
+        <div class="card-label">// Key Concept</div>
+        <div class="card-title">Signal-to-Noise Ratio</div>
+        <div class="card-body"><strong>SNR</strong> compares how strong your signal is versus how much background noise exists. A high SNR means a clear transmission. Low SNR means the signal is buried in static.</div>
+      </div>
+      <div class="card orange" style="margin-bottom:0;">
+        <div class="card-label">// Interference Sources</div>
+        <div class="card-title">What Creates Noise?</div>
+        <div class="card-body">Other transmitters on nearby frequencies, electrical equipment, atmospheric static, and even cosmic background radiation all add noise to your signal.</div>
+      </div>
+    </div>
+    <div class="formula-box">
+      <div class="formula">SNR = 10 × log<sub style="font-size:0.6em;">10</sub>(<em>S</em> ÷ <em>N</em>)</div>
+      <div class="formula-note">Measured in decibels (dB) · Above 20 dB = clear · 10–20 dB = degraded · Below 10 dB = lost</div>
+    </div>
+    <div class="ctrl-row">
+      <span class="ctrl-label">Distance</span>
+      <input type="range" min="0" max="100" value="0" id="snrSlider" oninput="updateSNR(this.value)" step="1">
+      <span class="ctrl-val" id="snr-dist">0 km</span>
+    </div>
+    <div class="display-panel">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <span style="font-family:var(--font-mono);font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:1px;">Signal Strength</span>
+        <span class="dp-name" style="font-size:18px;" id="snr-sig">20.0 dB</span>
+      </div>
+      <div style="height:6px;background:var(--panel2);border-radius:3px;margin-bottom:12px;overflow:hidden;">
+        <div id="snr-bar" style="height:100%;width:100%;background:#69f0ae;border-radius:3px;transition:width 0.3s,background 0.3s;"></div>
+      </div>
+      <svg id="snr-wave" class="wave-svg" viewBox="0 0 300 48" preserveAspectRatio="none"></svg>
+      <div class="dp-name" id="snr-label" style="margin-top:8px;font-size:18px;color:#69f0ae;">SNR: 25.4 dB // COMMS CLEAR</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const allSections = ['spectrum','howwork','explorer','wavelength','builder','history','antenna','propagation','encoding','noise','quiz'];
+function showSection(id) {
+  allSections.forEach(s => { document.getElementById(s).classList.toggle('active', s === id); });
+  document.querySelectorAll('nav button').forEach((b, i) => { b.classList.toggle('active', allSections[i] === id); });
+  if (id === 'quiz') { qi = 0; score = 0; answered = false; renderQuiz(); }
+  if (id === 'wavelength') updateMath(10);
+  if (id === 'builder') renderUseCases();
+  if (id === 'explorer') { drawWave('waveViz', 1.5, 18, '#22d3ee'); }
+  if (id === 'antenna') updateAntenna(0);
+  if (id === 'noise') updateSNR(0);
+}
+
+// Explorer
+const bands = [
+  { min:0, max:15, name:'AM Radio', detail:'Range: 530–1700 kHz · Long-range · Penetrates buildings', freq: v => Math.round(530+v/15*1170)+' kHz', wf:1.5, wa:16, fact:'AM signals can bounce off the ionosphere at night, letting you receive stations hundreds of miles away.' },
+  { min:15, max:30, name:'Shortwave Radio', detail:'Range: 3–30 MHz · International broadcast · Ham radio operators', freq: v => (3+(v-15)/15*27).toFixed(1)+' MHz', wf:3, wa:13, fact:'Shortwave radio was how people around the world received wartime news during WWII.' },
+  { min:30, max:50, name:'FM Radio', detail:'Range: 88–108 MHz · High-fidelity audio · Shorter range', freq: v => (88+(v-30)/20*20).toFixed(1)+' MHz', wf:5, wa:10, fact:'FM stands for Frequency Modulation — it encodes sound by varying the wave\'s speed, not its height.' },
+  { min:50, max:65, name:'TV Broadcast', detail:'Range: 54–890 MHz · Over-the-air television channels', freq: v => Math.round(54+(v-50)/15*836)+' MHz', wf:7, wa:8, fact:'Before cable TV, all television signals were transmitted over these radio frequencies.' },
+  { min:65, max:80, name:'Cell Phones (4G/5G)', detail:'Range: 700 MHz – 3.5 GHz · Voice, text, and mobile data', freq: v => (0.7+(v-65)/15*2.8).toFixed(2)+' GHz', wf:10, wa:6, fact:'Your smartphone uses multiple frequency bands simultaneously to send and receive data faster.' },
+  { min:80, max:92, name:'Wi-Fi (2.4 GHz)', detail:'Range: 2.4–2.5 GHz · Longer range · Home wireless internet', freq: () => '2.4 GHz', wf:14, wa:5, fact:'Microwave ovens also operate at 2.4 GHz — which is why they can sometimes interfere with Wi-Fi signals.' },
+  { min:92, max:100, name:'Wi-Fi & Radar (5 GHz+)', detail:'Range: 5 GHz and above · Fast Wi-Fi · Airport radar systems', freq: () => '5–10 GHz', wf:20, wa:3, fact:'Airport radar uses high-frequency waves to track aircraft within a 60-mile radius in real time.' },
+];
+
+function updateExplorer(v) {
+  v = parseInt(v);
+  const b = bands.find(x => v >= x.min && v < x.max) || bands[bands.length-1];
+  document.getElementById('marker').style.left = v + '%';
+  document.getElementById('freqLabel').textContent = b.freq(v);
+  document.getElementById('sigName').textContent = b.name;
+  document.getElementById('sigDetail').textContent = b.detail;
+  document.getElementById('funFactBody').textContent = b.fact;
+  drawWave('waveViz', b.wf, b.wa, '#22d3ee');
+}
+
+function drawWave(id, freq, amp, color) {
+  const svg = document.getElementById(id);
+  if (!svg) return;
+  const w = 300, h = 48, cy = h / 2;
+  let d = '';
+  for (let x = 0; x <= w; x++) {
+    const y = cy - Math.sin((x / w) * Math.PI * 2 * freq) * amp;
+    d += (x === 0 ? 'M' : 'L') + x.toFixed(1) + ',' + y.toFixed(1);
+  }
+  svg.innerHTML = `<path d="${d}" fill="none" stroke="${color}" stroke-width="1.5" opacity="0.8"/>`;
+}
+drawWave('waveViz', 1.5, 18, '#22d3ee');
+
+// Math
+const mathFreqs = [
+  {v:0,  label:'10 kHz',   hz:10000,       name:'Very low frequency'},
+  {v:10, label:'100 MHz',  hz:100000000,   name:'FM radio'},
+  {v:20, label:'200 MHz',  hz:200000000,   name:'TV broadcast'},
+  {v:30, label:'500 MHz',  hz:500000000,   name:'UHF / early cell'},
+  {v:40, label:'1 GHz',    hz:1000000000,  name:'Cell phone band'},
+  {v:50, label:'2.4 GHz',  hz:2400000000,  name:'Wi-Fi / microwave'},
+  {v:60, label:'5 GHz',    hz:5000000000,  name:'5 GHz Wi-Fi'},
+  {v:70, label:'10 GHz',   hz:10000000000, name:'Radar systems'},
+  {v:80, label:'30 GHz',   hz:30000000000, name:'5G mmWave'},
+  {v:90, label:'60 GHz',   hz:60000000000, name:'WiGig'},
+  {v:100,label:'100 GHz',  hz:100000000000,name:'Satellite / research'},
+];
+function updateMath(v) {
+  const idx = Math.min(Math.round(parseInt(v) / 10), mathFreqs.length - 1);
+  const f = mathFreqs[idx];
+  const wl = 300000000 / f.hz;
+  let wlStr, antStr;
+  if (wl >= 1000)     { wlStr = (wl/1000).toFixed(1)+' km';  antStr = (wl/4/1000).toFixed(2)+' km'; }
+  else if (wl >= 1)   { wlStr = wl.toFixed(2)+' m';           antStr = (wl/4).toFixed(2)+' m'; }
+  else if (wl >= 0.01){ wlStr = (wl*100).toFixed(1)+' cm';   antStr = (wl/4*100).toFixed(1)+' cm'; }
+  else                { wlStr = (wl*1000).toFixed(1)+' mm';  antStr = (wl/4*1000).toFixed(1)+' mm'; }
+  document.getElementById('mathFreqLabel').textContent = f.label;
+  document.getElementById('mathResult').innerHTML = `
+    <div class="math-row"><span class="math-key">Frequency</span><span class="math-val">${f.label} — ${f.name}</span></div>
+    <div class="math-row"><span class="math-key">Wavelength (λ = c ÷ f)</span><span class="math-val">${wlStr}</span></div>
+    <div class="math-row"><span class="math-key">Ideal antenna length (λ/4)</span><span class="math-val">${antStr}</span></div>
+  `;
+}
+
+// Builder
+const useCases = [
+  {id:'walkie',   title:'Walkie-Talkie',     desc:'Short-range field comms',         freq:'~462 MHz (UHF)',       mod:'FM',      why:'Short-range voice benefits from FM\'s clearer audio. UHF penetrates buildings and terrain well.'},
+  {id:'satellite',title:'Satellite Internet', desc:'Data relay from orbit',           freq:'12–18 GHz (Ku-band)', mod:'Digital', why:'High GHz frequencies carry massive data payloads. Digital modulation enables error correction over vast distances.'},
+  {id:'am_news',  title:'News Radio',         desc:'Broadcast to hundreds of miles',  freq:'540–1600 kHz (AM)',    mod:'AM',      why:'Low-frequency AM waves bounce off the ionosphere, achieving vast coverage — ideal for wide broadcast.'},
+  {id:'wifi',     title:'Home Wi-Fi',         desc:'Connect devices in a building',   freq:'2.4 or 5 GHz',        mod:'Digital', why:'High frequencies support fast data rates. Digital modulation is essential for internet traffic.'},
+  {id:'music_fm', title:'Music Station',      desc:'High-quality audio broadcast',    freq:'88–108 MHz (FM)',      mod:'FM',      why:'FM preserves audio fidelity far better than AM — the standard for music broadcasting.'},
+  {id:'radar',    title:'Weather Radar',      desc:'Detect rain and storm systems',   freq:'2–10 GHz (S/C-band)', mod:'Digital', why:'These frequencies reflect off water droplets in clouds, returning a detectable echo to the radar station.'},
+];
+
+window._chosenUse = null;
+function renderUseCases() {
+  document.getElementById('useCaseGrid').innerHTML = useCases.map(u => `
+    <div class="use-card" id="uc_${u.id}" onclick="selectUse('${u.id}')">
+      <div class="uc-title">${u.title}</div>
+      <div class="uc-desc">${u.desc}</div>
+    </div>`).join('');
+  document.getElementById('buildStep2').style.display = 'none';
+  document.getElementById('signalResult').style.display = 'none';
+  ['AM','FM','Digital'].forEach(m => { const el = document.getElementById('mod'+m); if(el) el.classList.remove('active'); });
+}
+
+function selectUse(id) {
+  document.querySelectorAll('.use-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('uc_'+id).classList.add('selected');
+  window._chosenUse = id;
+  document.getElementById('buildStep2').style.display = 'block';
+  document.getElementById('signalResult').style.display = 'none';
+  ['AM','FM','Digital'].forEach(m => { const el = document.getElementById('mod'+m); if(el) el.classList.remove('active'); });
+}
+
+function selectMod(mod) {
+  ['AM','FM','Digital'].forEach(m => { const el = document.getElementById('mod'+m); if(el) el.classList.toggle('active', m===mod); });
+  const u = useCases.find(x => x.id === window._chosenUse);
+  if (!u) return;
+  const isRight = mod === u.mod;
+  const sr = document.getElementById('signalResult');
+  sr.style.display = 'block';
+  sr.innerHTML = isRight
+    ? `<strong>// SIGNAL DESIGN APPROVED</strong><br><br>Correct modulation for <em>${u.title}</em>. ${u.why}<br><br><strong>Recommended frequency band:</strong> ${u.freq}`
+    : `<strong>// SIGNAL DESIGN FLAGGED</strong><br><br>${u.mod} modulation is optimal here. ${u.why}<br><br>Your choice (${mod}) may function in some scenarios, but <strong>${u.mod}</strong> is the field standard.<br><br><strong>Recommended frequency band:</strong> ${u.freq}`;
+}
+
+// Quiz
+const questions = [
+  {q:'What unit measures radio frequency?', opts:['Volts','Hertz','Watts','Decibels'], ans:1, exp:'Hertz (Hz) measures frequency — the number of wave cycles per second. Named after Heinrich Hertz.'},
+  {q:'FM radio encodes information by changing the _____ of the carrier wave.', opts:['Amplitude (height)','Frequency (speed)','Color','Direction'], ans:1, exp:'FM = Frequency Modulation. Sound is encoded by varying how fast the wave oscillates, not how tall it is.'},
+  {q:'Why does each service get its own frequency range?', opts:['To reduce cost','To prevent signal interference','To shrink antenna size','Frequencies are identical'], ans:1, exp:'Like highway lanes, separate frequency allocations prevent signals from colliding and interfering with each other.'},
+  {q:'Which has a higher frequency?', opts:['AM Radio at 1 MHz','Wi-Fi at 2.4 GHz','They are equal','Cannot be determined'], ans:1, exp:'2.4 GHz = 2,400 MHz — far greater than 1 MHz. GHz (gigahertz) is 1,000 times larger than MHz.'},
+  {q:'As frequency increases, wavelength...', opts:['Gets longer','Gets shorter','Stays the same','Doubles'], ans:1, exp:'λ = c ÷ f. Frequency and wavelength are inversely proportional — as one goes up, the other goes down.'},
+  {q:'An antenna is typically designed to be what fraction of a wavelength?', opts:['1/2','1/10','1/4','Full length'], ans:2, exp:'Quarter-wave antennas (λ/4) are most efficient. This is why AM towers are enormous and Wi-Fi antennas are tiny.'},
+  {q:'Who sent the first transatlantic radio signal in 1901?', opts:['Heinrich Hertz','James Maxwell','Guglielmo Marconi','Edwin Armstrong'], ans:2, exp:'Marconi transmitted "S" in Morse code from England to Canada, proving radio could span oceans.'},
+  {q:'What does AM stand for?', opts:['Automatic Modulation','Amplitude Modulation','Aerial Messaging','Antenna Mode'], ans:1, exp:'AM = Amplitude Modulation. The wave\'s height (amplitude) is varied to encode the audio signal.'},
+  {q:'Why are AM towers much taller than Wi-Fi antennas?', opts:['AM uses more power','AM wavelengths are hundreds of meters long','AM towers are decorative','AM signals travel underground'], ans:1, exp:'Antenna size scales with wavelength. AM at ~1 MHz has λ ≈ 300m. Wi-Fi at 2.4 GHz has λ ≈ 12cm.'},
+  {q:'What technology uses radio waves to detect precipitation and storms?', opts:['Sonar','Radar','Lidar','Infrared'], ans:1, exp:'Radar (Radio Detection And Ranging) sends waves that bounce off water droplets and return to reveal storm locations.'},
+  {q:'What is the quarter-wave rule for antenna sizing?', opts:['Antenna length = wavelength','Antenna length = wavelength ÷ 2','Antenna length = wavelength ÷ 4','Antenna length = wavelength × 4'], ans:2, exp:'Quarter-wave (λ/4) antennas resonate most efficiently — their length matches the wave\'s rhythm so they absorb and radiate power with maximum efficiency.'},
+  {q:'A Wi-Fi router at 2.4 GHz has a quarter-wave antenna approximately...', opts:['30 cm','3 cm','3 m','30 m'], ans:1, exp:'λ = 300,000,000 ÷ 2,400,000,000 ≈ 0.125 m. Quarter-wave = 0.125 ÷ 4 ≈ 3.1 cm. That tiny stub is perfectly sized for 2.4 GHz.'},
+  {q:'How does a directional antenna differ from an omnidirectional one?', opts:['It uses more power','It focuses its signal in one direction for greater range','It transmits at a higher frequency','It is physically smaller'], ans:1, exp:'Directional antennas concentrate power into a narrow beam — like a flashlight versus a lightbulb. This increases effective range in one direction at the cost of coverage area.'},
+  {q:'Which propagation type bounces off the ionosphere to travel beyond the horizon?', opts:['Line-of-sight','Sky-wave','Ground-wave','Microwave relay'], ans:1, exp:'Sky-wave propagation uses the ionosphere — an electrically charged layer of the upper atmosphere — as a mirror, allowing signals to reach thousands of kilometers.'},
+  {q:'Why can very low frequency (VLF) signals penetrate underground?', opts:['They use more power','Their very long wavelengths pass through solid materials','They travel faster than other waves','They use a different modulation type'], ans:1, exp:'Long wavelengths (hundreds of kilometers for VLF) interact differently with matter and can penetrate earth and seawater — which is why they\'re used to communicate with submerged submarines.'},
+  {q:'What most limits line-of-sight radio transmission?', opts:['The speed of light','Physical obstacles between transmitter and receiver','The time of day','Battery power of the transmitter'], ans:1, exp:'Line-of-sight requires a clear, unobstructed path. Buildings, hills, and terrain directly block these signals — which is why cell towers are placed on high ground.'},
+  {q:'What does "baud rate" measure?', opts:['Signal power in watts','The number of signal changes per second','The frequency in MHz','The wavelength in meters'], ans:1, exp:'Baud rate counts how many times per second a signal switches state. At 9600 baud, 9,600 signal changes carry data every second.'},
+  {q:'Why are digital signals more reliable over long distances than analog?', opts:['They travel faster','They only use two states — making errors detectable and correctable','They use more power','They have a longer wavelength'], ans:1, exp:'Digital signals are either ON or OFF. Even with noise added, the receiver can still determine which state was intended. Analog signals accumulate noise with no way to separate it from the original.'},
+  {q:'What does ASCII do?', opts:['Measures signal frequency in hertz','Converts letters and symbols into binary numbers','Encodes radio waves for transmission','Amplifies weak signals'], ans:1, exp:'ASCII (American Standard Code for Information Interchange) assigns every letter, digit, and symbol a number from 0–127, which is then represented as binary bits for transmission.'},
+  {q:'What does SNR stand for?', opts:['Signal Node Relay','Signal-to-Noise Ratio','System Network Rate','Spectrum Noise Reduction'], ans:1, exp:'Signal-to-Noise Ratio measures how much stronger your signal is compared to background noise. High SNR = clear comms. Low SNR = signal buried in static.'},
+  {q:'As distance from a transmitter increases, SNR generally...', opts:['Increases','Stays the same','Decreases','Doubles'], ans:2, exp:'Signal strength drops with distance (inverse square law) while background noise stays roughly constant — so SNR decreases as distance increases.'},
+  {q:'At very low SNR, a radio transmission will...', opts:['Automatically boost its power','Become unreadable or fail entirely','Switch to a higher frequency','Require no antenna'], ans:1, exp:'Below about 10 dB SNR, noise overwhelms the signal and the receiver can\'t distinguish the original message. This is why signal boosters and repeaters are used in long-range systems.'},
+];
+
+let qi = 0, score = 0, answered = false;
+
+function renderQuiz() {
+  const fill = document.getElementById('progressFill');
+  if (fill) fill.style.width = (qi / questions.length * 100) + '%';
+  if (qi >= questions.length) { showScore(); return; }
+  const q = questions[qi];
+  document.getElementById('quizContent').innerHTML = `
+    <div class="quiz-progress">QUESTION ${qi+1} OF ${questions.length} // SCORE: ${score}</div>
+    <div class="quiz-q">${q.q}</div>
+    <div class="quiz-opts" id="opts">${q.opts.map((o,i) => `<button onclick="answer(${i})">${o}</button>`).join('')}</div>
+    <div id="fb"></div>
+    <button class="btn" id="nextBtn" style="display:none;" onclick="nextQ()">Next →</button>
+  `;
+  answered = false;
+}
+
+function answer(i) {
+  if (answered) return;
+  answered = true;
+  const q = questions[qi];
+  const btns = document.querySelectorAll('.quiz-opts button');
+  btns[q.ans].classList.add('correct');
+  if (i !== q.ans) btns[i].classList.add('wrong');
+  else score++;
+  const fb = document.getElementById('fb');
+  fb.className = 'feedback ' + (i === q.ans ? 'correct' : 'wrong');
+  fb.textContent = (i === q.ans ? '// CONFIRMED — ' : '// NEGATIVE — ') + q.exp;
+  document.getElementById('nextBtn').style.display = 'inline-block';
+}
+
+function nextQ() { qi++; renderQuiz(); }
+
+function showScore() {
+  const pct = Math.round(score / questions.length * 100);
+  const fill = document.getElementById('progressFill');
+  if (fill) fill.style.width = '100%';
+  const msg = pct >= 80 ? 'CLEARANCE GRANTED — EXCELLENT PERFORMANCE' : pct >= 60 ? 'PROBATIONARY — REVIEW FLAGGED MODULES' : 'CLEARANCE DENIED — FULL RETRAINING REQUIRED';
+  document.getElementById('quizContent').innerHTML = `
+    <div class="score-wrap">
+      <div class="score-num">${score}<span class="score-denom">/${questions.length}</span></div>
+      <div class="score-msg">${pct}% // ${msg}</div>
+      <div style="margin-top:24px;">
+        <button class="btn btn-teal" onclick="restartQuiz()">Retry Assessment</button>
+        <button class="btn" onclick="showSection('spectrum')">Back to Briefings</button>
+      </div>
+    </div>
+  `;
+}
+
+function restartQuiz() { qi = 0; score = 0; answered = false; renderQuiz(); }
+
+// Section 08 — Antenna Theory
+const antBands = [
+  { name: 'AM Radio',       freqHz: 1e6,   label: '1 MHz' },
+  { name: 'Shortwave',      freqHz: 10e6,  label: '10 MHz' },
+  { name: 'FM Radio',       freqHz: 100e6, label: '100 MHz' },
+  { name: 'TV Broadcast',   freqHz: 300e6, label: '300 MHz' },
+  { name: 'Cell Phone',     freqHz: 1e9,   label: '1 GHz' },
+  { name: 'Wi-Fi 2.4 GHz',  freqHz: 2.4e9, label: '2.4 GHz' },
+  { name: 'Wi-Fi 5 GHz',    freqHz: 5e9,   label: '5 GHz' },
+];
+function updateAntenna(v) {
+  const b = antBands[parseInt(v)];
+  const lengthM = 3e8 / b.freqHz / 4;
+  let display;
+  if (lengthM >= 1) display = lengthM.toFixed(1) + ' m';
+  else display = (lengthM * 100).toFixed(1) + ' cm';
+  document.getElementById('ant-length').textContent = display;
+  document.getElementById('ant-band').textContent = b.name + ' · ' + b.label + ' · quarter-wave antenna length';
+  const logMin = Math.log(0.015), logMax = Math.log(75);
+  const logLen = Math.log(Math.max(0.015, lengthM));
+  const svgH = Math.round(3 + (logLen - logMin) / (logMax - logMin) * 117);
+  const rod = document.getElementById('ant-rod');
+  rod.setAttribute('height', svgH);
+  rod.setAttribute('y', 120 - svgH);
+}
+
+// Section 09 — Signal Propagation
+const terrains = [
+  { type: 'Line-of-Sight', range: '~50 km', best: 'VHF/UHF (FM, cellular)', note: 'Clear path, maximum efficiency. Standard UNSC field comms.' },
+  { type: 'Multipath / Reflection', range: '~5 km', best: 'UHF (cellular, Wi-Fi)', note: 'Signals bounce off buildings. Shorter effective range — use higher-gain antennas to compensate.' },
+  { type: 'Ground-Wave / Guided', range: '~1 km', best: 'ELF/VLF (very low freq.)', note: 'Only extremely low frequencies penetrate soil and rock. Used for submarine communications worldwide.' },
+  { type: 'Diffraction / Sky-Wave', range: '~500 km', best: 'HF shortwave (3–30 MHz)', note: 'Use sky-wave bounce off the ionosphere to reach beyond the horizon. Long-range UNSC comms.' },
+];
+function selectTerrain(i) {
+  document.querySelectorAll('#terrainBtns .mod-btn').forEach((b, j) => b.classList.toggle('active', j === i));
+  const t = terrains[i];
+  document.getElementById('terr-type').textContent = t.type;
+  document.getElementById('terr-range').textContent = 'Estimated range: ' + t.range + ' · Best for: ' + t.best;
+  document.getElementById('terr-note').textContent = t.note;
+}
+
+// Section 10 — Signal Encoding
+function encodeMessage() {
+  const msg = document.getElementById('enc-input').value;
+  if (!msg) {
+    document.getElementById('enc-char').textContent = '// ENTER A CHARACTER ABOVE';
+    document.getElementById('enc-wave').innerHTML = '';
+    document.getElementById('enc-baud').textContent = '';
+    return;
+  }
+  const ch = msg[0];
+  const code = ch.charCodeAt(0);
+  const bits = code.toString(2).padStart(8, '0');
+  document.getElementById('enc-char').textContent = "'" + ch + "' = " + code + " = " + bits;
+  drawBitWave('enc-wave', bits);
+  const ms = (8 / 9600 * 1000).toFixed(2);
+  document.getElementById('enc-baud').textContent = 'At 9600 baud: ' + ms + ' ms to transmit this character';
+}
+function drawBitWave(svgId, bits) {
+  const svg = document.getElementById(svgId);
+  if (!svg) return;
+  const bw = 200 / 8;
+  let path = '';
+  bits.split('').forEach((b, i) => {
+    const x = i * bw;
+    const y = b === '1' ? 6 : 34;
+    const nx = (i + 1) * bw;
+    if (path === '') path += 'M' + x + ',' + y;
+    else path += ' L' + x + ',' + y;
+    path += ' L' + nx + ',' + y;
+    if (i < 7 && bits[i + 1] !== b) path += ' L' + nx + ',' + (bits[i + 1] === '1' ? 6 : 34);
+  });
+  svg.innerHTML = '<path d="' + path + '" stroke="#22d3ee" stroke-width="2" fill="none"/>';
+}
+
+// Section 11 — Noise & Interference
+function updateSNR(v) {
+  v = parseInt(v);
+  document.getElementById('snr-dist').textContent = v + ' km';
+  const signal = Math.max(1, 100 / (1 + (v / 10) * (v / 10)));
+  const noise = 5;
+  const snr = 10 * Math.log10(signal / noise);
+  const sigDb = (10 * Math.log10(signal)).toFixed(1);
+  document.getElementById('snr-sig').textContent = sigDb + ' dB';
+  const barPct = Math.max(2, Math.round(signal));
+  const bar = document.getElementById('snr-bar');
+  bar.style.width = barPct + '%';
+  const label = document.getElementById('snr-label');
+  let color, status;
+  if (snr > 20) { color = '#69f0ae'; status = 'COMMS CLEAR'; }
+  else if (snr > 10) { color = '#c4862a'; status = 'SIGNAL DEGRADED'; }
+  else { color = '#e85d04'; status = 'COMMS LOST'; }
+  bar.style.background = color;
+  label.style.color = color;
+  label.textContent = 'SNR: ' + snr.toFixed(1) + ' dB // ' + status;
+  const amp = Math.max(2, 18 * (signal / 100));
+  drawWave('snr-wave', 3, amp, color);
+  if (snr < 20) {
+    const svg = document.getElementById('snr-wave');
+    const noiseLevel = Math.min(0.85, (20 - snr) / 20);
+    let noisePath = '';
+    for (let x = 0; x < 300; x += 5) {
+      const ny = 24 + (Math.random() - 0.5) * 40 * noiseLevel;
+      noisePath += (noisePath === '' ? 'M' : ' L') + x + ',' + ny.toFixed(1);
+    }
+    svg.innerHTML += '<path d="' + noisePath + '" stroke="rgba(232,93,4,0.3)" stroke-width="1" fill="none"/>';
+  }
+}
+</script>
+</body>
+</html>

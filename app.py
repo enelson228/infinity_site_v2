@@ -16,6 +16,7 @@ from blueprints.terminal import terminal_bp
 from blueprints.projects import projects_bp
 from blueprints.monitor import monitor_bp
 from blueprints.forge import forge_bp
+from blueprints.coms_uplink import coms_uplink_bp
 
 app = Flask(__name__)
 app.secret_key = config.SECRET_KEY
@@ -42,6 +43,7 @@ app.register_blueprint(terminal_bp)
 app.register_blueprint(projects_bp)
 app.register_blueprint(monitor_bp)
 app.register_blueprint(forge_bp)
+app.register_blueprint(coms_uplink_bp)
 
 @app.after_request
 def add_security_headers(response):

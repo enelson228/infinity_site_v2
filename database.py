@@ -177,6 +177,22 @@ def init_db():
             )
             conn.commit()
 
+        # Seed default projects (INSERT OR IGNORE — never overwrites existing rows)
+        default_projects = [
+            ("telemetry",   "Telemetry",        "Live system metrics dashboard",                    "/telemetry",    "activity", "Infrastructure", "online", 0),
+            ("uplink",      "Uplink Cache",      "Authenticated file upload/download portal",        "/uplink",       "cloud",    "Infrastructure", "online", 1),
+            ("terminal",    "Infinity Terminal", "Secure command interface with AI assistance",      "/terminal",     "server",   "Tools",          "online", 2),
+            ("coms-uplink", "COMS-UPLINK",       "Radio & electromagnetic spectrum training module", "/coms-uplink",  "anchor",   "Tools",          "online", 3),
+        ]
+        conn.executemany(
+            """
+            INSERT OR IGNORE INTO projects (id, name, description, url, icon, category, status, sort_order)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            default_projects,
+        )
+        conn.commit()
+
 def get_user_by_username(username: str):
     with _db_conn() as conn:
         cur = conn.execute("SELECT * FROM users WHERE username = ?", (username,))

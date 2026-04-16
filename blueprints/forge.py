@@ -51,15 +51,37 @@ def api_forge_generate():
 
     negative_prompt = (data.get('negative_prompt') or '').strip()
 
-    payload = json.dumps({
-        'input': {
-            'prompt': prompt,
-            'negative_prompt': negative_prompt,
-            'num_inference_steps': 20,
-            'width': 1024,
-            'height': 1024,
-        }
-    }).encode()
+    def _clamp(val, lo, hi, default):
+        try:
+            return max(lo, min(hi, int(val)))
+        except (TypeError, ValueError):
+            return default
+
+    def _clamp_f(val, lo, hi, default):
+        try:
+            return max(lo, min(hi, float(val)))
+        except (TypeError, ValueError):
+            return default
+
+    steps        = _clamp(data.get('steps'),          1,   50,   20)
+    width        = _clamp(data.get('width'),           256, 2048, 1024)
+    height       = _clamp(data.get('height'),          256, 2048, 1024)
+    guidance     = _clamp_f(data.get('guidance_scale'), 1.0, 20.0, 7.5)
+    seed_raw     = data.get('seed')
+    seed         = _clamp(seed_raw, 0, 2**32 - 1, -1) if seed_raw not in (None, '', -1, '-1') else -1
+
+    gen_input = {
+        'prompt': prompt,
+        'negative_prompt': negative_prompt,
+        'num_inference_steps': steps,
+        'width': width,
+        'height': height,
+        'guidance_scale': guidance,
+    }
+    if seed >= 0:
+        gen_input['seed'] = seed
+
+    payload = json.dumps({'input': gen_input}).encode()
 
     url = f'{_RUNPOD_BASE}/{config.SD_ENDPOINT_ID}/run'
     req = urllib.request.Request(url, data=payload, headers=_runpod_headers(), method='POST')

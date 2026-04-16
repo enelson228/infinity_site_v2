@@ -20,6 +20,7 @@
     </div>
     {% endif %}
 
+    <!-- Prompt -->
     <div style="margin-bottom: var(--spacing-md);">
       <label style="font-family: var(--font-mono); font-size: 0.65rem; color: rgba(34,211,238,0.6); letter-spacing: 0.15em; display: block; margin-bottom: 6px;">PROMPT</label>
       <textarea
@@ -33,6 +34,7 @@
       <div style="font-family: var(--font-mono); font-size: 0.6rem; color: rgba(34,211,238,0.3); text-align: right; margin-top: 3px;"><span id="prompt-count">0</span>/500</div>
     </div>
 
+    <!-- Negative Prompt -->
     <details style="margin-bottom: var(--spacing-md);">
       <summary style="font-family: var(--font-mono); font-size: 0.65rem; color: rgba(34,211,238,0.4); letter-spacing: 0.1em; cursor: pointer; user-select: none;">NEGATIVE PROMPT (optional)</summary>
       <textarea
@@ -43,6 +45,86 @@
         {% if not endpoint_configured %}disabled{% endif %}
         style="width: 100%; margin-top: 8px; background: rgba(0,0,0,0.4); border: 1px solid rgba(34,211,238,0.15); color: var(--text-primary); font-family: var(--font-mono); font-size: 0.8rem; padding: 10px 12px; resize: vertical; outline: none; box-sizing: border-box;"
       ></textarea>
+    </details>
+
+    <!-- Generation Parameters -->
+    <details id="params-details" style="margin-bottom: var(--spacing-md);">
+      <summary style="font-family: var(--font-mono); font-size: 0.65rem; color: rgba(34,211,238,0.4); letter-spacing: 0.1em; cursor: pointer; user-select: none; margin-bottom: 12px;">GENERATION PARAMETERS</summary>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 12px;">
+
+        <!-- Steps -->
+        <div>
+          <label style="font-family: var(--font-mono); font-size: 0.6rem; color: rgba(34,211,238,0.5); letter-spacing: 0.12em; display: flex; justify-content: space-between; margin-bottom: 6px;">
+            <span>STEPS</span>
+            <span id="steps-val" style="color: var(--reach-amber);">20</span>
+          </label>
+          <input type="range" id="forge-steps" min="1" max="50" value="20" step="1"
+            style="width: 100%; accent-color: var(--reach-amber);">
+          <div style="display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 0.5rem; color: rgba(34,211,238,0.25); margin-top: 2px;"><span>1</span><span>50</span></div>
+        </div>
+
+        <!-- Guidance Scale -->
+        <div>
+          <label style="font-family: var(--font-mono); font-size: 0.6rem; color: rgba(34,211,238,0.5); letter-spacing: 0.12em; display: flex; justify-content: space-between; margin-bottom: 6px;">
+            <span>GUIDANCE SCALE (CFG)</span>
+            <span id="guidance-val" style="color: var(--reach-amber);">7.5</span>
+          </label>
+          <input type="range" id="forge-guidance" min="1" max="20" value="7.5" step="0.5"
+            style="width: 100%; accent-color: var(--reach-amber);">
+          <div style="display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 0.5rem; color: rgba(34,211,238,0.25); margin-top: 2px;"><span>1</span><span>20</span></div>
+        </div>
+
+        <!-- Width -->
+        <div>
+          <label style="font-family: var(--font-mono); font-size: 0.6rem; color: rgba(34,211,238,0.5); letter-spacing: 0.12em; display: block; margin-bottom: 6px;">WIDTH</label>
+          <select id="forge-width"
+            style="width: 100%; background: rgba(0,0,0,0.4); border: 1px solid rgba(34,211,238,0.2); color: var(--text-primary); font-family: var(--font-mono); font-size: 0.75rem; padding: 7px 10px; outline: none; cursor: pointer;">
+            <option value="512">512 px</option>
+            <option value="768">768 px</option>
+            <option value="1024" selected>1024 px</option>
+            <option value="1280">1280 px</option>
+            <option value="1536">1536 px</option>
+          </select>
+        </div>
+
+        <!-- Height -->
+        <div>
+          <label style="font-family: var(--font-mono); font-size: 0.6rem; color: rgba(34,211,238,0.5); letter-spacing: 0.12em; display: block; margin-bottom: 6px;">HEIGHT</label>
+          <select id="forge-height"
+            style="width: 100%; background: rgba(0,0,0,0.4); border: 1px solid rgba(34,211,238,0.2); color: var(--text-primary); font-family: var(--font-mono); font-size: 0.75rem; padding: 7px 10px; outline: none; cursor: pointer;">
+            <option value="512">512 px</option>
+            <option value="768">768 px</option>
+            <option value="1024" selected>1024 px</option>
+            <option value="1280">1280 px</option>
+            <option value="1536">1536 px</option>
+          </select>
+        </div>
+
+        <!-- Seed (full width) -->
+        <div style="grid-column: 1 / -1;">
+          <label style="font-family: var(--font-mono); font-size: 0.6rem; color: rgba(34,211,238,0.5); letter-spacing: 0.12em; display: block; margin-bottom: 6px;">
+            SEED <span style="color: rgba(34,211,238,0.3);">(-1 = random)</span>
+          </label>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <input type="number" id="forge-seed" value="-1" min="-1" max="4294967295"
+              style="flex: 1; background: rgba(0,0,0,0.4); border: 1px solid rgba(34,211,238,0.2); color: var(--text-primary); font-family: var(--font-mono); font-size: 0.75rem; padding: 7px 10px; outline: none; box-sizing: border-box;">
+            <button id="random-seed-btn" type="button"
+              style="font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.1em; padding: 7px 14px; background: transparent; border: 1px solid rgba(34,211,238,0.25); color: rgba(34,211,238,0.5); cursor: pointer; white-space: nowrap;"
+              onmouseover="this.style.borderColor='rgba(34,211,238,0.5)';this.style.color='var(--reach-cyan)'"
+              onmouseout="this.style.borderColor='rgba(34,211,238,0.25)';this.style.color='rgba(34,211,238,0.5)'">
+              RANDOM
+            </button>
+            <button id="clear-seed-btn" type="button"
+              style="font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.1em; padding: 7px 14px; background: transparent; border: 1px solid rgba(34,211,238,0.25); color: rgba(34,211,238,0.5); cursor: pointer; white-space: nowrap;"
+              onmouseover="this.style.borderColor='rgba(34,211,238,0.5)';this.style.color='var(--reach-cyan)'"
+              onmouseout="this.style.borderColor='rgba(34,211,238,0.25)';this.style.color='rgba(34,211,238,0.5)'">
+              CLEAR
+            </button>
+          </div>
+        </div>
+
+      </div>
     </details>
 
     <div style="display: flex; align-items: center; gap: var(--spacing-md);">
@@ -66,19 +148,31 @@
 
   <div id="forge-gallery" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--spacing-md);">
     {% for img in images %}
-    <div class="forge-card" data-id="{{ img.id }}" style="background: rgba(21,25,42,0.85); border: 1px solid rgba(34,211,238,0.15); border-radius: 10px; overflow: hidden;">
-      <img src="/static/forge_outputs/{{ img.filename }}" alt="Generated image" loading="lazy"
-           style="width: 100%; display: block; aspect-ratio: 1; object-fit: cover;">
+    <div class="forge-card" data-id="{{ img.id }}" data-url="/static/forge_outputs/{{ img.filename }}" data-prompt="{{ img.prompt | e }}"
+         style="background: rgba(21,25,42,0.85); border: 1px solid rgba(34,211,238,0.15); border-radius: 10px; overflow: hidden;">
+      <div style="position: relative; cursor: zoom-in;" onclick="openLightbox('/static/forge_outputs/{{ img.filename }}', '{{ img.prompt | e }}')">
+        <img src="/static/forge_outputs/{{ img.filename }}" alt="Generated image" loading="lazy"
+             style="width: 100%; display: block; aspect-ratio: 1; object-fit: cover;">
+        <div class="forge-zoom-hint">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+        </div>
+      </div>
       <div style="padding: 10px 12px;">
-        <p style="font-family: var(--font-mono); font-size: 0.65rem; color: rgba(34,211,238,0.5); margin: 0 0 6px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ img.prompt }}">{{ img.prompt }}</p>
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-          <span style="font-family: var(--font-mono); font-size: 0.55rem; color: rgba(34,211,238,0.3);">{{ img.created_at[:16] }}</span>
-          <button
-            onclick="forgeDelete({{ img.id }}, this)"
-            style="font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.1em; padding: 3px 10px; background: transparent; border: 1px solid rgba(234,88,12,0.4); color: var(--reach-orange); cursor: pointer;"
-            onmouseover="this.style.background='rgba(234,88,12,0.1)'"
-            onmouseout="this.style.background='transparent'"
-          >DELETE</button>
+        <p style="font-family: var(--font-mono); font-size: 0.65rem; color: rgba(34,211,238,0.5); margin: 0 0 8px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ img.prompt }}">{{ img.prompt }}</p>
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px;">
+          <span style="font-family: var(--font-mono); font-size: 0.55rem; color: rgba(34,211,238,0.3); flex-shrink: 0;">{{ img.created_at[:16] }}</span>
+          <div style="display: flex; gap: 6px; align-items: center;">
+            <a href="/static/forge_outputs/{{ img.filename }}" download="{{ img.filename }}"
+               style="font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.1em; padding: 3px 10px; background: transparent; border: 1px solid rgba(34,211,238,0.3); color: rgba(34,211,238,0.6); cursor: pointer; text-decoration: none; display: inline-block;"
+               onmouseover="this.style.background='rgba(34,211,238,0.08)';this.style.color='var(--reach-cyan)'"
+               onmouseout="this.style.background='transparent';this.style.color='rgba(34,211,238,0.6)'">DL</a>
+            <button
+              onclick="forgeDelete({{ img.id }}, this)"
+              style="font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.1em; padding: 3px 10px; background: transparent; border: 1px solid rgba(234,88,12,0.4); color: var(--reach-orange); cursor: pointer;"
+              onmouseover="this.style.background='rgba(234,88,12,0.1)'"
+              onmouseout="this.style.background='transparent'"
+            >DEL</button>
+          </div>
         </div>
       </div>
     </div>
@@ -88,6 +182,38 @@
   </div>
 
 </div>
+
+<!-- Lightbox -->
+<div id="forge-lightbox" style="display:none; position:fixed; inset:0; z-index:9000; background:rgba(8,10,18,0.94); backdrop-filter:blur(6px); cursor:zoom-out; align-items:center; justify-content:center; flex-direction:column; gap:16px;">
+  <button id="lb-close" onclick="closeLightbox()"
+    style="position:absolute; top:20px; right:24px; background:transparent; border:1px solid rgba(34,211,238,0.3); color:rgba(34,211,238,0.7); font-family:var(--font-mono); font-size:0.7rem; letter-spacing:0.15em; padding:6px 14px; cursor:pointer;"
+    onmouseover="this.style.background='rgba(34,211,238,0.08)'" onmouseout="this.style.background='transparent'">✕ CLOSE</button>
+  <img id="lb-img" src="" alt="Preview" style="max-width:90vw; max-height:82vh; object-fit:contain; border:1px solid rgba(34,211,238,0.15); box-shadow:0 0 60px rgba(34,211,238,0.06);">
+  <div style="display:flex; gap:14px; align-items:center;">
+    <p id="lb-prompt" style="font-family:var(--font-mono); font-size:0.65rem; color:rgba(34,211,238,0.45); letter-spacing:0.05em; max-width:70vw; text-align:center; margin:0;"></p>
+    <a id="lb-download" href="#" download
+      style="font-family:var(--font-mono); font-size:0.65rem; letter-spacing:0.12em; padding:5px 14px; background:transparent; border:1px solid rgba(34,211,238,0.35); color:rgba(34,211,238,0.7); text-decoration:none; white-space:nowrap;"
+      onmouseover="this.style.background='rgba(34,211,238,0.08)';this.style.color='var(--reach-cyan)'"
+      onmouseout="this.style.background='transparent';this.style.color='rgba(34,211,238,0.7)'">↓ DOWNLOAD</a>
+  </div>
+</div>
+
+<style>
+.forge-zoom-hint {
+  position: absolute; top: 8px; right: 8px;
+  background: rgba(8,10,18,0.65);
+  border: 1px solid rgba(34,211,238,0.2);
+  color: rgba(34,211,238,0.6);
+  padding: 5px;
+  border-radius: 3px;
+  opacity: 0;
+  transition: opacity 0.15s;
+  pointer-events: none;
+  line-height: 0;
+}
+.forge-card:hover .forge-zoom-hint { opacity: 1; }
+</style>
+
 {% endblock %}
 
 {% block scripts %}
@@ -96,18 +222,38 @@ const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
 
 // Prompt character counter
 const promptEl = document.getElementById('forge-prompt');
-const countEl = document.getElementById('prompt-count');
+const countEl  = document.getElementById('prompt-count');
 if (promptEl) {
-  promptEl.addEventListener('input', () => {
-    countEl.textContent = promptEl.value.length;
-  });
+  promptEl.addEventListener('input', () => { countEl.textContent = promptEl.value.length; });
 }
+
+// Slider live-update labels
+document.getElementById('forge-steps')?.addEventListener('input', e => {
+  document.getElementById('steps-val').textContent = e.target.value;
+});
+document.getElementById('forge-guidance')?.addEventListener('input', e => {
+  document.getElementById('guidance-val').textContent = parseFloat(e.target.value).toFixed(1);
+});
+
+// Seed helpers
+document.getElementById('random-seed-btn')?.addEventListener('click', () => {
+  document.getElementById('forge-seed').value = Math.floor(Math.random() * 4294967295);
+});
+document.getElementById('clear-seed-btn')?.addEventListener('click', () => {
+  document.getElementById('forge-seed').value = -1;
+});
 
 // Generate
 document.getElementById('forge-generate-btn')?.addEventListener('click', async () => {
   const prompt = promptEl.value.trim();
   const negative = document.getElementById('forge-negative')?.value.trim() || '';
   if (!prompt) { showError('Prompt is required.'); return; }
+
+  const steps    = parseInt(document.getElementById('forge-steps')?.value || 20);
+  const guidance = parseFloat(document.getElementById('forge-guidance')?.value || 7.5);
+  const width    = parseInt(document.getElementById('forge-width')?.value || 1024);
+  const height   = parseInt(document.getElementById('forge-height')?.value || 1024);
+  const seed     = parseInt(document.getElementById('forge-seed')?.value ?? -1);
 
   setGenerating(true);
   showError('');
@@ -117,7 +263,7 @@ document.getElementById('forge-generate-btn')?.addEventListener('click', async (
     const resp = await fetch('/api/forge/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
-      body: JSON.stringify({ prompt, negative_prompt: negative }),
+      body: JSON.stringify({ prompt, negative_prompt: negative, steps, guidance_scale: guidance, width, height, seed }),
     });
     if (resp.status === 401) { showError('Session expired — please reload and log in again.'); setGenerating(false); return; }
     const data = await resp.json();
@@ -132,7 +278,7 @@ document.getElementById('forge-generate-btn')?.addEventListener('click', async (
 function pollStatus(jobId, prompt) {
   showStatus('QUEUED...');
   let polls = 0;
-  const MAX_POLLS = 150; // 5 minutes at 2s intervals
+  const MAX_POLLS = 150;
   const interval = setInterval(async () => {
     if (++polls > MAX_POLLS) {
       clearInterval(interval);
@@ -160,9 +306,7 @@ function pollStatus(jobId, prompt) {
       } else {
         showStatus('QUEUED...');
       }
-    } catch (e) {
-      // transient network error — keep polling
-    }
+    } catch (e) { /* transient — keep polling */ }
   }, 2000);
 }
 
@@ -172,17 +316,35 @@ function prependImageCard(imageId, imageUrl, prompt) {
   if (empty) empty.remove();
 
   const now = new Date().toISOString().slice(0, 16);
+  const ep  = escapeHtml(prompt);
+  const filename = imageUrl.split('/').pop();
+
   const card = document.createElement('div');
   card.className = 'forge-card';
-  card.dataset.id = imageId;
+  card.dataset.id  = imageId;
+  card.dataset.url = imageUrl;
+  card.dataset.prompt = prompt;
   card.style.cssText = 'background:rgba(21,25,42,0.85);border:1px solid rgba(34,211,238,0.15);border-radius:10px;overflow:hidden;';
   card.innerHTML = `
-    <img src="${imageUrl}" alt="Generated image" style="width:100%;display:block;aspect-ratio:1;object-fit:cover;">
+    <div style="position:relative;cursor:zoom-in;" onclick="openLightbox('${imageUrl}','${ep}')">
+      <img src="${imageUrl}" alt="Generated image" style="width:100%;display:block;aspect-ratio:1;object-fit:cover;">
+      <div class="forge-zoom-hint">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+      </div>
+    </div>
     <div style="padding:10px 12px;">
-      <p style="font-family:var(--font-mono);font-size:0.65rem;color:rgba(34,211,238,0.5);margin:0 0 6px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${escapeHtml(prompt)}">${escapeHtml(prompt)}</p>
-      <div style="display:flex;justify-content:space-between;align-items:center;">
-        <span style="font-family:var(--font-mono);font-size:0.55rem;color:rgba(34,211,238,0.3);">${now}</span>
-        <button onclick="forgeDelete(${imageId},this)" style="font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.1em;padding:3px 10px;background:transparent;border:1px solid rgba(234,88,12,0.4);color:var(--reach-orange);cursor:pointer;" onmouseover="this.style.background='rgba(234,88,12,0.1)'" onmouseout="this.style.background='transparent'">DELETE</button>
+      <p style="font-family:var(--font-mono);font-size:0.65rem;color:rgba(34,211,238,0.5);margin:0 0 8px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${ep}">${ep}</p>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;">
+        <span style="font-family:var(--font-mono);font-size:0.55rem;color:rgba(34,211,238,0.3);flex-shrink:0;">${now}</span>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <a href="${imageUrl}" download="${filename}"
+             style="font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.1em;padding:3px 10px;background:transparent;border:1px solid rgba(34,211,238,0.3);color:rgba(34,211,238,0.6);cursor:pointer;text-decoration:none;display:inline-block;"
+             onmouseover="this.style.background='rgba(34,211,238,0.08)';this.style.color='var(--reach-cyan)'"
+             onmouseout="this.style.background='transparent';this.style.color='rgba(34,211,238,0.6)'">DL</a>
+          <button onclick="forgeDelete(${imageId},this)"
+            style="font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.1em;padding:3px 10px;background:transparent;border:1px solid rgba(234,88,12,0.4);color:var(--reach-orange);cursor:pointer;"
+            onmouseover="this.style.background='rgba(234,88,12,0.1)'" onmouseout="this.style.background='transparent'">DEL</button>
+        </div>
       </div>
     </div>`;
   gallery.prepend(card);
@@ -199,8 +361,8 @@ async function forgeDelete(imageId, btn) {
       const card = document.querySelector(`.forge-card[data-id="${imageId}"]`);
       if (card) card.remove();
       if (!document.querySelector('.forge-card')) {
-        const gallery = document.getElementById('forge-gallery');
-        gallery.innerHTML = '<p id="forge-empty" style="font-family:var(--font-mono);font-size:0.7rem;color:rgba(34,211,238,0.3);letter-spacing:0.1em;grid-column:1/-1;">NO IMAGES GENERATED YET.</p>';
+        document.getElementById('forge-gallery').innerHTML =
+          '<p id="forge-empty" style="font-family:var(--font-mono);font-size:0.7rem;color:rgba(34,211,238,0.3);letter-spacing:0.1em;grid-column:1/-1;">NO IMAGES GENERATED YET.</p>';
       }
     } else {
       btn.disabled = false;
@@ -210,27 +372,47 @@ async function forgeDelete(imageId, btn) {
   }
 }
 
+// Lightbox
+function openLightbox(url, prompt) {
+  const lb = document.getElementById('forge-lightbox');
+  document.getElementById('lb-img').src = url;
+  document.getElementById('lb-prompt').textContent = prompt;
+  const dl = document.getElementById('lb-download');
+  dl.href = url;
+  dl.download = url.split('/').pop();
+  lb.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+function closeLightbox() {
+  document.getElementById('forge-lightbox').style.display = 'none';
+  document.body.style.overflow = '';
+  document.getElementById('lb-img').src = '';
+}
+document.getElementById('forge-lightbox')?.addEventListener('click', e => {
+  if (e.target === document.getElementById('forge-lightbox')) closeLightbox();
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeLightbox();
+});
+
 function setGenerating(on) {
   const btn = document.getElementById('forge-generate-btn');
   if (btn) btn.disabled = on;
 }
-
 function showStatus(msg) {
   const el = document.getElementById('forge-status');
   if (!el) return;
   el.textContent = msg;
   el.style.display = msg ? 'inline' : 'none';
 }
-
 function showError(msg) {
   const el = document.getElementById('forge-error');
   if (!el) return;
   el.textContent = msg;
   el.style.display = msg ? 'block' : 'none';
 }
-
 function escapeHtml(str) {
-  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 </script>
 {% endblock %}
