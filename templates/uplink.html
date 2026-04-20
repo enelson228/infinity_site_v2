@@ -84,6 +84,14 @@
         </div>
     </section>
 </div>
+    <!-- Image Preview Lightbox -->
+    <div id="uplink-lightbox" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10, 15, 20, 0.95); z-index: 1000; backdrop-filter: blur(8px);">
+        <button onclick="closePreview()" style="position: absolute; top: 24px; right: 24px; background: transparent; border: 1px solid rgba(34, 211, 238, 0.4); color: var(--reach-cyan); width: 44px; height: 44px; font-size: 28px; cursor: pointer; font-family: var(--font-mono); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 15px rgba(34, 211, 238, 0.3), inset 0 0 10px rgba(34, 211, 238, 0.1); z-index: 1001;">×</button>
+        <div style="width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px;">
+            <img id="lightbox-img" src="" alt="Preview" style="max-width: 90vw; max-height: 85vh; object-fit: contain; border: 1px solid rgba(34, 211, 238, 0.4); box-shadow: 0 0 30px rgba(34, 211, 238, 0.2), 0 0 60px rgba(34, 211, 238, 0.1); background: var(--reach-steel);">
+            <div id="lightbox-filename" style="margin-top: 20px; color: var(--reach-cyan); font-family: var(--font-mono); font-size: 13px; text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 0 10px rgba(34, 211, 238, 0.6); max-width: 90vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"></div>
+        </div>
+    </div>
 {% endblock %}
 
 {% block scripts %}

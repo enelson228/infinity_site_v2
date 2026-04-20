@@ -63,10 +63,10 @@ def api_forge_generate():
         except (TypeError, ValueError):
             return default
 
-    steps        = _clamp(data.get('steps'),          1,   50,   20)
-    width        = _clamp(data.get('width'),           256, 2048, 1024)
-    height       = _clamp(data.get('height'),          256, 2048, 1024)
-    guidance     = _clamp_f(data.get('guidance_scale'), 1.0, 20.0, 7.5)
+    steps        = _clamp(data.get('steps'),          1,   150,  75)
+    width        = _clamp(data.get('width'),           256, 4096, 1024)
+    height       = _clamp(data.get('height'),          256, 4096, 1024)
+    guidance     = _clamp_f(data.get('guidance_scale'), 1.0, 30.0, 11.5)
     seed_raw     = data.get('seed')
     seed         = _clamp(seed_raw, 0, 2**32 - 1, -1) if seed_raw not in (None, '', -1, '-1') else -1
 

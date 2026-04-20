@@ -1,3 +1,4 @@
+import logging
 import os
 import uuid
 from datetime import datetime
@@ -7,6 +8,8 @@ import config
 import database
 from auth import login_required
 from utils import is_allowed_upload
+
+logger = logging.getLogger(__name__)
 
 uplink_bp = Blueprint('uplink', __name__)
 
@@ -24,6 +27,10 @@ def api_files():
 @uplink_bp.route('/api/files/upload', methods=['POST'])
 @login_required
 def api_upload():
+    logger.info('Upload attempt: files=%s csrf_header=%s session_has_csrf=%s',
+                list(request.files.keys()),
+                bool(request.headers.get('X-CSRF-Token')),
+                bool(session.get('csrf_token')))
     if 'file' not in request.files:
         return jsonify({'error': 'No file provided'}), 400
 
@@ -74,6 +81,26 @@ def api_download(file_id):
         file_entry['stored_name'],
         download_name=file_entry['name'],
         as_attachment=True
+    )
+
+@uplink_bp.route('/api/files/<file_id>/preview')
+@login_required
+def api_preview(file_id):
+    file_entry = database.get_file(file_id)
+    if not file_entry:
+        return jsonify({'error': 'File not found'}), 404
+
+    allowed_extensions = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+    filename = file_entry['name'].lower()
+    file_ext = filename.rsplit('.', 1)[-1] if '.' in filename else ''
+    if file_ext not in allowed_extensions:
+        return jsonify({'error': 'File is not an image'}), 400
+
+    return send_from_directory(
+        config.UPLOAD_FOLDER,
+        file_entry['stored_name'],
+        download_name=file_entry['name'],
+        as_attachment=False
     )
 
 @uplink_bp.route('/api/files/<file_id>', methods=['DELETE'])

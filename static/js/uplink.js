@@ -1,7 +1,6 @@
 /**
  * INFINITY - Uplink Cache JavaScript
  */
-
 const dropZone = document.getElementById('drop-zone');
 const fileInput = document.getElementById('file-input');
 const browseTrigger = document.getElementById('browse-trigger');
@@ -11,6 +10,30 @@ const progressText = document.getElementById('progress-text');
 const fileList = document.getElementById('file-list');
 const emptyState = document.getElementById('empty-state');
 const logoutBtn = document.getElementById('logout-btn');
+const lightbox = document.getElementById('uplink-lightbox');
+const lightboxImg = document.getElementById('lightbox-img');
+const lightboxFilename = document.getElementById('lightbox-filename');
+
+const CSRF_TOKEN = document.querySelector('meta[name="csrf-token"]')?.content || '';
+const IMAGE_EXTENSIONS = new Set(['png', 'jpg', 'jpeg', 'gif', 'webp']);
+
+function isImage(filename) {
+    const ext = filename.split('.').pop().toLowerCase();
+    return IMAGE_EXTENSIONS.has(ext);
+}
+
+function openPreview(fileId, filename) {
+    lightboxImg.src = `/api/files/${fileId}/preview`;
+    lightboxFilename.textContent = filename;
+    lightbox.style.display = 'block';
+    document.body.style.overflow = 'hidden';
+}
+
+function closePreview() {
+    lightbox.style.display = 'none';
+    lightboxImg.src = '';
+    document.body.style.overflow = '';
+}
 
 /**
  * Load and display files
@@ -25,7 +48,6 @@ async function loadFiles() {
             renderFiles(data.files);
         } else {
             emptyState.style.display = 'block';
-            // Clear any existing file items except empty state
             const fileItems = fileList.querySelectorAll('.file-item');
             fileItems.forEach(item => item.remove());
         }
@@ -38,28 +60,33 @@ async function loadFiles() {
  * Render file list
  */
 function renderFiles(files) {
-    // Remove existing file items
     const existingItems = fileList.querySelectorAll('.file-item');
     existingItems.forEach(item => item.remove());
 
-    // Sort by upload date (newest first)
     files.sort((a, b) => new Date(b.uploaded) - new Date(a.uploaded));
 
     files.forEach((file, index) => {
         const fileItem = document.createElement('div');
         fileItem.className = 'file-item vault-file-item';
-        
-        // Add a staggering entrance animation
         fileItem.style.animationDelay = `${index * 0.1}s`;
-        
+
+        const isImg = isImage(file.name);
+        const fileInfoData = isImg ? `data-id="${file.id}" data-name="${file.name}" style="cursor: pointer;"` : '';
+        const iconSvg = isImg
+            ? `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+               </svg>`
+            : `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="12" y1="8" x2="12" y2="16"></line>
+                <line x1="8" y1="12" x2="16" y2="12"></line>
+               </svg>`;
+
         fileItem.innerHTML = `
-            <div class="file-info">
+            <div class="file-info" ${fileInfoData}>
                 <div class="file-icon vault-icon" style="border: 1px solid rgba(34, 211, 238, 0.3); background: rgba(34, 211, 238, 0.05); color: var(--reach-cyan);">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                        <line x1="12" y1="8" x2="12" y2="16"></line>
-                        <line x1="8" y1="12" x2="16" y2="12"></line>
-                    </svg>
+                    ${iconSvg}
                 </div>
                 <div class="file-details">
                     <div class="file-name scramble-text" data-text="${file.name}"></div>
@@ -90,10 +117,7 @@ function renderFiles(files) {
         fileList.appendChild(fileItem);
     });
 
-    // Attach event listeners
     attachFileActions();
-    
-    // Trigger Scramble Animation
     triggerScrambleAnimation();
 }
 
@@ -105,14 +129,13 @@ function triggerScrambleAnimation() {
     document.querySelectorAll('.scramble-text').forEach(el => {
         const targetText = el.getAttribute('data-text');
         let iterations = 0;
-        const maxIterations = 15;
-        
+
         const interval = setInterval(() => {
             el.textContent = targetText.split('').map((char, index) => {
                 if (index < iterations) return char;
                 return chars[Math.floor(Math.random() * chars.length)];
             }).join('');
-            
+
             iterations += 1;
             if (iterations > targetText.length) {
                 clearInterval(interval);
@@ -126,14 +149,19 @@ function triggerScrambleAnimation() {
  * Attach event listeners to file action buttons
  */
 function attachFileActions() {
-    // Download buttons
     document.querySelectorAll('.file-btn.download').forEach(btn => {
         btn.addEventListener('click', () => downloadFile(btn.dataset.id));
     });
 
-    // Delete buttons
     document.querySelectorAll('.file-btn.delete').forEach(btn => {
         btn.addEventListener('click', () => deleteFile(btn.dataset.id));
+    });
+
+    document.querySelectorAll('.file-info[data-id]').forEach(info => {
+        info.addEventListener('click', (e) => {
+            e.preventDefault();
+            openPreview(info.dataset.id, info.dataset.name);
+        });
     });
 }
 
@@ -148,20 +176,11 @@ function downloadFile(fileId) {
  * Delete a file
  */
 async function deleteFile(fileId) {
-    if (!confirm('Are you sure you want to delete this file?')) {
-        return;
-    }
-
+    if (!confirm('Are you sure you want to delete this file?')) return;
     try {
-        const response = await fetch(`/api/files/${fileId}`, {
-            method: 'DELETE'
-        });
-
-        if (response.ok) {
-            loadFiles();
-        } else {
-            alert('Failed to delete file');
-        }
+        const response = await fetch(`/api/files/${fileId}`, { method: 'DELETE', headers: { 'X-CSRF-Token': CSRF_TOKEN } });
+        if (response.ok) loadFiles();
+        else alert('Failed to delete file');
     } catch (error) {
         console.error('Delete error:', error);
         alert('Failed to delete file');
@@ -187,16 +206,14 @@ async function uploadFiles(files) {
         try {
             const response = await fetch('/api/files/upload', {
                 method: 'POST',
+                headers: { 'X-CSRF-Token': CSRF_TOKEN },
                 body: formData
             });
 
-            if (!response.ok) {
-                throw new Error('Upload failed');
-            }
+            if (!response.ok) throw new Error('Upload failed');
 
             completed++;
             progressFill.style.width = `${(completed / files.length) * 100}%`;
-
         } catch (error) {
             console.error('Upload error:', error);
             progressText.textContent = `Failed to upload ${file.name}`;
@@ -223,12 +240,18 @@ async function logout() {
         await fetch('/api/auth/logout', { method: 'POST' });
         window.location.href = '/uplink/login';
     } catch (error) {
-        console.error('Logout error:', error);
         window.location.href = '/uplink/login';
     }
 }
 
-// Event Listeners
+// Lightbox: ESC key and click-outside to close
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && lightbox.style.display === 'block') closePreview();
+});
+
+lightbox.addEventListener('click', (e) => {
+    if (e.target === lightbox) closePreview();
+});
 
 // Browse trigger
 browseTrigger.addEventListener('click', () => fileInput.click());
@@ -236,28 +259,19 @@ browseTrigger.addEventListener('click', () => fileInput.click());
 // File input change
 fileInput.addEventListener('change', (e) => {
     uploadFiles(Array.from(e.target.files));
-    fileInput.value = ''; // Reset input
+    fileInput.value = '';
 });
 
 // Drag and drop events
 dropZone.addEventListener('click', () => fileInput.click());
-
-dropZone.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    dropZone.classList.add('dragover');
-});
-
-dropZone.addEventListener('dragleave', () => {
-    dropZone.classList.remove('dragover');
-});
-
+dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
 dropZone.addEventListener('drop', (e) => {
     e.preventDefault();
     dropZone.classList.remove('dragover');
     uploadFiles(Array.from(e.dataTransfer.files));
 });
 
-// Prevent default drag behavior on document
 document.addEventListener('dragover', (e) => e.preventDefault());
 document.addEventListener('drop', (e) => e.preventDefault());
 

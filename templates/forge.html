@@ -51,30 +51,30 @@
     <details id="params-details" style="margin-bottom: var(--spacing-md);">
       <summary style="font-family: var(--font-mono); font-size: 0.65rem; color: rgba(34,211,238,0.4); letter-spacing: 0.1em; cursor: pointer; user-select: none; margin-bottom: 12px;">GENERATION PARAMETERS</summary>
 
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 12px;">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-top: 12px;">
 
         <!-- Steps -->
         <div>
           <label style="font-family: var(--font-mono); font-size: 0.6rem; color: rgba(34,211,238,0.5); letter-spacing: 0.12em; display: flex; justify-content: space-between; margin-bottom: 4px;">
             <span>STEPS</span>
-            <span id="steps-val" style="color: var(--reach-amber);">20</span>
+            <span id="steps-val" style="color: var(--reach-amber);">75</span>
           </label>
           <div style="font-family: var(--font-mono); font-size: 0.55rem; color: rgba(34,211,238,0.3); margin-bottom: 6px;">How many denoising passes. More = sharper detail, slower.</div>
-          <input type="range" id="forge-steps" min="1" max="50" value="20" step="1"
+          <input type="range" id="forge-steps" min="1" max="150" value="75" step="1"
             style="width: 100%; accent-color: var(--reach-amber);">
-          <div style="display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 0.5rem; color: rgba(34,211,238,0.25); margin-top: 2px;"><span>1</span><span>50</span></div>
+          <div style="display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 0.5rem; color: rgba(34,211,238,0.25); margin-top: 2px;"><span>1</span><span>150</span></div>
         </div>
 
         <!-- Guidance Scale -->
         <div>
           <label style="font-family: var(--font-mono); font-size: 0.6rem; color: rgba(34,211,238,0.5); letter-spacing: 0.12em; display: flex; justify-content: space-between; margin-bottom: 4px;">
             <span>GUIDANCE SCALE (CFG)</span>
-            <span id="guidance-val" style="color: var(--reach-amber);">7.5</span>
+            <span id="guidance-val" style="color: var(--reach-amber);">11.5</span>
           </label>
           <div style="font-family: var(--font-mono); font-size: 0.55rem; color: rgba(34,211,238,0.3); margin-bottom: 6px;">How strictly the model follows your prompt. High = literal, low = creative.</div>
-          <input type="range" id="forge-guidance" min="1" max="20" value="7.5" step="0.5"
+          <input type="range" id="forge-guidance" min="1" max="30" value="11.5" step="0.5"
             style="width: 100%; accent-color: var(--reach-amber);">
-          <div style="display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 0.5rem; color: rgba(34,211,238,0.25); margin-top: 2px;"><span>1</span><span>20</span></div>
+          <div style="display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 0.5rem; color: rgba(34,211,238,0.25); margin-top: 2px;"><span>1</span><span>30</span></div>
         </div>
 
         <!-- Width -->
@@ -88,6 +88,8 @@
             <option value="1024" selected>1024 px</option>
             <option value="1280">1280 px</option>
             <option value="1536">1536 px</option>
+            <option value="2048">2048 px</option>
+            <option value="4096">4096 px</option>
           </select>
         </div>
 
@@ -102,6 +104,8 @@
             <option value="1024" selected>1024 px</option>
             <option value="1280">1280 px</option>
             <option value="1536">1536 px</option>
+            <option value="2048">2048 px</option>
+            <option value="4096">4096 px</option>
           </select>
         </div>
 
@@ -111,7 +115,7 @@
             SEED <span style="color: rgba(34,211,238,0.3);">(-1 = random)</span>
           </label>
           <div style="font-family: var(--font-mono); font-size: 0.55rem; color: rgba(34,211,238,0.3); margin-bottom: 6px;">Locks the random noise — same seed + same prompt = same image every time.</div>
-          <div style="display: flex; gap: 8px; align-items: center;">
+          <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
             <input type="number" id="forge-seed" value="-1" min="-1" max="4294967295"
               style="flex: 1; background: rgba(0,0,0,0.4); border: 1px solid rgba(34,211,238,0.2); color: var(--text-primary); font-family: var(--font-mono); font-size: 0.75rem; padding: 7px 10px; outline: none; box-sizing: border-box;">
             <button id="random-seed-btn" type="button"
@@ -129,6 +133,60 @@
           </div>
         </div>
 
+      </div>
+    </details>
+
+    <details style="margin-bottom: var(--spacing-md);">
+      <summary style="font-family: var(--font-mono); font-size: 0.65rem; color: var(--reach-amber); letter-spacing: 0.1em; cursor: pointer; user-select: none;">OPTIMIZATION REFERENCE (TEST RESULTS)</summary>
+      <div style="margin-top: 12px; border: 1px solid rgba(34,211,238,0.1); background: rgba(0,0,0,0.2); padding: 8px; overflow-x: auto; max-width: 100%; box-sizing: border-box;">
+        <table style="width: 100%; border-collapse: collapse; font-family: var(--font-mono); font-size: 0.6rem; color: rgba(34,211,238,0.7); min-width: 350px;">
+          <thead>
+            <tr style="border-bottom: 1px solid rgba(34,211,238,0.2); text-align: left;">
+              <th style="padding: 6px; width: 80px;">MODE</th>
+              <th style="padding: 6px; width: 45px;">STEPS</th>
+              <th style="padding: 6px; width: 40px;">CFG</th>
+              <th style="padding: 6px; width: 85px;">RES</th>
+              <th style="padding: 6px;">RESULT</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom: 1px solid rgba(34,211,238,0.05);">
+              <td style="padding: 6px; color: var(--text-primary);">Balanced</td>
+              <td style="padding: 6px;">30</td>
+              <td style="padding: 6px;">7.5</td>
+              <td style="padding: 6px;">1024x1024</td>
+              <td style="padding: 6px; color: rgba(34,211,238,0.4); line-height: 1.2;">Standard quality, fast.</td>
+            </tr>
+            <tr style="border-bottom: 1px solid rgba(34,211,238,0.05);">
+              <td style="padding: 6px; color: var(--text-primary);">High Detail</td>
+              <td style="padding: 6px;">60</td>
+              <td style="padding: 6px;">9.0</td>
+              <td style="padding: 6px;">1024x1024</td>
+              <td style="padding: 6px; color: rgba(34,211,238,0.4); line-height: 1.2;">Noticeably sharper edges.</td>
+            </tr>
+            <tr style="border-bottom: 1px solid rgba(34,211,238,0.1); background: rgba(34,211,238,0.05);">
+              <td style="padding: 6px; color: var(--reach-cyan); font-weight: bold;">Sweet Spot</td>
+              <td style="padding: 6px; color: var(--reach-cyan);">75</td>
+              <td style="padding: 6px; color: var(--reach-cyan);">11.5</td>
+              <td style="padding: 6px; color: var(--reach-cyan);">1024x1024</td>
+              <td style="padding: 6px; color: var(--reach-cyan); line-height: 1.2;">Peak clarity and color depth.</td>
+            </tr>
+            <tr style="border-bottom: 1px solid rgba(34,211,238,0.05);">
+              <td style="padding: 6px; color: var(--text-primary);">Extreme</td>
+              <td style="padding: 6px;">120</td>
+              <td style="padding: 6px;">12.0</td>
+              <td style="padding: 6px;">1024x1024</td>
+              <td style="padding: 6px; color: rgba(34,211,238,0.4); line-height: 1.2;">Diminishing returns.</td>
+            </tr>
+            <tr>
+              <td style="padding: 6px; color: var(--text-primary);">Max Stability</td>
+              <td style="padding: 6px;">100</td>
+              <td style="padding: 6px;">20.0</td>
+              <td style="padding: 6px;">1536x1536</td>
+              <td style="padding: 6px; color: rgba(34,211,238,0.4); line-height: 1.2;">High load, very high detail.</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </details>
 

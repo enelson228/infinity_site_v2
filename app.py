@@ -1,9 +1,12 @@
+import logging
 import os
 import threading
 import time
 import hashlib
 import urllib.request
 from flask import Flask, render_template, url_for
+
+logging.basicConfig(level=logging.INFO)
 import psutil
 import config
 import database

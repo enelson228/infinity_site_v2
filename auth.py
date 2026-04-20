@@ -1,7 +1,10 @@
+import logging
 from functools import wraps
 from datetime import datetime, timedelta
 import secrets
 from flask import Blueprint, request, jsonify, session, redirect, url_for, render_template
+
+_log = logging.getLogger(__name__)
 from werkzeug.security import check_password_hash
 import config
 import database
@@ -23,11 +26,15 @@ def validate_csrf():
         return
     session_token = session.get('csrf_token', '')
     if not session_token:
-        return  # No session token means unauthenticated; other guards handle that
+        _log.warning('CSRF skip (no session token): %s %s', request.method, request.path)
+        return
     token = request.headers.get('X-CSRF-Token') or request.form.get('_csrf_token', '')
     if not secrets.compare_digest(token, session_token):
+        _log.warning('CSRF FAIL: %s %s | sent=%r session=%r',
+                     request.method, request.path, token[:8] if token else '', session_token[:8])
         from flask import abort
         abort(403)
+    _log.info('CSRF OK: %s %s', request.method, request.path)
 
 def login_required(f):
     """Decorator to require authentication for routes."""

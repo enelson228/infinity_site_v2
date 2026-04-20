@@ -179,10 +179,11 @@ window.INFINITY = {
     });
 }());
 
+// Start status bar immediately — script runs at bottom of body, DOM is ready
+statusBar.start();
+
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
-    statusBar.start();
-
     // Animate footer crypto string
     const cryptoEl = document.getElementById('footer-crypto');
     if (cryptoEl) {
