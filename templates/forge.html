@@ -48,10 +48,50 @@
     </details>
 
     <!-- Generation Parameters -->
-    <details id="params-details" style="margin-bottom: var(--spacing-md);">
+    <details id="params-details" open style="margin-bottom: var(--spacing-md);">
       <summary style="font-family: var(--font-mono); font-size: 0.65rem; color: rgba(34,211,238,0.4); letter-spacing: 0.1em; cursor: pointer; user-select: none; margin-bottom: 12px;">GENERATION PARAMETERS</summary>
 
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-top: 12px;">
+
+        <!-- Compute Backend -->
+        <div>
+          <label style="font-family: var(--font-mono); font-size: 0.6rem; color: rgba(34,211,238,0.5); letter-spacing: 0.12em; display: block; margin-bottom: 4px;">COMPUTE BACKEND</label>
+          <div style="font-family: var(--font-mono); font-size: 0.55rem; color: rgba(34,211,238,0.3); margin-bottom: 6px;">GPU endpoint for generation.</div>
+          <select id="forge-backend"
+            style="width: 100%; background: rgba(0,0,0,0.4); border: 1px solid rgba(34,211,238,0.2); color: var(--text-primary); font-family: var(--font-mono); font-size: 0.75rem; padding: 7px 10px; outline: none; cursor: pointer;">
+            <option value="sdxl" {% if not has_forge %}selected{% endif %}>SDXL Turbo</option>
+            <option value="forge" {% if has_forge %}selected{% endif %}>Forge</option>
+          </select>
+        </div>
+
+        <!-- Model -->
+        <div>
+          <label style="font-family: var(--font-mono); font-size: 0.6rem; color: rgba(34,211,238,0.5); letter-spacing: 0.12em; display: block; margin-bottom: 4px;">MODEL</label>
+          <div style="font-family: var(--font-mono); font-size: 0.55rem; color: rgba(34,211,238,0.3); margin-bottom: 6px;">Base model for generation.</div>
+          <select id="forge-model"
+            style="width: 100%; background: rgba(0,0,0,0.4); border: 1px solid rgba(34,211,238,0.2); color: var(--text-primary); font-family: var(--font-mono); font-size: 0.75rem; padding: 7px 10px; outline: none; cursor: pointer;">
+            <option value="sdxl">SDXL 1.0</option>
+            <option value="sdxl-turbo">SDXL Turbo (Fast)</option>
+            <option value="pony">Pony Diffusion XL</option>
+            <option value="sd15">Stable Diffusion 1.5</option>
+          </select>
+        </div>
+
+        <!-- Preset Selector -->
+        <div style="grid-column: 1 / -1;">
+          <label style="font-family: var(--font-mono); font-size: 0.6rem; color: rgba(34,211,238,0.5); letter-spacing: 0.12em; display: block; margin-bottom: 4px;">PRESET</label>
+          <div style="font-family: var(--font-mono); font-size: 0.55rem; color: rgba(34,211,238,0.3); margin-bottom: 6px;">Steps, CFG, and dimensions optimized per backend.</div>
+          <select id="forge-preset"
+            style="width: 100%; background: rgba(0,0,0,0.4); border: 1px solid rgba(34,211,238,0.2); color: var(--text-primary); font-family: var(--font-mono); font-size: 0.75rem; padding: 7px 10px; outline: none; cursor: pointer;"
+            onchange="applyPreset()">
+          </select>
+        </div>
+
+        <!-- Hidden inputs for generation params -->
+        <input type="hidden" id="forge-width" value="1024">
+        <input type="hidden" id="forge-height" value="1024">
+        <input type="hidden" id="forge-steps" value="75">
+        <input type="hidden" id="forge-guidance" value="11.5">
 
         <!-- Steps -->
         <div>
@@ -75,46 +115,6 @@
           <input type="range" id="forge-guidance" min="1" max="30" value="11.5" step="0.5"
             style="width: 100%; accent-color: var(--reach-amber);">
           <div style="display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 0.5rem; color: rgba(34,211,238,0.25); margin-top: 2px;"><span>1</span><span>30</span></div>
-        </div>
-
-        <!-- Width -->
-        <div>
-          <label style="font-family: var(--font-mono); font-size: 0.6rem; color: rgba(34,211,238,0.5); letter-spacing: 0.12em; display: block; margin-bottom: 4px;">WIDTH</label>
-          <div style="font-family: var(--font-mono); font-size: 0.55rem; color: rgba(34,211,238,0.3); margin-bottom: 6px;">Output image width in pixels.</div>
-          <select id="forge-width"
-            style="width: 100%; background: rgba(0,0,0,0.4); border: 1px solid rgba(34,211,238,0.2); color: var(--text-primary); font-family: var(--font-mono); font-size: 0.75rem; padding: 7px 10px; outline: none; cursor: pointer;">
-            <option value="512">512 px</option>
-            <option value="768">768 px</option>
-            <option value="832">832 px</option>
-            <option value="832">832 px</option>
-            <option value="1024" selected>1024 px</option>
-            <option value="1216">1216 px</option>
-            <option value="1216">1216 px</option>
-            <option value="1280">1280 px</option>
-            <option value="1536">1536 px</option>
-            <option value="2048">2048 px</option>
-            <option value="4096">4096 px</option>
-          </select>
-        </div>
-
-        <!-- Height -->
-        <div>
-          <label style="font-family: var(--font-mono); font-size: 0.6rem; color: rgba(34,211,238,0.5); letter-spacing: 0.12em; display: block; margin-bottom: 4px;">HEIGHT</label>
-          <div style="font-family: var(--font-mono); font-size: 0.55rem; color: rgba(34,211,238,0.3); margin-bottom: 6px;">Output image height in pixels.</div>
-          <select id="forge-height"
-            style="width: 100%; background: rgba(0,0,0,0.4); border: 1px solid rgba(34,211,238,0.2); color: var(--text-primary); font-family: var(--font-mono); font-size: 0.75rem; padding: 7px 10px; outline: none; cursor: pointer;">
-            <option value="512">512 px</option>
-            <option value="768">768 px</option>
-            <option value="832">832 px</option>
-            <option value="832">832 px</option>
-            <option value="1024" selected>1024 px</option>
-            <option value="1216">1216 px</option>
-            <option value="1216">1216 px</option>
-            <option value="1280">1280 px</option>
-            <option value="1536">1536 px</option>
-            <option value="2048">2048 px</option>
-            <option value="4096">4096 px</option>
-          </select>
         </div>
 
         <!-- Seed (full width) -->
@@ -143,45 +143,6 @@
 
       </div>
     </details>
-
-    <!-- Worker Selection -->
-    <div style="margin-bottom: var(--spacing-md); padding-bottom: 12px; border-bottom: 1px solid rgba(34,211,238,0.1);">
-      <div style="display:none" id="debug-info" data-sdxl="{{has_sdxl}}" data-forge="{{has_forge}}"></div>
-      <label style="font-family: var(--font-mono); font-size: 0.65rem; color: rgba(34,211,238,0.6); letter-spacing: 0.15em; display: block; margin-bottom: 8px;">COMPUTE BACKEND</label>
-      <div style="display: flex; gap: 12px; align-items: center;">
-        {% if has_sdxl %}
-        <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
-          <input type="radio" name="worker-type" value="sdxl" checked style="accent-color: var(--reach-cyan);">
-          <span style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-primary);">SDXL v2.1.1</span>
-        </label>
-        {% endif %}
-        
-        {% if has_forge %}
-        <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
-          <input type="radio" name="worker-type" value="forge" {% if not has_sdxl %}checked{% endif %} style="accent-color: var(--reach-amber);">
-          <span style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-primary);">FORGE OPTIMIZED</span>
-        </label>
-        {% endif %}
-
-        {% if not has_sdxl and not has_forge %}
-        <span style="font-family: var(--font-mono); font-size: 0.65rem; color: var(--reach-orange);">NO ENDPOINTS CONFIGURED</span>
-        {% endif %}
-      </div>
-    </div>
-
-    <div id="optimization-presets-container" style="margin-bottom: var(--spacing-md);">
-      <label style="font-family: var(--font-mono); font-size: 0.65rem; color: var(--reach-amber); letter-spacing: 0.1em; display: block; margin-bottom: 8px;">OPTIMIZATION PRESETS</label>
-      <div id="worker-hint" style="font-family: var(--font-mono); font-size: 0.55rem; color: rgba(246,166,35,0.55); letter-spacing: 0.08em; margin-bottom: 8px;">
-        FORGE OPTIMIZED uses a lighter default profile to reduce queue time and GPU pressure.
-      </div>
-      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-        <button type="button" class="preset-btn" data-steps="6" data-guidance="1.8" data-width="1024" data-height="1024">LIGHTNING</button>
-        <button type="button" class="preset-btn forge-recommended" data-steps="35" data-guidance="4.5" data-width="1024" data-height="1024">FORGE OPTIMIZED</button>
-        <button type="button" class="preset-btn" data-steps="35" data-guidance="5.0" data-width="832" data-height="1216">PORTRAIT</button>
-        <button type="button" class="preset-btn" data-steps="40" data-guidance="5.5" data-width="1216" data-height="832">CINEMATIC</button>
-        <button type="button" class="preset-btn" data-steps="50" data-guidance="6.0" data-width="1024" data-height="1024">HIGH DETAIL</button>
-      </div>
-    </div>
 
     <div style="display: flex; align-items: center; gap: var(--spacing-md);">
       <button
@@ -322,53 +283,73 @@ document.getElementById('clear-seed-btn')?.addEventListener('click', () => {
   document.getElementById('forge-seed').value = -1;
 });
 
-function applyPreset(btn) {
-  const steps = btn.dataset.steps;
-  const guidance = btn.dataset.guidance;
-  const width = btn.dataset.width;
-  const height = btn.dataset.height;
+// Full presets: steps, cfg, dimensions per backend
+const fullPresets = {
+  sdxl: [
+    { value: '1x1-balanced',   label: '1:1 Balanced — 30stp / CFG 7.5 / 1024×1024',    steps: 30,  guidance: 7.5,  width: 1024, height: 1024 },
+    { value: '1x1-detail',     label: '1:1 Detail — 60stp / CFG 9 / 1024×1024',         steps: 60,  guidance: 9.0,  width: 1024, height: 1024 },
+    { value: '1x1-sweetspot',   label: '1:1 Sweet Spot — 75stp / CFG 11.5 / 1024×1024', steps: 75,  guidance: 11.5, width: 1024, height: 1024 },
+    { value: '1x1-extreme',     label: '1:1 Extreme — 120stp / CFG 12 / 1024×1024',      steps: 120, guidance: 12.0, width: 1024, height: 1024 },
+    { value: '1x1-max',        label: '1:1 Max — 100stp / CFG 20 / 1536×1536',          steps: 100, guidance: 20.0, width: 1536, height: 1536 },
+    { value: '4x3-balanced',    label: '4:3 Balanced — 30stp / CFG 7.5 / 1152×896',      steps: 30,  guidance: 7.5,  width: 1152, height: 896  },
+    { value: '4x3-detail',     label: '4:3 Detail — 60stp / CFG 9 / 1152×896',          steps: 60,  guidance: 9.0,  width: 1152, height: 896  },
+    { value: '3x2-detail',     label: '3:2 Detail — 60stp / CFG 9 / 1216×832',           steps: 60,  guidance: 9.0,  width: 1216, height: 832  },
+    { value: '16x9-detail',    label: '16:9 Detail — 60stp / CFG 9 / 1344×768',          steps: 60,  guidance: 9.0,  width: 1344, height: 768  },
+    { value: '3x4-portrait',   label: '3:4 Portrait — 60stp / CFG 9 / 896×1152',        steps: 60,  guidance: 9.0,  width: 896,  height: 1152 },
+    { value: '9x16-portrait',  label: '9:16 Portrait — 60stp / CFG 9 / 768×1344',       steps: 60,  guidance: 9.0,  width: 768,  height: 1344 },
+  ],
+  forge: [
+    { value: '1x1-balanced',   label: '1:1 Balanced — 20stp / CFG 5 / 1024×1024',       steps: 20,  guidance: 5.0,  width: 1024, height: 1024 },
+    { value: '1x1-sweetspot',  label: '1:1 Sweet Spot — 28stp / CFG 7 / 1024×1024',     steps: 28,  guidance: 7.0,  width: 1024, height: 1024 },
+    { value: '1x1-detail',     label: '1:1 Detail — 35stp / CFG 8 / 1024×1024',          steps: 35,  guidance: 8.0,  width: 1024, height: 1024 },
+    { value: '1x1-ultra',      label: '1:1 Ultra — 50stp / CFG 10 / 2048×2048',           steps: 50,  guidance: 10.0, width: 2048, height: 2048 },
+    { value: '4x3-balanced',   label: '4:3 Balanced — 20stp / CFG 5 / 1152×896',         steps: 20,  guidance: 5.0,  width: 1152, height: 896  },
+    { value: '4x3-detail',    label: '4:3 Detail — 35stp / CFG 8 / 1152×896',           steps: 35,  guidance: 8.0,  width: 1152, height: 896  },
+    { value: '16x9-hd',       label: '16:9 HD — 28stp / CFG 7 / 1280×720',              steps: 28,  guidance: 7.0,  width: 1280, height: 720  },
+    { value: '3x2-jxl',       label: '3:2 JXL — 35stp / CFG 8 / 1536×1024',             steps: 35,  guidance: 8.0,  width: 1536, height: 1024 },
+    { value: '3x4-portrait',  label: '3:4 Portrait — 28stp / CFG 7 / 896×1152',         steps: 28,  guidance: 7.0,  width: 896,  height: 1152 },
+    { value: '9x16-hd',       label: '9:16 HD — 28stp / CFG 7 / 720×1280',              steps: 28,  guidance: 7.0,  width: 720,  height: 1280 },
+  ],
+};
 
-  if (steps) {
-    const stepsInput = document.getElementById('forge-steps');
-    stepsInput.value = steps;
-    document.getElementById('steps-val').textContent = steps;
-  }
-  if (guidance) {
-    const guidanceInput = document.getElementById('forge-guidance');
-    guidanceInput.value = guidance;
-    document.getElementById('guidance-val').textContent = parseFloat(guidance).toFixed(1);
-  }
-  if (width) document.getElementById('forge-width').value = width;
-  if (height) document.getElementById('forge-height').value = height;
-
-  document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-
-  const details = document.getElementById('params-details');
-  if (details) details.open = true;
-}
-
-function applyForgeOptimizedDefaults(force = false) {
-  const forgeSelected = document.querySelector('input[name="worker-type"]:checked')?.value === 'forge';
-  const recommendedBtn = document.querySelector('.forge-recommended');
-  if (!forgeSelected || !recommendedBtn) return;
-
-  const hasActivePreset = document.querySelector('.preset-btn.active');
-  if (force || !hasActivePreset) applyPreset(recommendedBtn);
-}
-
-// Preset handlers
-document.querySelectorAll('.preset-btn').forEach(btn => {
-  btn.addEventListener('click', () => applyPreset(btn));
-});
-
-document.querySelectorAll('input[name="worker-type"]').forEach(input => {
-  input.addEventListener('change', () => {
-    if (input.checked && input.value === 'forge') applyForgeOptimizedDefaults(true);
+function updatePresets() {
+  const backend = document.getElementById('forge-backend')?.value || 'sdxl';
+  const select = document.getElementById('forge-preset');
+  if (!select) return;
+  const current = select.value;
+  select.innerHTML = '';
+  const presets = fullPresets[backend] || fullPresets.sdxl;
+  presets.forEach(p => {
+    const opt = document.createElement('option');
+    opt.value = p.value;
+    opt.textContent = p.label;
+    select.appendChild(opt);
   });
-});
+  const match = presets.find(p => p.value === current);
+  select.value = match ? current : presets[0].value;
+  applyPreset();
+}
 
-applyForgeOptimizedDefaults(false);
+function applyPreset() {
+  const backend = document.getElementById('forge-backend')?.value || 'sdxl';
+  const select = document.getElementById('forge-preset');
+  if (!select) return;
+  const presets = fullPresets[backend] || fullPresets.sdxl;
+  const preset = presets.find(p => p.value === select.value);
+  if (!preset) return;
+  document.getElementById('forge-steps').value = preset.steps;
+  document.getElementById('forge-guidance').value = preset.guidance;
+  document.getElementById('steps-val').textContent = preset.steps;
+  document.getElementById('guidance-val').textContent = preset.guidance.toFixed(1);
+  document.getElementById('forge-width').value = preset.width;
+  document.getElementById('forge-height').value = preset.height;
+}
+
+// Backend change → update presets
+document.getElementById('forge-backend')?.addEventListener('change', updatePresets);
+
+// Init presets on load
+updatePresets();
 
 // Generate
 document.getElementById('forge-generate-btn')?.addEventListener('click', async () => {
@@ -381,7 +362,8 @@ document.getElementById('forge-generate-btn')?.addEventListener('click', async (
   const width    = parseInt(document.getElementById('forge-width')?.value || 1024);
   const height   = parseInt(document.getElementById('forge-height')?.value || 1024);
   const seed     = parseInt(document.getElementById('forge-seed')?.value ?? -1);
-  const workerType = document.querySelector('input[name="worker-type"]:checked')?.value || 'sdxl';
+  const backend = document.getElementById('forge-backend')?.value || 'sdxl';
+  const model = document.getElementById('forge-model')?.value || 'sdxl';
 
   setGenerating(true);
   showError('');
@@ -391,7 +373,7 @@ document.getElementById('forge-generate-btn')?.addEventListener('click', async (
     const resp = await fetch('/api/forge/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
-      body: JSON.stringify({ prompt, negative_prompt: negative, steps, guidance_scale: guidance, width, height, seed, worker_type: workerType }),
+      body: JSON.stringify({ prompt, negative_prompt: negative, steps, guidance_scale: guidance, width, height, seed, worker_type: backend, model }),
     });
     if (resp.status === 401) { showError('Session expired — please reload and log in again.'); setGenerating(false); return; }
     const data = await resp.json();

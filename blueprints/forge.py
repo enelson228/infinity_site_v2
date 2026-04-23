@@ -78,6 +78,7 @@ def api_forge_generate():
 
     negative_prompt = (data.get('negative_prompt') or '').strip()
     worker_type = data.get('worker_type', 'sdxl')
+    model = data.get('model', 'sdxl')
 
     def _clamp(val, lo, hi, default):
         try:
@@ -110,6 +111,7 @@ def api_forge_generate():
         'width': width,
         'height': height,
         'guidance_scale': guidance,
+        'model': model,
     }
     if seed >= 0:
         gen_input['seed'] = seed
