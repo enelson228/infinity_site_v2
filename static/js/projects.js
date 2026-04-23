@@ -2,6 +2,10 @@
  * INFINITY - Projects Page JavaScript
  */
 
+function escHtml(str) {
+    return String(str ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
 const projectsGrid = document.getElementById('projects-grid');
 const projectsListBody = document.getElementById('projects-list-body');
 const viewToggleBtns = document.querySelectorAll('.view-toggle-btn');
@@ -32,12 +36,17 @@ function getProjectIcon(iconName) {
  * Create project card HTML
  */
 function createProjectCard(project) {
-    const clickAction = project.detail_url
-        ? `window.location.href='${project.detail_url}'`
-        : `window.open('${project.url}', '_blank')`;
-
-    const viewHref = project.detail_url || project.url;
+    const safeDetailUrl = escHtml(project.detail_url || '');
+    const safeUrl = escHtml(project.url || '');
+    const viewHref = safeDetailUrl || safeUrl;
     const viewTarget = project.detail_url ? '' : 'target="_blank"';
+
+    const card = document.createElement('article');
+    card.className = 'project-card';
+    card.addEventListener('click', () => {
+        if (project.detail_url) window.location.href = project.detail_url;
+        else window.open(project.url, '_blank');
+    });
 
     let dateStr = 'NEVER';
     if (project.last_ping) {
@@ -45,56 +54,60 @@ function createProjectCard(project) {
         dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).toUpperCase();
     }
 
-    return `
-        <article class="project-card" onclick="${clickAction}">
-            <div class="project-header">
-                <div class="project-icon">${getProjectIcon(project.icon)}</div>
-                <span class="project-status ${project.status}">${project.status.toUpperCase()}</span>
-            </div>
-            <h3 class="project-name">${project.name}</h3>
-            <p class="project-description">${project.description}</p>
-            <div class="project-meta">
-                <span>
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="10"/>
-                        <polyline points="12 6 12 12 16 14"/>
-                    </svg>
-                    ${dateStr}
-                </span>
-                <a href="${viewHref}" ${viewTarget} onclick="event.stopPropagation()" class="project-view-link">VIEW DETAILS →</a>
-            </div>
-        </article>
+    card.innerHTML = `
+        <div class="project-header">
+            <div class="project-icon">${getProjectIcon(project.icon)}</div>
+            <span class="project-status ${escHtml(project.status)}">${escHtml(project.status.toUpperCase())}</span>
+        </div>
+        <h3 class="project-name">${escHtml(project.name)}</h3>
+        <p class="project-description">${escHtml(project.description)}</p>
+        <div class="project-meta">
+            <span>
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <polyline points="12 6 12 12 16 14"/>
+                </svg>
+                ${escHtml(dateStr)}
+            </span>
+            <a href="${viewHref}" ${viewTarget} onclick="event.stopPropagation()" class="project-view-link">VIEW DETAILS →</a>
+        </div>
     `;
+    return card.outerHTML;
 }
 
 /**
  * Create project list row HTML
  */
 function createProjectRow(project) {
-    const href = project.detail_url || project.url;
+    const safeDetailUrl = escHtml(project.detail_url || '');
+    const safeUrl = escHtml(project.url || '');
+    const href = safeDetailUrl || safeUrl;
     const target = project.detail_url ? '_self' : '_blank';
-    const clickAction = project.detail_url
-        ? `window.location.href='${project.detail_url}'`
-        : `window.open('${project.url}', '_blank')`;
-    
-    const heartbeat = `<span class="heartbeat ${project.status}"></span>`;
 
-    return `
-        <div class="list-row" onclick="${clickAction}">
-            <div class="list-name">
-                <div class="list-name-icon">${getProjectIcon(project.icon)}</div>
-                <div class="list-name-text">
-                    <h4>${project.name}</h4>
-                    <p>${project.description}</p>
-                </div>
-            </div>
-            <span class="list-status project-status ${project.status}">${heartbeat} ${project.status.toUpperCase()}</span>
-            <span class="list-updated">${project.response_time ? project.response_time + 'ms' : '---'}</span>
-            <div class="list-action">
-                <a href="${href}" target="${target}" onclick="event.stopPropagation()">OPEN →</a>
+    const row = document.createElement('div');
+    row.className = 'list-row';
+    row.addEventListener('click', () => {
+        if (project.detail_url) window.location.href = project.detail_url;
+        else window.open(project.url, '_blank');
+    });
+
+    const heartbeat = `<span class="heartbeat ${escHtml(project.status)}"></span>`;
+
+    row.innerHTML = `
+        <div class="list-name">
+            <div class="list-name-icon">${getProjectIcon(project.icon)}</div>
+            <div class="list-name-text">
+                <h4>${escHtml(project.name)}</h4>
+                <p>${escHtml(project.description)}</p>
             </div>
         </div>
+        <span class="list-status project-status ${escHtml(project.status)}">${heartbeat} ${escHtml(project.status.toUpperCase())}</span>
+        <span class="list-updated">${escHtml(project.response_time ? project.response_time + 'ms' : '---')}</span>
+        <div class="list-action">
+            <a href="${href}" target="${target}" onclick="event.stopPropagation()">OPEN →</a>
+        </div>
     `;
+    return row.outerHTML;
 }
 
 /**

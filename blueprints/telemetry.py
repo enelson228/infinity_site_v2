@@ -97,6 +97,5 @@ def api_telemetry_audit():
         sanitized.append({
             'created_at': e['created_at'],
             'event_type': e['event_type'],
-            'detail': e['detail'] if 'username' in (e['detail'] or '') else '' # Hide specific details unless safe
         })
     return jsonify({'events': sanitized})

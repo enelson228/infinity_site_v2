@@ -47,9 +47,13 @@ def reset_runpod_config():
     import config
     original_key = config.RUNPOD_API_KEY
     original_endpoint = config.SD_ENDPOINT_ID
+    original_sdxl_endpoint = config.SDXL_ENDPOINT_ID
+    original_forge_endpoint = config.FORGE_ENDPOINT_ID
     yield
     config.RUNPOD_API_KEY = original_key
     config.SD_ENDPOINT_ID = original_endpoint
+    config.SDXL_ENDPOINT_ID = original_sdxl_endpoint
+    config.FORGE_ENDPOINT_ID = original_forge_endpoint
 
 
 @pytest.fixture

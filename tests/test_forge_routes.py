@@ -20,15 +20,15 @@ def test_forge_page_renders_when_logged_in(admin_client):
 # ── Generate endpoint ─────────────────────────────────────────────────────────
 
 def test_generate_requires_login(client):
-    # API routes return 401 (not 302) for unauthenticated JSON requests
+    # Mutating API routes are blocked by CSRF before auth if no session exists.
     resp = client.post('/api/forge/generate', json={'prompt': 'a dragon'})
-    assert resp.status_code == 401
+    assert resp.status_code == 403
 
 
 def test_generate_rejects_empty_prompt(admin_client):
     import config
     config.RUNPOD_API_KEY = 'test-key'
-    config.SD_ENDPOINT_ID = 'test-endpoint'
+    config.SDXL_ENDPOINT_ID = 'test-endpoint'
     with admin_client.session_transaction() as sess:
         token = sess['csrf_token']
     resp = admin_client.post('/api/forge/generate',
@@ -41,7 +41,7 @@ def test_generate_rejects_empty_prompt(admin_client):
 def test_generate_rejects_prompt_too_long(admin_client):
     import config
     config.RUNPOD_API_KEY = 'test-key'
-    config.SD_ENDPOINT_ID = 'test-endpoint'
+    config.SDXL_ENDPOINT_ID = 'test-endpoint'
     with admin_client.session_transaction() as sess:
         token = sess['csrf_token']
     resp = admin_client.post('/api/forge/generate',
@@ -53,7 +53,7 @@ def test_generate_rejects_prompt_too_long(admin_client):
 def test_generate_returns_job_id(admin_client):
     import config
     config.RUNPOD_API_KEY = 'test-key'
-    config.SD_ENDPOINT_ID = 'test-endpoint'
+    config.SDXL_ENDPOINT_ID = 'test-endpoint'
     with admin_client.session_transaction() as sess:
         token = sess['csrf_token']
 
@@ -70,12 +70,35 @@ def test_generate_returns_job_id(admin_client):
     assert resp.status_code == 200
     data = json.loads(resp.data)
     assert data['job_id'] == 'job-abc123'
+    assert data['status'] == 'IN_QUEUE'
+
+
+def test_generate_returns_502_when_runpod_omits_job_id(admin_client):
+    import config
+    config.RUNPOD_API_KEY = 'test-key'
+    config.FORGE_ENDPOINT_ID = 'forge-endpoint'
+    with admin_client.session_transaction() as sess:
+        token = sess['csrf_token']
+
+    mock_response = MagicMock()
+    mock_response.read.return_value = json.dumps({'status': 'COMPLETED', 'output': {'images': ['abc']}}).encode()
+    mock_response.__enter__ = lambda s: s
+    mock_response.__exit__ = MagicMock(return_value=False)
+
+    with patch('urllib.request.urlopen', return_value=mock_response):
+        resp = admin_client.post('/api/forge/generate',
+                                 json={'prompt': 'a red dragon', 'worker_type': 'forge'},
+                                 headers={'X-CSRF-Token': token})
+
+    assert resp.status_code == 502
+    data = json.loads(resp.data)
+    assert 'job ID' in data['error']
 
 
 def test_generate_returns_502_on_runpod_error(admin_client):
     import config
     config.RUNPOD_API_KEY = 'test-key'
-    config.SD_ENDPOINT_ID = 'test-endpoint'
+    config.SDXL_ENDPOINT_ID = 'test-endpoint'
     with admin_client.session_transaction() as sess:
         token = sess['csrf_token']
 
@@ -91,6 +114,8 @@ def test_generate_disabled_without_config(admin_client):
     import config
     config.RUNPOD_API_KEY = ''
     config.SD_ENDPOINT_ID = ''
+    config.SDXL_ENDPOINT_ID = ''
+    config.FORGE_ENDPOINT_ID = ''
     with admin_client.session_transaction() as sess:
         token = sess['csrf_token']
     resp = admin_client.post('/api/forge/generate',
@@ -109,7 +134,7 @@ def test_status_requires_login(client):
 def test_status_returns_in_queue(admin_client):
     import config
     config.RUNPOD_API_KEY = 'test-key'
-    config.SD_ENDPOINT_ID = 'test-endpoint'
+    config.FORGE_ENDPOINT_ID = 'forge-endpoint'
 
     mock_response = MagicMock()
     mock_response.read.return_value = json.dumps({'status': 'IN_QUEUE'}).encode()
@@ -124,12 +149,30 @@ def test_status_returns_in_queue(admin_client):
     assert data['status'] == 'IN_QUEUE'
 
 
+def test_status_returns_running(admin_client):
+    import config
+    config.RUNPOD_API_KEY = 'test-key'
+    config.FORGE_ENDPOINT_ID = 'forge-endpoint'
+
+    mock_response = MagicMock()
+    mock_response.read.return_value = json.dumps({'status': 'RUNNING'}).encode()
+    mock_response.__enter__ = lambda s: s
+    mock_response.__exit__ = MagicMock(return_value=False)
+
+    with patch('urllib.request.urlopen', return_value=mock_response):
+        resp = admin_client.get('/api/forge/status/job-123?prompt=a+dragon')
+
+    assert resp.status_code == 200
+    data = json.loads(resp.data)
+    assert data['status'] == 'RUNNING'
+
+
 def test_status_saves_image_on_completed(admin_client, tmp_path, monkeypatch):
     import blueprints.forge as forge_module
     monkeypatch.setattr(forge_module, '_FORGE_OUTPUTS', str(tmp_path))
     import config
     config.RUNPOD_API_KEY = 'test-key'
-    config.SD_ENDPOINT_ID = 'test-endpoint'
+    config.FORGE_ENDPOINT_ID = 'forge-endpoint'
 
     # 1x1 red PNG in base64
     tiny_png_b64 = (
@@ -164,7 +207,7 @@ def test_status_idempotent_on_repeated_completed_poll(admin_client, tmp_path, mo
     monkeypatch.setattr(forge_module, '_FORGE_OUTPUTS', str(tmp_path))
     import config
     config.RUNPOD_API_KEY = 'test-key'
-    config.SD_ENDPOINT_ID = 'test-endpoint'
+    config.FORGE_ENDPOINT_ID = 'forge-endpoint'
 
     tiny_png_b64 = (
         'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8'
@@ -196,7 +239,7 @@ def test_status_idempotent_on_repeated_completed_poll(admin_client, tmp_path, mo
 def test_status_failed_job(admin_client):
     import config
     config.RUNPOD_API_KEY = 'test-key'
-    config.SD_ENDPOINT_ID = 'test-endpoint'
+    config.FORGE_ENDPOINT_ID = 'forge-endpoint'
 
     mock_response = MagicMock()
     mock_response.read.return_value = json.dumps({'status': 'FAILED', 'error': 'OOM'}).encode()
@@ -210,11 +253,32 @@ def test_status_failed_job(admin_client):
     assert data['status'] == 'FAILED'
 
 
+def test_status_prefers_forge_endpoint_without_query_param(admin_client):
+    import config
+    config.RUNPOD_API_KEY = 'test-key'
+    config.SD_ENDPOINT_ID = 'legacy-endpoint'
+    config.SDXL_ENDPOINT_ID = 'sdxl-endpoint'
+    config.FORGE_ENDPOINT_ID = 'forge-endpoint'
+
+    mock_response = MagicMock()
+    mock_response.read.return_value = json.dumps({'status': 'FAILED', 'error': 'OOM'}).encode()
+    mock_response.__enter__ = lambda s: s
+    mock_response.__exit__ = MagicMock(return_value=False)
+
+    with patch('urllib.request.urlopen', return_value=mock_response) as urlopen:
+        resp = admin_client.get('/api/forge/status/job-fail?prompt=test')
+
+    data = json.loads(resp.data)
+    assert data['status'] == 'FAILED'
+    req = urlopen.call_args.args[0]
+    assert req.full_url == 'https://api.runpod.ai/v2/forge-endpoint/status/job-fail'
+
+
 # ── Delete endpoint ───────────────────────────────────────────────────────────
 
 def test_delete_requires_login(client):
     resp = client.delete('/api/forge/images/1')
-    assert resp.status_code == 401
+    assert resp.status_code == 403
 
 
 def test_delete_image(admin_client, tmp_path, monkeypatch):

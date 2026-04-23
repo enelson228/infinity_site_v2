@@ -38,19 +38,23 @@ LOGIN_RATE_LIMIT_WINDOW_SECONDS = int(os.environ.get('LOGIN_RATE_LIMIT_WINDOW_SE
 # Telemetry access (non-secret)
 TELEMETRY_PUBLIC = os.environ.get('TELEMETRY_PUBLIC', 'false').lower() in ('1', 'true', 'yes')
 
-# Optional file extension allowlist (comma-separated, lowercased)
+_DEFAULT_EXTENSIONS = 'pdf,txt,png,jpg,jpeg,gif,webp,zip,tar,gz,mp4,mp3,doc,docx,csv,json,md'
 UPLOAD_ALLOWED_EXTENSIONS = {
     ext.strip().lower().lstrip('.')
-    for ext in os.environ.get('UPLOAD_ALLOWED_EXTENSIONS', '').split(',')
+    for ext in os.environ.get('UPLOAD_ALLOWED_EXTENSIONS', _DEFAULT_EXTENSIONS).split(',')
     if ext.strip()
 }
 
 # GitHub API token for monitor dashboard (optional — GitHub panel disabled if missing)
 GITHUB_TOKEN = os.environ.get('GITHUB_TOKEN', '')
 
-# RunPod serverless image generation (optional — Forge disabled if missing)
+# RunPod serverless image generation
 RUNPOD_API_KEY = os.environ.get('RUNPOD_API_KEY', '')
 SD_ENDPOINT_ID = os.environ.get('SD_ENDPOINT_ID', '')
+# Specific endpoint overrides
+SDXL_ENDPOINT_ID = os.environ.get('SDXL_ENDPOINT_ID', SD_ENDPOINT_ID)
+FORGE_ENDPOINT_ID = os.environ.get('FORGE_ENDPOINT_ID', '')
+
 
 # AI model for monitor recommendations (optional override)
 AI_MODEL = os.environ.get('AI_MODEL', 'claude-haiku-4-5-20251001')

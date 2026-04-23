@@ -1,5 +1,9 @@
 'use strict';
 
+function escHtml(str) {
+    return String(str ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
 const REFRESH_INTERVAL_MS = 5000;
 
 // Previous network snapshot for rate calculation
@@ -202,12 +206,11 @@ async function fetchAudit() {
         if (!feed) return;
         
         feed.innerHTML = data.events.map(e => {
-            const time = e.created_at.split('T')[1].split('.')[0];
+            const time = escHtml(e.created_at.split('T')[1].split('.')[0]);
             return `
                 <div class="audit-entry">
                     <span class="time">[${time}]</span>
-                    <span class="type">${e.event_type.toUpperCase()}</span>
-                    <span class="detail">${e.detail || ''}</span>
+                    <span class="type">${escHtml(e.event_type.toUpperCase())}</span>
                 </div>
             `;
         }).join('');

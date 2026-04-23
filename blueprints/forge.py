@@ -2,6 +2,8 @@ import base64
 import json
 import logging
 import os
+import re
+import urllib.error
 import urllib.request
 from datetime import datetime
 from flask import Blueprint, jsonify, render_template, request
@@ -28,18 +30,43 @@ def _runpod_headers():
     }
 
 
+def _extract_b64_image(output):
+    """Extract the first image from supported RunPod output shapes."""
+    if isinstance(output, list) and output:
+        return output[0].get('image') or output[0].get('images', [None])[0]
+    if isinstance(output, dict):
+        if 'images' in output and isinstance(output['images'], list) and output['images']:
+            return output['images'][0]
+        return output.get('image') or (output.get('images') or [None])[0]
+    return None
+
+
 @forge_bp.route('/forge')
 @login_required
 def forge():
     images = database.list_forge_images()
-    endpoint_configured = bool(config.RUNPOD_API_KEY and config.SD_ENDPOINT_ID)
-    return render_template('forge.html', images=images, endpoint_configured=endpoint_configured)
+    
+    # Force them to be true if the value exists in config, regardless of RUNPOD_API_KEY for now to test visibility
+    has_sdxl = bool(config.SDXL_ENDPOINT_ID)
+    has_forge = bool(config.FORGE_ENDPOINT_ID)
+    
+    endpoint_configured = bool(config.RUNPOD_API_KEY) and (has_sdxl or has_forge)
+    
+    return render_template('forge.html', 
+                           images=images, 
+                           endpoint_configured=endpoint_configured,
+                           has_sdxl=has_sdxl,
+                           has_forge=has_forge)
 
 
 @forge_bp.route('/api/forge/generate', methods=['POST'])
 @login_required
 def api_forge_generate():
-    if not config.RUNPOD_API_KEY or not config.SD_ENDPOINT_ID:
+    if not config.RUNPOD_API_KEY:
+        return jsonify({'error': 'RunPod API Key not configured'}), 503
+    
+    if not config.SDXL_ENDPOINT_ID and not config.FORGE_ENDPOINT_ID:
+        logger.error("No RunPod endpoints configured in config.py or environment")
         return jsonify({'error': 'Image generation endpoint not configured'}), 503
 
     data = request.get_json(silent=True) or {}
@@ -50,6 +77,7 @@ def api_forge_generate():
         return jsonify({'error': 'Prompt must be 500 characters or fewer'}), 400
 
     negative_prompt = (data.get('negative_prompt') or '').strip()
+    worker_type = data.get('worker_type', 'sdxl')
 
     def _clamp(val, lo, hi, default):
         try:
@@ -63,10 +91,15 @@ def api_forge_generate():
         except (TypeError, ValueError):
             return default
 
-    steps        = _clamp(data.get('steps'),          1,   150,  75)
-    width        = _clamp(data.get('width'),           256, 4096, 1024)
-    height       = _clamp(data.get('height'),          256, 4096, 1024)
-    guidance     = _clamp_f(data.get('guidance_scale'), 1.0, 30.0, 11.5)
+    default_steps = 28 if worker_type == 'forge' else 75
+    default_width = 896 if worker_type == 'forge' else 1024
+    default_height = 896 if worker_type == 'forge' else 1024
+    default_guidance = 7.0 if worker_type == 'forge' else 11.5
+
+    steps        = _clamp(data.get('steps'),          1,   150,  default_steps)
+    width        = _clamp(data.get('width'),           256, 4096, default_width)
+    height       = _clamp(data.get('height'),          256, 4096, default_height)
+    guidance     = _clamp_f(data.get('guidance_scale'), 1.0, 30.0, default_guidance)
     seed_raw     = data.get('seed')
     seed         = _clamp(seed_raw, 0, 2**32 - 1, -1) if seed_raw not in (None, '', -1, '-1') else -1
 
@@ -83,14 +116,44 @@ def api_forge_generate():
 
     payload = json.dumps({'input': gen_input}).encode()
 
-    url = f'{_RUNPOD_BASE}/{config.SD_ENDPOINT_ID}/run'
+    # Determine endpoint ID
+    endpoint_id = config.FORGE_ENDPOINT_ID if worker_type == 'forge' else config.SDXL_ENDPOINT_ID
+    if not endpoint_id:
+        return jsonify({'error': f'Endpoint for {worker_type} not configured'}), 503
+
+    url = f'{_RUNPOD_BASE}/{endpoint_id}/run'
     req = urllib.request.Request(url, data=payload, headers=_runpod_headers(), method='POST')
 
     try:
         with urllib.request.urlopen(req, timeout=15) as resp:
             result = json.loads(resp.read().decode())
-        return jsonify({'job_id': result['id']})
+        job_id = result.get('id')
+        if not job_id:
+            logger.error("RunPod Generate missing job ID for endpoint %s: %s", endpoint_id, result)
+            return jsonify({
+                'error': (
+                    'RunPod did not return a job ID. '
+                    'Check that FORGE_ENDPOINT_ID points to an async queue-based endpoint.'
+                ),
+                'runpod_status': result.get('status'),
+            }), 502
+
+        # Store endpoint_id in return so client can pass it back for status checks
+        return jsonify({
+            'job_id': job_id,
+            'endpoint_id': endpoint_id,
+            'status': result.get('status', 'IN_QUEUE'),
+        })
+    except urllib.error.HTTPError as e:
+        detail = ''
+        try:
+            detail = e.read().decode()
+        except Exception:
+            detail = str(e)
+        logger.error("RunPod Generate HTTP error: %s", detail)
+        return jsonify({'error': f'RunPod error: {detail or e}'}), 502
     except Exception as e:
+        logger.error(f"RunPod Generate error: {e}")
         return jsonify({'error': f'RunPod error: {e}'}), 502
 
 
@@ -100,12 +163,26 @@ _TERMINAL_STATUSES = {'COMPLETED', 'FAILED', 'CANCELLED', 'TIMED_OUT'}
 @forge_bp.route('/api/forge/status/<job_id>')
 @login_required
 def api_forge_status(job_id):
-    if not config.RUNPOD_API_KEY or not config.SD_ENDPOINT_ID:
+    if not re.match(r'^[a-zA-Z0-9_-]+$', job_id):
+        return jsonify({'error': 'Invalid job ID'}), 400
+    
+    # Client should pass endpoint_id as a query param. If it does not,
+    # prefer the explicit worker-specific endpoints before the legacy default.
+    endpoint_id = (
+        request.args.get('endpoint_id')
+        or config.FORGE_ENDPOINT_ID
+        or config.SDXL_ENDPOINT_ID
+        or config.SD_ENDPOINT_ID
+    )
+    if not endpoint_id:
+        return jsonify({'error': 'Endpoint ID missing for status check'}), 400
+
+    if not config.RUNPOD_API_KEY:
         return jsonify({'error': 'Endpoint not configured'}), 503
 
     prompt = request.args.get('prompt', '')
 
-    url = f'{_RUNPOD_BASE}/{config.SD_ENDPOINT_ID}/status/{job_id}'
+    url = f'{_RUNPOD_BASE}/{endpoint_id}/status/{job_id}'
     req = urllib.request.Request(url, headers=_runpod_headers())
 
     try:
@@ -128,11 +205,7 @@ def api_forge_status(job_id):
 
         # Extract base64 image — handle list-of-objects or dict output formats
         output = result.get('output')
-        b64_image = None
-        if isinstance(output, list) and output:
-            b64_image = output[0].get('image') or output[0].get('images', [None])[0]
-        elif isinstance(output, dict):
-            b64_image = output.get('image') or (output.get('images') or [None])[0]
+        b64_image = _extract_b64_image(output)
 
         if not b64_image:
             return jsonify({'error': 'No image in response', 'status': 'FAILED'}), 502

@@ -4,7 +4,7 @@ import threading
 import time
 import hashlib
 import urllib.request
-from flask import Flask, render_template, url_for
+from flask import Flask, render_template, url_for, jsonify, request
 
 logging.basicConfig(level=logging.INFO)
 import psutil
@@ -229,4 +229,4 @@ def control():
     return render_template('control.html')
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5173)
+    app.run(debug=os.environ.get('FLASK_DEBUG', '0') == '1', host='127.0.0.1', port=5173)

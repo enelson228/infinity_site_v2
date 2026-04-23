@@ -5,16 +5,19 @@ Personal website and homelab dashboard running at [mjolnirarmory.com](https://mj
 ## Features
 
 - **Home** — Landing page
-- **Projects** — Dashboard of internal services and tools (includes Overwatch + Terminal)
-- **Telemetry** — Live system metrics dashboard (CPU, RAM, disk, network, load avg) with Halo Reach military HUD aesthetic — glowing amber/cyan readouts and animated progress bars
+- **Projects** — Dashboard of internal services and tools
+- **Telemetry** — Live system metrics dashboard (CPU, RAM, disk, network, load avg) with Halo Reach military HUD aesthetic
 - **Uplink Cache** — Authenticated file upload/download portal (100MB max per file)
 - **Terminal** — AI terminal with per-user memory (explicit `REMEMBER` / `RECALL`)
-- **Overwatch** — Live globe view with aircraft and satellite tracking
+- **Forge** — AI image generation (Stable Diffusion via RunPod serverless)
+- **Monitor** — Admin-only dashboard for services, GitHub repo status, and AI-driven recommendations
+- **COMS-UPLINK** — Radio & electromagnetic spectrum training module
 - **Control** — Admin console for user and memory management with audit log
 
 ## Stack
 
 - Python 3 / Flask
+- SQLite (persistence)
 - Gunicorn (WSGI server)
 - Nginx (reverse proxy + static files)
 - Let's Encrypt SSL
@@ -46,17 +49,15 @@ Required secrets:
 - `CLAUDE_PASSWORD_HASH`
 - `ANTHROPIC_API_KEY`
 
-Generate password hashes locally:
-
-```bash
-python3 -c "from werkzeug.security import generate_password_hash; print(generate_password_hash('your-password', method='pbkdf2:sha256'))"
-```
-
-Optional config:
+Optional config (enables additional features):
+- `GITHUB_TOKEN` (Enables GitHub panel in Monitor dashboard)
+- `RUNPOD_API_KEY` + `SD_ENDPOINT_ID` (Enables Forge image generation)
+- `CESIUM_ION_TOKEN` (Used for mapping tools)
 - `TELEMETRY_PUBLIC` (`true`/`false`)
 - `LOGIN_RATE_LIMIT_MAX_ATTEMPTS` (default `10`)
 - `LOGIN_RATE_LIMIT_WINDOW_SECONDS` (default `600`)
-- `UPLOAD_ALLOWED_EXTENSIONS` (comma-separated, e.g. `zip,pdf,txt`)
+- `UPLOAD_ALLOWED_EXTENSIONS` (comma-separated list)
+- `SESSION_COOKIE_SECURE` (set to `false` for local HTTP development)
 
 ### 3. Run (development)
 

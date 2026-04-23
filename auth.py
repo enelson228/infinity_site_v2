@@ -2,6 +2,7 @@ import logging
 from functools import wraps
 from datetime import datetime, timedelta
 import secrets
+from urllib.parse import urlparse
 from flask import Blueprint, request, jsonify, session, redirect, url_for, render_template
 
 _log = logging.getLogger(__name__)
@@ -26,8 +27,9 @@ def validate_csrf():
         return
     session_token = session.get('csrf_token', '')
     if not session_token:
-        _log.warning('CSRF skip (no session token): %s %s', request.method, request.path)
-        return
+        _log.warning('CSRF block (no session token): %s %s', request.method, request.path)
+        from flask import abort
+        abort(403)
     token = request.headers.get('X-CSRF-Token') or request.form.get('_csrf_token', '')
     if not secrets.compare_digest(token, session_token):
         _log.warning('CSRF FAIL: %s %s | sent=%r session=%r',
@@ -78,10 +80,16 @@ def admin_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+def _safe_next(target: str) -> str:
+    ref = urlparse(target)
+    if ref.scheme or ref.netloc:
+        return url_for('home')
+    return target or url_for('home')
+
 @auth_bp.route('/login')
 def login():
     if session.get('user_id'):
-        return redirect(request.args.get('next') or url_for('home'))
+        return redirect(_safe_next(request.args.get('next', '')))
     return render_template('login.html')
 
 @auth_bp.route('/uplink/login')
@@ -116,6 +124,7 @@ def api_login():
         return jsonify({'error': 'Account disabled'}), 403
     
     if check_password_hash(user['password_hash'], password):
+        session.clear()
         session['user_id'] = user['id']
         session['username'] = user['username']
         session['role'] = user['role']
