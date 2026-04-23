@@ -16,7 +16,7 @@
 
     {% if not endpoint_configured %}
     <div style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--reach-orange); letter-spacing: 0.1em; padding: var(--spacing-md); border: 1px solid rgba(234,88,12,0.3); background: rgba(234,88,12,0.05); margin-bottom: var(--spacing-md);">
-      ⚠ ENDPOINT NOT CONFIGURED — Set RUNPOD_API_KEY and at least one of SDXL_ENDPOINT_ID or FORGE_ENDPOINT_ID in Doppler.
+      ⚠ ENDPOINT NOT CONFIGURED — Set RUNPOD_API_KEY and SD_ENDPOINT_ID in Doppler.
     </div>
     {% endif %}
 
@@ -27,7 +27,7 @@
         id="forge-prompt"
         rows="3"
         maxlength="500"
-        placeholder="[Subject] + [Action] + [Environment] + [Lighting] + [Style]... e.g. A rugged Viking warrior, kneeling in the snow, cinematic sunset, RAW photo, 8k"
+        placeholder="Describe the image..."
         {% if not endpoint_configured %}disabled{% endif %}
         style="width: 100%; background: rgba(0,0,0,0.4); border: 1px solid rgba(34,211,238,0.2); color: var(--text-primary); font-family: var(--font-mono); font-size: 0.8rem; padding: 10px 12px; resize: vertical; outline: none; box-sizing: border-box;"
       ></textarea>
@@ -39,83 +39,59 @@
       <summary style="font-family: var(--font-mono); font-size: 0.65rem; color: rgba(34,211,238,0.4); letter-spacing: 0.1em; cursor: pointer; user-select: none;">NEGATIVE PROMPT (optional)</summary>
       <textarea
         id="forge-negative"
-        rows="3"
+        rows="2"
         maxlength="500"
-        placeholder="Things to exclude..."
+        placeholder="Things to exclude from the image..."
         {% if not endpoint_configured %}disabled{% endif %}
         style="width: 100%; margin-top: 8px; background: rgba(0,0,0,0.4); border: 1px solid rgba(34,211,238,0.15); color: var(--text-primary); font-family: var(--font-mono); font-size: 0.8rem; padding: 10px 12px; resize: vertical; outline: none; box-sizing: border-box;"
-      >(worst quality, low quality, normal quality:1.2), lowres, blurry, jpeg artifacts, watermark, signature, text, logo, username, bad anatomy, bad hands, extra fingers, fewer fingers, missing fingers, extra limbs, fused fingers, too many fingers, mutated hands, poorly drawn hands, poorly drawn face, long neck, cross-eyed, deformed iris</textarea>
+      ></textarea>
     </details>
 
     <!-- Generation Parameters -->
-    <details id="params-details" style="margin-bottom: var(--spacing-md);">
+    <details id="params-details" open style="margin-bottom: var(--spacing-md);">
       <summary style="font-family: var(--font-mono); font-size: 0.65rem; color: rgba(34,211,238,0.4); letter-spacing: 0.1em; cursor: pointer; user-select: none; margin-bottom: 12px;">GENERATION PARAMETERS</summary>
 
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-top: 12px;">
 
-        <!-- Steps -->
+        <!-- Compute Backend -->
         <div>
-          <label style="font-family: var(--font-mono); font-size: 0.6rem; color: rgba(34,211,238,0.5); letter-spacing: 0.12em; display: flex; justify-content: space-between; margin-bottom: 4px;">
-            <span>STEPS</span>
-            <span id="steps-val" style="color: var(--reach-amber);">75</span>
-          </label>
-          <div style="font-family: var(--font-mono); font-size: 0.55rem; color: rgba(34,211,238,0.3); margin-bottom: 6px;">How many denoising passes. More = sharper detail, slower.</div>
-          <input type="range" id="forge-steps" min="1" max="150" value="75" step="1"
-            style="width: 100%; accent-color: var(--reach-amber);">
-          <div style="display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 0.5rem; color: rgba(34,211,238,0.25); margin-top: 2px;"><span>1</span><span>150</span></div>
-        </div>
-
-        <!-- Guidance Scale -->
-        <div>
-          <label style="font-family: var(--font-mono); font-size: 0.6rem; color: rgba(34,211,238,0.5); letter-spacing: 0.12em; display: flex; justify-content: space-between; margin-bottom: 4px;">
-            <span>GUIDANCE SCALE (CFG)</span>
-            <span id="guidance-val" style="color: var(--reach-amber);">11.5</span>
-          </label>
-          <div style="font-family: var(--font-mono); font-size: 0.55rem; color: rgba(34,211,238,0.3); margin-bottom: 6px;">How strictly the model follows your prompt. High = literal, low = creative.</div>
-          <input type="range" id="forge-guidance" min="1" max="30" value="11.5" step="0.5"
-            style="width: 100%; accent-color: var(--reach-amber);">
-          <div style="display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 0.5rem; color: rgba(34,211,238,0.25); margin-top: 2px;"><span>1</span><span>30</span></div>
-        </div>
-
-        <!-- Width -->
-        <div>
-          <label style="font-family: var(--font-mono); font-size: 0.6rem; color: rgba(34,211,238,0.5); letter-spacing: 0.12em; display: block; margin-bottom: 4px;">WIDTH</label>
-          <div style="font-family: var(--font-mono); font-size: 0.55rem; color: rgba(34,211,238,0.3); margin-bottom: 6px;">Output image width in pixels.</div>
-          <select id="forge-width"
+          <label style="font-family: var(--font-mono); font-size: 0.6rem; color: rgba(34,211,238,0.5); letter-spacing: 0.12em; display: block; margin-bottom: 4px;">COMPUTE BACKEND</label>
+          <div style="font-family: var(--font-mono); font-size: 0.55rem; color: rgba(34,211,238,0.3); margin-bottom: 6px;">GPU endpoint for generation.</div>
+          <select id="forge-backend"
             style="width: 100%; background: rgba(0,0,0,0.4); border: 1px solid rgba(34,211,238,0.2); color: var(--text-primary); font-family: var(--font-mono); font-size: 0.75rem; padding: 7px 10px; outline: none; cursor: pointer;">
-            <option value="512">512 px</option>
-            <option value="768">768 px</option>
-            <option value="832">832 px</option>
-            <option value="832">832 px</option>
-            <option value="1024" selected>1024 px</option>
-            <option value="1216">1216 px</option>
-            <option value="1216">1216 px</option>
-            <option value="1280">1280 px</option>
-            <option value="1536">1536 px</option>
-            <option value="2048">2048 px</option>
-            <option value="4096">4096 px</option>
+            <option value="sdxl" {% if not has_forge %}selected{% endif %}>SDXL Turbo</option>
+            <option value="forge" {% if has_forge %}selected{% endif %}>Forge</option>
           </select>
         </div>
 
-        <!-- Height -->
+        <!-- Model -->
         <div>
-          <label style="font-family: var(--font-mono); font-size: 0.6rem; color: rgba(34,211,238,0.5); letter-spacing: 0.12em; display: block; margin-bottom: 4px;">HEIGHT</label>
-          <div style="font-family: var(--font-mono); font-size: 0.55rem; color: rgba(34,211,238,0.3); margin-bottom: 6px;">Output image height in pixels.</div>
-          <select id="forge-height"
+          <label style="font-family: var(--font-mono); font-size: 0.6rem; color: rgba(34,211,238,0.5); letter-spacing: 0.12em; display: block; margin-bottom: 4px;">MODEL</label>
+          <div style="font-family: var(--font-mono); font-size: 0.55rem; color: rgba(34,211,238,0.3); margin-bottom: 6px;">Base model for generation.</div>
+          <select id="forge-model"
             style="width: 100%; background: rgba(0,0,0,0.4); border: 1px solid rgba(34,211,238,0.2); color: var(--text-primary); font-family: var(--font-mono); font-size: 0.75rem; padding: 7px 10px; outline: none; cursor: pointer;">
-            <option value="512">512 px</option>
-            <option value="768">768 px</option>
-            <option value="832">832 px</option>
-            <option value="832">832 px</option>
-            <option value="1024" selected>1024 px</option>
-            <option value="1216">1216 px</option>
-            <option value="1216">1216 px</option>
-            <option value="1280">1280 px</option>
-            <option value="1536">1536 px</option>
-            <option value="2048">2048 px</option>
-            <option value="4096">4096 px</option>
+            <option value="sdxl">SDXL 1.0</option>
+            <option value="sdxl-turbo">SDXL Turbo (Fast)</option>
+            <option value="pony">Pony Diffusion XL</option>
+            <option value="sd15">Stable Diffusion 1.5</option>
           </select>
         </div>
+
+        <!-- Preset Selector -->
+        <div style="grid-column: 1 / -1;">
+          <label style="font-family: var(--font-mono); font-size: 0.6rem; color: rgba(34,211,238,0.5); letter-spacing: 0.12em; display: block; margin-bottom: 4px;">PRESET</label>
+          <div style="font-family: var(--font-mono); font-size: 0.55rem; color: rgba(34,211,238,0.3); margin-bottom: 6px;">Steps, CFG, and dimensions optimized per backend.</div>
+          <select id="forge-preset"
+            style="width: 100%; background: rgba(0,0,0,0.4); border: 1px solid rgba(34,211,238,0.2); color: var(--text-primary); font-family: var(--font-mono); font-size: 0.75rem; padding: 7px 10px; outline: none; cursor: pointer;"
+            onchange="applyPreset()">
+          </select>
+        </div>
+
+        <!-- Hidden inputs for generation params -->
+        <input type="hidden" id="forge-width" value="1024">
+        <input type="hidden" id="forge-height" value="1024">
+        <input type="hidden" id="forge-steps" value="75">
+        <input type="hidden" id="forge-guidance" value="11.5">
 
         <!-- Seed (full width) -->
         <div style="grid-column: 1 / -1;">
@@ -144,44 +120,59 @@
       </div>
     </details>
 
-    <!-- Worker Selection -->
-    <div style="margin-bottom: var(--spacing-md); padding-bottom: 12px; border-bottom: 1px solid rgba(34,211,238,0.1);">
-      <div style="display:none" id="debug-info" data-sdxl="{{has_sdxl}}" data-forge="{{has_forge}}"></div>
-      <label style="font-family: var(--font-mono); font-size: 0.65rem; color: rgba(34,211,238,0.6); letter-spacing: 0.15em; display: block; margin-bottom: 8px;">COMPUTE BACKEND</label>
-      <div style="display: flex; gap: 12px; align-items: center;">
-        {% if has_sdxl %}
-        <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
-          <input type="radio" name="worker-type" value="sdxl" checked style="accent-color: var(--reach-cyan);">
-          <span style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-primary);">SDXL v2.1.1</span>
-        </label>
-        {% endif %}
-        
-        {% if has_forge %}
-        <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
-          <input type="radio" name="worker-type" value="forge" {% if not has_sdxl %}checked{% endif %} style="accent-color: var(--reach-amber);">
-          <span style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-primary);">FORGE OPTIMIZED</span>
-        </label>
-        {% endif %}
-
-        {% if not has_sdxl and not has_forge %}
-        <span style="font-family: var(--font-mono); font-size: 0.65rem; color: var(--reach-orange);">NO ENDPOINTS CONFIGURED</span>
-        {% endif %}
+    <details style="margin-bottom: var(--spacing-md);">
+      <summary style="font-family: var(--font-mono); font-size: 0.65rem; color: var(--reach-amber); letter-spacing: 0.1em; cursor: pointer; user-select: none;">OPTIMIZATION REFERENCE (TEST RESULTS)</summary>
+      <div style="margin-top: 12px; border: 1px solid rgba(34,211,238,0.1); background: rgba(0,0,0,0.2); padding: 8px; overflow-x: auto; max-width: 100%; box-sizing: border-box;">
+        <table style="width: 100%; border-collapse: collapse; font-family: var(--font-mono); font-size: 0.6rem; color: rgba(34,211,238,0.7); min-width: 350px;">
+          <thead>
+            <tr style="border-bottom: 1px solid rgba(34,211,238,0.2); text-align: left;">
+              <th style="padding: 6px; width: 80px;">MODE</th>
+              <th style="padding: 6px; width: 45px;">STEPS</th>
+              <th style="padding: 6px; width: 40px;">CFG</th>
+              <th style="padding: 6px; width: 85px;">RES</th>
+              <th style="padding: 6px;">RESULT</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom: 1px solid rgba(34,211,238,0.05);">
+              <td style="padding: 6px; color: var(--text-primary);">Balanced</td>
+              <td style="padding: 6px;">30</td>
+              <td style="padding: 6px;">7.5</td>
+              <td style="padding: 6px;">1024x1024</td>
+              <td style="padding: 6px; color: rgba(34,211,238,0.4); line-height: 1.2;">Standard quality, fast.</td>
+            </tr>
+            <tr style="border-bottom: 1px solid rgba(34,211,238,0.05);">
+              <td style="padding: 6px; color: var(--text-primary);">High Detail</td>
+              <td style="padding: 6px;">60</td>
+              <td style="padding: 6px;">9.0</td>
+              <td style="padding: 6px;">1024x1024</td>
+              <td style="padding: 6px; color: rgba(34,211,238,0.4); line-height: 1.2;">Noticeably sharper edges.</td>
+            </tr>
+            <tr style="border-bottom: 1px solid rgba(34,211,238,0.1); background: rgba(34,211,238,0.05);">
+              <td style="padding: 6px; color: var(--reach-cyan); font-weight: bold;">Sweet Spot</td>
+              <td style="padding: 6px; color: var(--reach-cyan);">75</td>
+              <td style="padding: 6px; color: var(--reach-cyan);">11.5</td>
+              <td style="padding: 6px; color: var(--reach-cyan);">1024x1024</td>
+              <td style="padding: 6px; color: var(--reach-cyan); line-height: 1.2;">Peak clarity and color depth.</td>
+            </tr>
+            <tr style="border-bottom: 1px solid rgba(34,211,238,0.05);">
+              <td style="padding: 6px; color: var(--text-primary);">Extreme</td>
+              <td style="padding: 6px;">120</td>
+              <td style="padding: 6px;">12.0</td>
+              <td style="padding: 6px;">1024x1024</td>
+              <td style="padding: 6px; color: rgba(34,211,238,0.4); line-height: 1.2;">Diminishing returns.</td>
+            </tr>
+            <tr>
+              <td style="padding: 6px; color: var(--text-primary);">Max Stability</td>
+              <td style="padding: 6px;">100</td>
+              <td style="padding: 6px;">20.0</td>
+              <td style="padding: 6px;">1536x1536</td>
+              <td style="padding: 6px; color: rgba(34,211,238,0.4); line-height: 1.2;">High load, very high detail.</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
-    </div>
-
-    <div id="optimization-presets-container" style="margin-bottom: var(--spacing-md);">
-      <label style="font-family: var(--font-mono); font-size: 0.65rem; color: var(--reach-amber); letter-spacing: 0.1em; display: block; margin-bottom: 8px;">OPTIMIZATION PRESETS</label>
-      <div id="worker-hint" style="font-family: var(--font-mono); font-size: 0.55rem; color: rgba(246,166,35,0.55); letter-spacing: 0.08em; margin-bottom: 8px;">
-        FORGE OPTIMIZED uses a lighter default profile to reduce queue time and GPU pressure.
-      </div>
-      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-        <button type="button" class="preset-btn" data-steps="6" data-guidance="1.8" data-width="1024" data-height="1024">LIGHTNING</button>
-        <button type="button" class="preset-btn forge-recommended" data-steps="35" data-guidance="4.5" data-width="1024" data-height="1024">FORGE OPTIMIZED</button>
-        <button type="button" class="preset-btn" data-steps="35" data-guidance="5.0" data-width="832" data-height="1216">PORTRAIT</button>
-        <button type="button" class="preset-btn" data-steps="40" data-guidance="5.5" data-width="1216" data-height="832">CINEMATIC</button>
-        <button type="button" class="preset-btn" data-steps="50" data-guidance="6.0" data-width="1024" data-height="1024">HIGH DETAIL</button>
-      </div>
-    </div>
+    </details>
 
     <div style="display: flex; align-items: center; gap: var(--spacing-md);">
       <button
@@ -206,7 +197,7 @@
     {% for img in images %}
     <div class="forge-card" data-id="{{ img.id }}" data-url="/static/forge_outputs/{{ img.filename }}" data-prompt="{{ img.prompt | e }}"
          style="background: rgba(21,25,42,0.85); border: 1px solid rgba(34,211,238,0.15); border-radius: 10px; overflow: hidden;">
-      <div style="position: relative; cursor: zoom-in;" >
+      <div style="position: relative; cursor: zoom-in;" onclick="openLightbox('/static/forge_outputs/{{ img.filename }}', '{{ img.prompt | e }}')">
         <img src="/static/forge_outputs/{{ img.filename }}" alt="Generated image" loading="lazy"
              style="width: 100%; display: block; aspect-ratio: 1; object-fit: cover;">
         <div class="forge-zoom-hint">
@@ -240,12 +231,19 @@
 </div>
 
 <!-- Lightbox -->
-<div id="forge-lightbox" style="display:none; position:fixed; inset:0; z-index:100000; background:rgba(8,10,18,0.94); backdrop-filter:blur(6px); cursor:zoom-out; align-items:center; justify-content:center; flex-direction:column; gap:16px;">
+<div id="forge-lightbox" style="display:none; position:fixed; inset:0; z-index:9000; background:rgba(8,10,18,0.94); backdrop-filter:blur(6px); cursor:zoom-out; align-items:center; justify-content:center; flex-direction:column; gap:16px;">
   <button id="lb-close" onclick="closeLightbox()"
-    style="position:absolute; top:20px; right:24px; background:transparent; border:1px solid rgba(34,211,238,0.3); color:rgba(34,211,238,0.7); font-family:var(--font-mono); font-size:0.7rem; letter-spacing:0.15em; padding:6px 14px; cursor:pointer;"
+    style="position:absolute; top:20px; right:24px; background:transparent; border:1px solid rgba(34,211,238,0.3); color:rgba(34,211,238,0.7); font-family:var(--font-mono); font-size:0.7rem; letter-spacing:0.15em; padding:6px 14px; cursor:pointer; z-index:9010;"
     onmouseover="this.style.background='rgba(34,211,238,0.08)'" onmouseout="this.style.background='transparent'">✕ CLOSE</button>
+  <button id="lb-prev" onclick="lbPrev()"
+    style="position:absolute; left:20px; top:50%; transform:translateY(-50%); background:transparent; border:1px solid rgba(34,211,238,0.3); color:rgba(34,211,238,0.7); font-family:var(--font-mono); font-size:1.2rem; padding:12px 16px; cursor:pointer; z-index:9010; line-height:1;"
+    onmouseover="this.style.background='rgba(34,211,238,0.08)'" onmouseout="this.style.background='transparent'">‹</button>
+  <button id="lb-next" onclick="lbNext()"
+    style="position:absolute; right:20px; top:50%; transform:translateY(-50%); background:transparent; border:1px solid rgba(34,211,238,0.3); color:rgba(34,211,238,0.7); font-family:var(--font-mono); font-size:1.2rem; padding:12px 16px; cursor:pointer; z-index:9010; line-height:1;"
+    onmouseover="this.style.background='rgba(34,211,238,0.08)'" onmouseout="this.style.background='transparent'">›</button>
   <img id="lb-img" src="" alt="Preview" style="max-width:90vw; max-height:82vh; object-fit:contain; border:1px solid rgba(34,211,238,0.15); box-shadow:0 0 60px rgba(34,211,238,0.06);">
   <div style="display:flex; gap:14px; align-items:center;">
+    <span id="lb-counter" style="font-family:var(--font-mono); font-size:0.6rem; color:rgba(34,211,238,0.35); letter-spacing:0.1em;"></span>
     <p id="lb-prompt" style="font-family:var(--font-mono); font-size:0.65rem; color:rgba(34,211,238,0.45); letter-spacing:0.05em; max-width:70vw; text-align:center; margin:0;"></p>
     <a id="lb-download" href="#" download
       style="font-family:var(--font-mono); font-size:0.65rem; letter-spacing:0.12em; padding:5px 14px; background:transparent; border:1px solid rgba(34,211,238,0.35); color:rgba(34,211,238,0.7); text-decoration:none; white-space:nowrap;"
@@ -268,29 +266,6 @@
   line-height: 0;
 }
 .forge-card:hover .forge-zoom-hint { opacity: 1; }
-
-.preset-btn {
-  font-family: var(--font-mono);
-  font-size: 0.6rem;
-  letter-spacing: 0.1em;
-  padding: 6px 12px;
-  background: rgba(34,211,238,0.05);
-  border: 1px solid rgba(34,211,238,0.2);
-  color: rgba(34,211,238,0.6);
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.preset-btn:hover {
-  background: rgba(34,211,238,0.15);
-  border-color: rgba(34,211,238,0.5);
-  color: var(--reach-cyan);
-  box-shadow: 0 0 10px rgba(34,211,238,0.2);
-}
-.preset-btn.active {
-  background: rgba(34,211,238,0.2);
-  border-color: var(--reach-cyan);
-  color: var(--reach-cyan);
-}
 </style>
 
 {% endblock %}
@@ -314,6 +289,74 @@ document.getElementById('forge-guidance')?.addEventListener('input', e => {
   document.getElementById('guidance-val').textContent = parseFloat(e.target.value).toFixed(1);
 });
 
+// Backend change → update presets
+document.getElementById('forge-backend')?.addEventListener('change', updatePresets);
+
+// Init presets on load
+updatePresets();
+
+// Full presets: steps, cfg, dimensions per backend
+const fullPresets = {
+  sdxl: [
+    { value: '1x1-balanced',   label: '1:1 Balanced — 30stp / CFG 7.5 / 1024×1024',    steps: 30,  guidance: 7.5,  width: 1024, height: 1024 },
+    { value: '1x1-detail',     label: '1:1 Detail — 60stp / CFG 9 / 1024×1024',         steps: 60,  guidance: 9.0,  width: 1024, height: 1024 },
+    { value: '1x1-sweetspot',   label: '1:1 Sweet Spot — 75stp / CFG 11.5 / 1024×1024', steps: 75,  guidance: 11.5, width: 1024, height: 1024 },
+    { value: '1x1-extreme',     label: '1:1 Extreme — 120stp / CFG 12 / 1024×1024',      steps: 120, guidance: 12.0, width: 1024, height: 1024 },
+    { value: '1x1-max',        label: '1:1 Max — 100stp / CFG 20 / 1536×1536',          steps: 100, guidance: 20.0, width: 1536, height: 1536 },
+    { value: '4x3-balanced',    label: '4:3 Balanced — 30stp / CFG 7.5 / 1152×896',      steps: 30,  guidance: 7.5,  width: 1152, height: 896  },
+    { value: '4x3-detail',     label: '4:3 Detail — 60stp / CFG 9 / 1152×896',          steps: 60,  guidance: 9.0,  width: 1152, height: 896  },
+    { value: '3x2-detail',     label: '3:2 Detail — 60stp / CFG 9 / 1216×832',           steps: 60,  guidance: 9.0,  width: 1216, height: 832  },
+    { value: '16x9-detail',    label: '16:9 Detail — 60stp / CFG 9 / 1344×768',          steps: 60,  guidance: 9.0,  width: 1344, height: 768  },
+    { value: '3x4-portrait',   label: '3:4 Portrait — 60stp / CFG 9 / 896×1152',        steps: 60,  guidance: 9.0,  width: 896,  height: 1152 },
+    { value: '9x16-portrait',  label: '9:16 Portrait — 60stp / CFG 9 / 768×1344',       steps: 60,  guidance: 9.0,  width: 768,  height: 1344 },
+  ],
+  forge: [
+    { value: '1x1-balanced',   label: '1:1 Balanced — 20stp / CFG 5 / 1024×1024',       steps: 20,  guidance: 5.0,  width: 1024, height: 1024 },
+    { value: '1x1-sweetspot',  label: '1:1 Sweet Spot — 28stp / CFG 7 / 1024×1024',     steps: 28,  guidance: 7.0,  width: 1024, height: 1024 },
+    { value: '1x1-detail',     label: '1:1 Detail — 35stp / CFG 8 / 1024×1024',          steps: 35,  guidance: 8.0,  width: 1024, height: 1024 },
+    { value: '1x1-ultra',      label: '1:1 Ultra — 50stp / CFG 10 / 2048×2048',           steps: 50,  guidance: 10.0, width: 2048, height: 2048 },
+    { value: '4x3-balanced',   label: '4:3 Balanced — 20stp / CFG 5 / 1152×896',         steps: 20,  guidance: 5.0,  width: 1152, height: 896  },
+    { value: '4x3-detail',    label: '4:3 Detail — 35stp / CFG 8 / 1152×896',           steps: 35,  guidance: 8.0,  width: 1152, height: 896  },
+    { value: '16x9-hd',       label: '16:9 HD — 28stp / CFG 7 / 1280×720',              steps: 28,  guidance: 7.0,  width: 1280, height: 720  },
+    { value: '3x2-jxl',       label: '3:2 JXL — 35stp / CFG 8 / 1536×1024',             steps: 35,  guidance: 8.0,  width: 1536, height: 1024 },
+    { value: '3x4-portrait',  label: '3:4 Portrait — 28stp / CFG 7 / 896×1152',         steps: 28,  guidance: 7.0,  width: 896,  height: 1152 },
+    { value: '9x16-hd',       label: '9:16 HD — 28stp / CFG 7 / 720×1280',              steps: 28,  guidance: 7.0,  width: 720,  height: 1280 },
+  ],
+};
+
+function updatePresets() {
+  const backend = document.getElementById('forge-backend')?.value || 'sdxl';
+  const select = document.getElementById('forge-preset');
+  if (!select) return;
+  const current = select.value;
+  select.innerHTML = '';
+  const presets = fullPresets[backend] || fullPresets.sdxl;
+  presets.forEach(p => {
+    const opt = document.createElement('option');
+    opt.value = p.value;
+    opt.textContent = p.label;
+    select.appendChild(opt);
+  });
+  const match = presets.find(p => p.value === current);
+  select.value = match ? current : presets[0].value;
+  applyPreset();
+}
+
+function applyPreset() {
+  const backend = document.getElementById('forge-backend')?.value || 'sdxl';
+  const select = document.getElementById('forge-preset');
+  if (!select) return;
+  const presets = fullPresets[backend] || fullPresets.sdxl;
+  const preset = presets.find(p => p.value === select.value);
+  if (!preset) return;
+  document.getElementById('forge-steps').value = preset.steps;
+  document.getElementById('forge-guidance').value = preset.guidance;
+  document.getElementById('steps-val').textContent = preset.steps;
+  document.getElementById('guidance-val').textContent = preset.guidance.toFixed(1);
+  document.getElementById('forge-width').value = preset.width;
+  document.getElementById('forge-height').value = preset.height;
+}
+
 // Seed helpers
 document.getElementById('random-seed-btn')?.addEventListener('click', () => {
   document.getElementById('forge-seed').value = Math.floor(Math.random() * 4294967295);
@@ -322,66 +365,19 @@ document.getElementById('clear-seed-btn')?.addEventListener('click', () => {
   document.getElementById('forge-seed').value = -1;
 });
 
-function applyPreset(btn) {
-  const steps = btn.dataset.steps;
-  const guidance = btn.dataset.guidance;
-  const width = btn.dataset.width;
-  const height = btn.dataset.height;
-
-  if (steps) {
-    const stepsInput = document.getElementById('forge-steps');
-    stepsInput.value = steps;
-    document.getElementById('steps-val').textContent = steps;
-  }
-  if (guidance) {
-    const guidanceInput = document.getElementById('forge-guidance');
-    guidanceInput.value = guidance;
-    document.getElementById('guidance-val').textContent = parseFloat(guidance).toFixed(1);
-  }
-  if (width) document.getElementById('forge-width').value = width;
-  if (height) document.getElementById('forge-height').value = height;
-
-  document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-
-  const details = document.getElementById('params-details');
-  if (details) details.open = true;
-}
-
-function applyForgeOptimizedDefaults(force = false) {
-  const forgeSelected = document.querySelector('input[name="worker-type"]:checked')?.value === 'forge';
-  const recommendedBtn = document.querySelector('.forge-recommended');
-  if (!forgeSelected || !recommendedBtn) return;
-
-  const hasActivePreset = document.querySelector('.preset-btn.active');
-  if (force || !hasActivePreset) applyPreset(recommendedBtn);
-}
-
-// Preset handlers
-document.querySelectorAll('.preset-btn').forEach(btn => {
-  btn.addEventListener('click', () => applyPreset(btn));
-});
-
-document.querySelectorAll('input[name="worker-type"]').forEach(input => {
-  input.addEventListener('change', () => {
-    if (input.checked && input.value === 'forge') applyForgeOptimizedDefaults(true);
-  });
-});
-
-applyForgeOptimizedDefaults(false);
-
 // Generate
 document.getElementById('forge-generate-btn')?.addEventListener('click', async () => {
   const prompt = promptEl.value.trim();
   const negative = document.getElementById('forge-negative')?.value.trim() || '';
   if (!prompt) { showError('Prompt is required.'); return; }
 
+  const backend = document.getElementById('forge-backend')?.value || 'sdxl';
+  const model = document.getElementById('forge-model')?.value || 'sdxl';
   const steps    = parseInt(document.getElementById('forge-steps')?.value || 20);
   const guidance = parseFloat(document.getElementById('forge-guidance')?.value || 7.5);
   const width    = parseInt(document.getElementById('forge-width')?.value || 1024);
   const height   = parseInt(document.getElementById('forge-height')?.value || 1024);
   const seed     = parseInt(document.getElementById('forge-seed')?.value ?? -1);
-  const workerType = document.querySelector('input[name="worker-type"]:checked')?.value || 'sdxl';
 
   setGenerating(true);
   showError('');
@@ -391,24 +387,20 @@ document.getElementById('forge-generate-btn')?.addEventListener('click', async (
     const resp = await fetch('/api/forge/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
-      body: JSON.stringify({ prompt, negative_prompt: negative, steps, guidance_scale: guidance, width, height, seed, worker_type: workerType }),
+      body: JSON.stringify({ prompt, negative_prompt: negative, steps, guidance_scale: guidance, width, height, seed, worker_type: backend, model }),
     });
     if (resp.status === 401) { showError('Session expired — please reload and log in again.'); setGenerating(false); return; }
     const data = await resp.json();
     if (!resp.ok) { showError(data.error || 'Generation failed.'); setGenerating(false); return; }
-    pollStatus(data.job_id, prompt, data.endpoint_id, data.status);
+    pollStatus(data.job_id, data.endpoint_id, prompt);
   } catch (e) {
     showError('Network error. Try again.');
     setGenerating(false);
   }
 });
 
-function statusLabel(status) {
-  return (status === 'IN_PROGRESS' || status === 'RUNNING') ? 'GENERATING...' : 'QUEUED...';
-}
-
-function pollStatus(jobId, prompt, endpointId, initialStatus) {
-  showStatus(statusLabel(initialStatus || 'IN_QUEUE'));
+function pollStatus(jobId, endpointId, prompt) {
+  showStatus('QUEUED...');
   let polls = 0;
   const MAX_POLLS = 150;
 
@@ -420,9 +412,7 @@ function pollStatus(jobId, prompt, endpointId, initialStatus) {
       return;
     }
     try {
-      let url = `/api/forge/status/${jobId}?prompt=${encodeURIComponent(prompt)}`;
-      if (endpointId) url += `&endpoint_id=${endpointId}`;
-      
+      const url = `/api/forge/status/${jobId}?prompt=${encodeURIComponent(prompt)}&endpoint_id=${encodeURIComponent(endpointId || '')}`;
       const resp = await fetch(url);
       const data = await resp.json();
 
@@ -435,7 +425,7 @@ function pollStatus(jobId, prompt, endpointId, initialStatus) {
         showStatus('');
         setGenerating(false);
       } else {
-        showStatus(statusLabel(data.status));
+        showStatus(data.status === 'IN_PROGRESS' ? 'GENERATING...' : 'QUEUED...');
         setTimeout(tick, 2000);
       }
     } catch (e) {
@@ -462,7 +452,7 @@ function prependImageCard(imageId, imageUrl, prompt) {
   card.dataset.prompt = prompt;
   card.style.cssText = 'background:rgba(21,25,42,0.85);border:1px solid rgba(34,211,238,0.15);border-radius:10px;overflow:hidden;';
   card.innerHTML = `
-    <div style="position:relative;cursor:zoom-in;" >
+    <div style="position:relative;cursor:zoom-in;" onclick="openLightbox('${imageUrl}','${ep}')">
       <img src="${imageUrl}" alt="Generated image" style="width:100%;display:block;aspect-ratio:1;object-fit:cover;">
       <div class="forge-zoom-hint">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
@@ -508,18 +498,52 @@ async function forgeDelete(imageId, btn) {
   }
 }
 
-document.getElementById('forge-gallery').addEventListener('click', e => {   const clickable = e.target.closest('[style*="cursor: zoom-in"]');   if (!clickable) return;   const card = clickable.closest('.forge-card');   if (!card) return;   openLightbox(card.dataset.url, card.dataset.prompt); });
-// Lightbox
+// Lightbox with gallery navigation
+let lbImages = [];
+let lbIndex = 0;
+
+function getGalleryImages() {
+  const cards = document.querySelectorAll('.forge-card');
+  lbImages = Array.from(cards).map(card => ({
+    url: card.dataset.url,
+    prompt: card.dataset.prompt,
+  }));
+}
+
 function openLightbox(url, prompt) {
+  getGalleryImages();
+  lbIndex = lbImages.findIndex(img => img.url === url);
+  if (lbIndex === -1) lbIndex = 0;
+  updateLightboxImage();
   const lb = document.getElementById('forge-lightbox');
-  document.getElementById('lb-img').src = url;
-  document.getElementById('lb-prompt').textContent = prompt;
-  const dl = document.getElementById('lb-download');
-  dl.href = url;
-  dl.download = url.split('/').pop();
   lb.style.display = 'flex';
   document.body.style.overflow = 'hidden';
 }
+
+function updateLightboxImage() {
+  const img = lbImages[lbIndex];
+  if (!img) return;
+  document.getElementById('lb-img').src = img.url;
+  document.getElementById('lb-prompt').textContent = img.prompt;
+  const dl = document.getElementById('lb-download');
+  dl.href = img.url;
+  dl.download = img.url.split('/').pop();
+  const counter = document.getElementById('lb-counter');
+  counter.textContent = lbImages.length > 1 ? `${lbIndex + 1} / ${lbImages.length}` : '';
+  document.getElementById('lb-prev').style.display = lbImages.length > 1 ? 'block' : 'none';
+  document.getElementById('lb-next').style.display = lbImages.length > 1 ? 'block' : 'none';
+}
+
+function lbPrev() {
+  lbIndex = (lbIndex - 1 + lbImages.length) % lbImages.length;
+  updateLightboxImage();
+}
+
+function lbNext() {
+  lbIndex = (lbIndex + 1) % lbImages.length;
+  updateLightboxImage();
+}
+
 function closeLightbox() {
   document.getElementById('forge-lightbox').style.display = 'none';
   document.body.style.overflow = '';
@@ -529,7 +553,11 @@ document.getElementById('forge-lightbox')?.addEventListener('click', e => {
   if (e.target === document.getElementById('forge-lightbox')) closeLightbox();
 });
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') closeLightbox();
+  if (document.getElementById('forge-lightbox').style.display === 'flex') {
+    if (e.key === 'Escape') closeLightbox();
+    if (e.key === 'ArrowLeft') lbPrev();
+    if (e.key === 'ArrowRight') lbNext();
+  }
 });
 
 function setGenerating(on) {

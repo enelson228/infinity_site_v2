@@ -64,7 +64,7 @@ def forge():
 def api_forge_generate():
     if not config.RUNPOD_API_KEY:
         return jsonify({'error': 'RunPod API Key not configured'}), 503
-    
+
     if not config.SDXL_ENDPOINT_ID and not config.FORGE_ENDPOINT_ID:
         logger.error("No RunPod endpoints configured in config.py or environment")
         return jsonify({'error': 'Image generation endpoint not configured'}), 503
@@ -78,6 +78,7 @@ def api_forge_generate():
 
     negative_prompt = (data.get('negative_prompt') or '').strip()
     worker_type = data.get('worker_type', 'sdxl')
+    model = data.get('model', 'sdxl')
 
     def _clamp(val, lo, hi, default):
         try:
@@ -110,6 +111,7 @@ def api_forge_generate():
         'width': width,
         'height': height,
         'guidance_scale': guidance,
+        'model': model,
     }
     if seed >= 0:
         gen_input['seed'] = seed
