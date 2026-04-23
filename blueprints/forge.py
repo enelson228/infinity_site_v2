@@ -183,6 +183,8 @@ def api_forge_status(job_id):
         return jsonify({'error': 'Endpoint not configured'}), 503
 
     prompt = request.args.get('prompt', '')
+    worker_type = request.args.get('worker_type', 'sdxl')
+    model = request.args.get('model', 'sdxl')
 
     url = f'{_RUNPOD_BASE}/{endpoint_id}/status/{job_id}'
     req = urllib.request.Request(url, headers=_runpod_headers())
@@ -229,7 +231,7 @@ def api_forge_status(job_id):
             logger.error(f'Forge: failed to save image {job_id}: {e}')
             return jsonify({'error': 'Failed to save image', 'status': 'FAILED'}), 500
 
-        img_id = database.add_forge_image(job_id, prompt, filename, datetime.now().isoformat())
+        img_id = database.add_forge_image(job_id, prompt, filename, datetime.now().isoformat(), model, worker_type)
         return jsonify({
             'status': 'COMPLETED',
             'image_url': f'/static/forge_outputs/{filename}',

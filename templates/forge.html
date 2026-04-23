@@ -173,6 +173,9 @@
         <div class="forge-zoom-hint">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
         </div>
+        {% if img.model %}
+        <div style="position:absolute;top:8px;left:8px;background:rgba(8,10,18,0.75);border:1px solid rgba(34,211,238,0.3);color:var(--reach-amber);font-family:var(--font-mono);font-size:0.5rem;letter-spacing:0.1em;padding:3px 7px;border-radius:3px;">{{ img.model|upper }}</div>
+        {% endif %}
       </div>
       <div style="padding: 10px 12px;">
         <p style="font-family: var(--font-mono); font-size: 0.65rem; color: rgba(34,211,238,0.5); margin: 0 0 8px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ img.prompt }}">{{ img.prompt }}</p>
@@ -378,7 +381,7 @@ document.getElementById('forge-generate-btn')?.addEventListener('click', async (
     if (resp.status === 401) { showError('Session expired — please reload and log in again.'); setGenerating(false); return; }
     const data = await resp.json();
     if (!resp.ok) { showError(data.error || 'Generation failed.'); setGenerating(false); return; }
-    pollStatus(data.job_id, prompt, data.endpoint_id, data.status);
+    pollStatus(data.job_id, prompt, data.endpoint_id, data.status, backend, model);
   } catch (e) {
     showError('Network error. Try again.');
     setGenerating(false);
@@ -389,7 +392,7 @@ function statusLabel(status) {
   return (status === 'IN_PROGRESS' || status === 'RUNNING') ? 'GENERATING...' : 'QUEUED...';
 }
 
-function pollStatus(jobId, prompt, endpointId, initialStatus) {
+function pollStatus(jobId, prompt, endpointId, initialStatus, workerType, model) {
   showStatus(statusLabel(initialStatus || 'IN_QUEUE'));
   let polls = 0;
   const MAX_POLLS = 150;
@@ -403,15 +406,17 @@ function pollStatus(jobId, prompt, endpointId, initialStatus) {
     }
     try {
       let url = `/api/forge/status/${jobId}?prompt=${encodeURIComponent(prompt)}`;
-      if (endpointId) url += `&endpoint_id=${endpointId}`;
-      
+      if (endpointId) url += `&endpoint_id=${encodeURIComponent(endpointId)}`;
+      if (workerType) url += `&worker_type=${encodeURIComponent(workerType)}`;
+      if (model) url += `&model=${encodeURIComponent(model)}`;
+
       const resp = await fetch(url);
       const data = await resp.json();
 
       if (data.status === 'COMPLETED') {
         showStatus('');
         setGenerating(false);
-        prependImageCard(data.image_id, data.image_url, prompt);
+        prependImageCard(data.image_id, data.image_url, prompt, model);
       } else if (data.status === 'FAILED') {
         showError(data.error || 'Generation failed.');
         showStatus('');
@@ -428,7 +433,7 @@ function pollStatus(jobId, prompt, endpointId, initialStatus) {
   setTimeout(tick, 2000);
 }
 
-function prependImageCard(imageId, imageUrl, prompt) {
+function prependImageCard(imageId, imageUrl, prompt, model) {
   const gallery = document.getElementById('forge-gallery');
   const empty = document.getElementById('forge-empty');
   if (empty) empty.remove();
@@ -436,6 +441,7 @@ function prependImageCard(imageId, imageUrl, prompt) {
   const now = new Date().toISOString().slice(0, 16);
   const ep  = escapeHtml(prompt);
   const filename = imageUrl.split('/').pop();
+  const modelLabel = model ? model.toUpperCase() : '';
 
   const card = document.createElement('div');
   card.className = 'forge-card';
@@ -449,6 +455,7 @@ function prependImageCard(imageId, imageUrl, prompt) {
       <div class="forge-zoom-hint">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
       </div>
+      ${modelLabel ? `<div style="position:absolute;top:8px;left:8px;background:rgba(8,10,18,0.75);border:1px solid rgba(34,211,238,0.3);color:var(--reach-amber);font-family:var(--font-mono);font-size:0.5rem;letter-spacing:0.1em;padding:3px 7px;border-radius:3px;">${modelLabel}</div>` : ''}
     </div>
     <div style="padding:10px 12px;">
       <p style="font-family:var(--font-mono);font-size:0.65rem;color:rgba(34,211,238,0.5);margin:0 0 8px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${ep}">${ep}</p>

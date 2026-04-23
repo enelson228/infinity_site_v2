@@ -166,6 +166,13 @@ def init_db():
             conn.execute("ALTER TABLE projects ADD COLUMN response_time INTEGER")
             conn.commit()
 
+        cur = conn.execute("PRAGMA table_info(forge_images)")
+        cols = {row["name"] for row in cur.fetchall()}
+        if "model" not in cols:
+            conn.execute("ALTER TABLE forge_images ADD COLUMN model TEXT")
+            conn.execute("ALTER TABLE forge_images ADD COLUMN worker_type TEXT")
+            conn.commit()
+
         cur = conn.execute("SELECT COUNT(*) AS c FROM users")
         if cur.fetchone()["c"] == 0:
             conn.execute(
@@ -507,11 +514,11 @@ def clear_recommendations(source: str = None):
 
 # ── Forge Images ──────────────────────────────────────────────────────────────
 
-def add_forge_image(job_id: str, prompt: str, filename: str, created_at: str) -> int:
+def add_forge_image(job_id: str, prompt: str, filename: str, created_at: str, model: str = None, worker_type: str = None) -> int:
     with _db_conn() as conn:
         cur = conn.execute(
-            "INSERT INTO forge_images (job_id, prompt, filename, created_at) VALUES (?, ?, ?, ?)",
-            (job_id, prompt, filename, created_at),
+            "INSERT INTO forge_images (job_id, prompt, filename, created_at, model, worker_type) VALUES (?, ?, ?, ?, ?, ?)",
+            (job_id, prompt, filename, created_at, model, worker_type),
         )
         conn.commit()
         return cur.lastrowid
