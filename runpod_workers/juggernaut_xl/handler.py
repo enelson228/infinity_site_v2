@@ -7,11 +7,14 @@ from typing import Any
 
 MODEL_ID = os.environ.get("MODEL_ID", "RunDiffusion/Juggernaut-XL")
 MODEL_CACHE_DIR = os.environ.get("MODEL_CACHE_DIR", "/runpod-volume/huggingface")
+MODEL_FILE = os.environ.get(
+    "MODEL_FILE",
+    f"https://huggingface.co/{MODEL_ID}/blob/main/juggernautXL_version2.safetensors",
+)
 DEFAULT_NEGATIVE_PROMPT = os.environ.get(
     "DEFAULT_NEGATIVE_PROMPT",
     "blurry, low quality, distorted, deformed, watermark, text",
 )
-MODEL_VARIANT = os.environ.get("MODEL_VARIANT") or None
 
 _PIPELINE = None
 
@@ -38,14 +41,12 @@ def _load_pipeline():
     import torch
     from diffusers import StableDiffusionXLPipeline
 
-    pipe = StableDiffusionXLPipeline.from_pretrained(
-        MODEL_ID,
+    pipe = StableDiffusionXLPipeline.from_single_file(
+        MODEL_FILE,
         torch_dtype=torch.float16,
-        # RunDiffusion/Juggernaut-XL publishes diffusers folders with .bin weights.
-        # Forcing safetensors makes diffusers look for files the repo does not ship.
-        use_safetensors=False,
+        use_safetensors=True,
         cache_dir=MODEL_CACHE_DIR,
-        variant=MODEL_VARIANT,
+        add_watermarker=False,
     )
     pipe.to("cuda")
     pipe.enable_attention_slicing()
