@@ -9,7 +9,7 @@ MODEL_ID = os.environ.get("MODEL_ID", "RunDiffusion/Juggernaut-XL")
 MODEL_CACHE_DIR = os.environ.get("MODEL_CACHE_DIR", "/runpod-volume/huggingface")
 MODEL_FILE = os.environ.get(
     "MODEL_FILE",
-    f"https://huggingface.co/{MODEL_ID}/resolve/main/juggernautXL_version2.safetensors",
+    f"https://huggingface.co/{MODEL_ID}/blob/main/juggernautXL_version2.safetensors",
 )
 ORIGINAL_CONFIG_FILE = os.environ.get(
     "ORIGINAL_CONFIG_FILE",
