@@ -11,6 +11,7 @@ DEFAULT_NEGATIVE_PROMPT = os.environ.get(
     "DEFAULT_NEGATIVE_PROMPT",
     "blurry, low quality, distorted, deformed, watermark, text",
 )
+MODEL_VARIANT = os.environ.get("MODEL_VARIANT") or None
 
 _PIPELINE = None
 
@@ -40,9 +41,11 @@ def _load_pipeline():
     pipe = StableDiffusionXLPipeline.from_pretrained(
         MODEL_ID,
         torch_dtype=torch.float16,
-        use_safetensors=True,
+        # RunDiffusion/Juggernaut-XL publishes diffusers folders with .bin weights.
+        # Forcing safetensors makes diffusers look for files the repo does not ship.
+        use_safetensors=False,
         cache_dir=MODEL_CACHE_DIR,
-        variant=os.environ.get("MODEL_VARIANT") or None,
+        variant=MODEL_VARIANT,
     )
     pipe.to("cuda")
     pipe.enable_attention_slicing()
