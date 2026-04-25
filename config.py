@@ -51,7 +51,7 @@ GITHUB_TOKEN = os.environ.get('GITHUB_TOKEN', '')
 # RunPod serverless image generation
 RUNPOD_API_KEY = os.environ.get('RUNPOD_API_KEY', '')
 SD_ENDPOINT_ID = os.environ.get('SD_ENDPOINT_ID', '')
-# Specific endpoint overrides
+# Specific endpoint overrides. FORGE_ENDPOINT_ID is the Juggernaut XL endpoint.
 SDXL_ENDPOINT_ID = os.environ.get('SDXL_ENDPOINT_ID', SD_ENDPOINT_ID)
 FORGE_ENDPOINT_ID = os.environ.get('FORGE_ENDPOINT_ID', '')
 

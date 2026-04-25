@@ -8,7 +8,7 @@
   <!-- Header -->
   <div style="margin-bottom: var(--spacing-xl);">
     <h1 style="font-family: var(--font-display); font-size: 1.8rem; letter-spacing: 0.15em; color: var(--reach-cyan); text-shadow: 0 0 12px rgba(34,211,238,0.4); margin: 0 0 4px 0;">FORGE</h1>
-    <p style="font-family: var(--font-mono); font-size: 0.65rem; color: rgba(34,211,238,0.4); letter-spacing: 0.2em; margin: 0;">// IMAGE SYNTHESIS — RUNPOD SDXL SERVERLESS</p>
+    <p style="font-family: var(--font-mono); font-size: 0.65rem; color: rgba(34,211,238,0.4); letter-spacing: 0.2em; margin: 0;">// IMAGE SYNTHESIS — RUNPOD JUGGERNAUT XL SERVERLESS</p>
   </div>
 
   <!-- Generation Panel -->
@@ -16,7 +16,7 @@
 
     {% if not endpoint_configured %}
     <div style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--reach-orange); letter-spacing: 0.1em; padding: var(--spacing-md); border: 1px solid rgba(234,88,12,0.3); background: rgba(234,88,12,0.05); margin-bottom: var(--spacing-md);">
-      ⚠ ENDPOINT NOT CONFIGURED — Set RUNPOD_API_KEY and SD_ENDPOINT_ID in Doppler.
+      ⚠ ENDPOINT NOT CONFIGURED — Set RUNPOD_API_KEY and FORGE_ENDPOINT_ID in Doppler.
     </div>
     {% endif %}
 
@@ -59,8 +59,8 @@
           <div style="font-family: var(--font-mono); font-size: 0.55rem; color: rgba(34,211,238,0.3); margin-bottom: 6px;">GPU endpoint for generation.</div>
           <select id="forge-backend"
             style="width: 100%; background: rgba(0,0,0,0.4); border: 1px solid rgba(34,211,238,0.2); color: var(--text-primary); font-family: var(--font-mono); font-size: 0.75rem; padding: 7px 10px; outline: none; cursor: pointer;">
-            <option value="sdxl" {% if not has_forge %}selected{% endif %}>SDXL Turbo</option>
-            <option value="forge" {% if has_forge %}selected{% endif %}>Forge</option>
+            <option value="forge" {% if has_forge %}selected{% endif %}>Juggernaut XL</option>
+            <option value="sdxl" {% if not has_forge %}selected{% endif %}>Legacy SDXL</option>
           </select>
         </div>
 
@@ -70,6 +70,7 @@
           <div style="font-family: var(--font-mono); font-size: 0.55rem; color: rgba(34,211,238,0.3); margin-bottom: 6px;">Base model for generation.</div>
           <select id="forge-model"
             style="width: 100%; background: rgba(0,0,0,0.4); border: 1px solid rgba(34,211,238,0.2); color: var(--text-primary); font-family: var(--font-mono); font-size: 0.75rem; padding: 7px 10px; outline: none; cursor: pointer;">
+            <option value="juggernaut-xl" selected>Juggernaut XL</option>
             <option value="sdxl">SDXL 1.0</option>
             <option value="sdxl-turbo">SDXL Turbo (Fast)</option>
             <option value="pony">Pony Diffusion XL</option>
@@ -90,8 +91,8 @@
         <!-- Hidden inputs for generation params -->
         <input type="hidden" id="forge-width" value="1024">
         <input type="hidden" id="forge-height" value="1024">
-        <input type="hidden" id="forge-steps" value="75">
-        <input type="hidden" id="forge-guidance" value="11.5">
+        <input type="hidden" id="forge-steps" value="28">
+        <input type="hidden" id="forge-guidance" value="7">
 
         <!-- Seed (full width) -->
         <div style="grid-column: 1 / -1;">
@@ -283,17 +284,13 @@ if (promptEl) {
 
 // Slider live-update labels
 document.getElementById('forge-steps')?.addEventListener('input', e => {
-  document.getElementById('steps-val').textContent = e.target.value;
+  const stepsVal = document.getElementById('steps-val');
+  if (stepsVal) stepsVal.textContent = e.target.value;
 });
 document.getElementById('forge-guidance')?.addEventListener('input', e => {
-  document.getElementById('guidance-val').textContent = parseFloat(e.target.value).toFixed(1);
+  const guidanceVal = document.getElementById('guidance-val');
+  if (guidanceVal) guidanceVal.textContent = parseFloat(e.target.value).toFixed(1);
 });
-
-// Backend change → update presets
-document.getElementById('forge-backend')?.addEventListener('change', updatePresets);
-
-// Init presets on load
-updatePresets();
 
 // Full presets: steps, cfg, dimensions per backend
 const fullPresets = {
@@ -311,10 +308,9 @@ const fullPresets = {
     { value: '9x16-portrait',  label: '9:16 Portrait — 60stp / CFG 9 / 768×1344',       steps: 60,  guidance: 9.0,  width: 768,  height: 1344 },
   ],
   forge: [
-    { value: '1x1-balanced',   label: '1:1 Balanced — 20stp / CFG 5 / 1024×1024',       steps: 20,  guidance: 5.0,  width: 1024, height: 1024 },
-    { value: '1x1-sweetspot',  label: '1:1 Sweet Spot — 28stp / CFG 7 / 1024×1024',     steps: 28,  guidance: 7.0,  width: 1024, height: 1024 },
+    { value: '1x1-economy',    label: '1:1 Economy — 24stp / CFG 6 / 1024×1024',         steps: 24,  guidance: 6.0,  width: 1024, height: 1024 },
+    { value: '1x1-balanced',   label: '1:1 Balanced — 28stp / CFG 7 / 1024×1024',        steps: 28,  guidance: 7.0,  width: 1024, height: 1024 },
     { value: '1x1-detail',     label: '1:1 Detail — 35stp / CFG 8 / 1024×1024',          steps: 35,  guidance: 8.0,  width: 1024, height: 1024 },
-    { value: '1x1-ultra',      label: '1:1 Ultra — 50stp / CFG 10 / 2048×2048',           steps: 50,  guidance: 10.0, width: 2048, height: 2048 },
     { value: '4x3-balanced',   label: '4:3 Balanced — 20stp / CFG 5 / 1152×896',         steps: 20,  guidance: 5.0,  width: 1152, height: 896  },
     { value: '4x3-detail',    label: '4:3 Detail — 35stp / CFG 8 / 1152×896',           steps: 35,  guidance: 8.0,  width: 1152, height: 896  },
     { value: '16x9-hd',       label: '16:9 HD — 28stp / CFG 7 / 1280×720',              steps: 28,  guidance: 7.0,  width: 1280, height: 720  },
@@ -324,9 +320,23 @@ const fullPresets = {
   ],
 };
 
+// Backend change → update presets
+document.getElementById('forge-backend')?.addEventListener('change', updatePresets);
+
+// Init presets on load after preset data exists
+updatePresets();
+
 function updatePresets() {
   const backend = document.getElementById('forge-backend')?.value || 'sdxl';
   const select = document.getElementById('forge-preset');
+  const modelSelect = document.getElementById('forge-model');
+  if (modelSelect) {
+    if (backend === 'forge') {
+      modelSelect.value = 'juggernaut-xl';
+    } else if (modelSelect.value === 'juggernaut-xl') {
+      modelSelect.value = 'sdxl';
+    }
+  }
   if (!select) return;
   const current = select.value;
   select.innerHTML = '';
@@ -351,8 +361,10 @@ function applyPreset() {
   if (!preset) return;
   document.getElementById('forge-steps').value = preset.steps;
   document.getElementById('forge-guidance').value = preset.guidance;
-  document.getElementById('steps-val').textContent = preset.steps;
-  document.getElementById('guidance-val').textContent = preset.guidance.toFixed(1);
+  const stepsVal = document.getElementById('steps-val');
+  const guidanceVal = document.getElementById('guidance-val');
+  if (stepsVal) stepsVal.textContent = preset.steps;
+  if (guidanceVal) guidanceVal.textContent = preset.guidance.toFixed(1);
   document.getElementById('forge-width').value = preset.width;
   document.getElementById('forge-height').value = preset.height;
 }
