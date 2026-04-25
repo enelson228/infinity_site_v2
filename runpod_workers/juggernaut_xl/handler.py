@@ -52,7 +52,7 @@ def _load_pipeline():
     pipe = StableDiffusionXLPipeline.from_single_file(
         MODEL_FILE,
         config=MODEL_CONFIG_REPO,
-        original_config=ORIGINAL_CONFIG_FILE,
+        original_config_file=ORIGINAL_CONFIG_FILE,
         torch_dtype=torch.float16,
         use_safetensors=True,
         cache_dir=MODEL_CACHE_DIR,
