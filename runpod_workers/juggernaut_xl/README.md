@@ -34,6 +34,8 @@ Set the endpoint ID in the app environment as `FORGE_ENDPOINT_ID`. Keep `RUNPOD_
 
 - `MODEL_ID`: defaults to `RunDiffusion/Juggernaut-XL`
 - `MODEL_FILE`: defaults to the repo's `juggernautXL_version2.safetensors` single-file checkpoint
+- `MODEL_CONFIG_REPO`: defaults to `stabilityai/stable-diffusion-xl-base-1.0`
+- `ORIGINAL_CONFIG_FILE`: defaults to Stability AI's `sd_xl_base.yaml`
 - `MODEL_CACHE_DIR`: defaults to `/runpod-volume/huggingface`
 - `DEFAULT_NEGATIVE_PROMPT`: optional fallback negative prompt
 - `ENABLE_XFORMERS`: optional `true` if the image includes a compatible xFormers build
