@@ -73,6 +73,85 @@ def test_generate_returns_job_id(admin_client):
     assert data['status'] == 'IN_QUEUE'
 
 
+def test_generate_routes_juggernaut_payload_to_forge_endpoint(admin_client):
+    import config
+    config.RUNPOD_API_KEY = 'test-key'
+    config.SDXL_ENDPOINT_ID = 'sdxl-endpoint'
+    config.FORGE_ENDPOINT_ID = 'forge-endpoint'
+    with admin_client.session_transaction() as sess:
+        token = sess['csrf_token']
+
+    mock_response = MagicMock()
+    mock_response.read.return_value = json.dumps({'id': 'job-juggernaut', 'status': 'IN_QUEUE'}).encode()
+    mock_response.__enter__ = lambda s: s
+    mock_response.__exit__ = MagicMock(return_value=False)
+
+    with patch('urllib.request.urlopen', return_value=mock_response) as urlopen:
+        resp = admin_client.post(
+            '/api/forge/generate',
+            json={
+                'prompt': 'a cinematic orbital foundry',
+                'negative_prompt': 'blurry',
+                'worker_type': 'forge',
+                'steps': 28,
+                'width': 1024,
+                'height': 1024,
+                'guidance_scale': 7,
+                'seed': 123,
+            },
+            headers={'X-CSRF-Token': token},
+        )
+
+    assert resp.status_code == 200
+    req = urlopen.call_args.args[0]
+    assert req.full_url == 'https://api.runpod.ai/v2/forge-endpoint/run'
+    payload = json.loads(req.data.decode())
+    assert payload['input'] == {
+        'prompt': 'a cinematic orbital foundry',
+        'negative_prompt': 'blurry',
+        'num_inference_steps': 28,
+        'width': 1024,
+        'height': 1024,
+        'guidance_scale': 7.0,
+        'model': 'juggernaut-xl',
+        'seed': 123,
+    }
+
+
+def test_generate_clamps_juggernaut_cost_heavy_values(admin_client):
+    import config
+    config.RUNPOD_API_KEY = 'test-key'
+    config.FORGE_ENDPOINT_ID = 'forge-endpoint'
+    with admin_client.session_transaction() as sess:
+        token = sess['csrf_token']
+
+    mock_response = MagicMock()
+    mock_response.read.return_value = json.dumps({'id': 'job-clamp', 'status': 'IN_QUEUE'}).encode()
+    mock_response.__enter__ = lambda s: s
+    mock_response.__exit__ = MagicMock(return_value=False)
+
+    with patch('urllib.request.urlopen', return_value=mock_response) as urlopen:
+        resp = admin_client.post(
+            '/api/forge/generate',
+            json={
+                'prompt': 'a large render',
+                'worker_type': 'forge',
+                'steps': 150,
+                'width': 4096,
+                'height': 4096,
+                'guidance_scale': 30,
+            },
+            headers={'X-CSRF-Token': token},
+        )
+
+    assert resp.status_code == 200
+    payload = json.loads(urlopen.call_args.args[0].data.decode())
+    assert payload['input']['num_inference_steps'] == 60
+    assert payload['input']['width'] == 1536
+    assert payload['input']['height'] == 1536
+    assert payload['input']['guidance_scale'] == 15.0
+
+
 def test_generate_returns_502_when_runpod_omits_job_id(admin_client):
     import config
     config.RUNPOD_API_KEY = 'test-key'
@@ -199,6 +278,34 @@ def test_status_saves_image_on_completed(admin_client, tmp_path, monkeypatch):
     # Verify file was written
     saved_file = tmp_path / 'job-save-test.png'
     assert saved_file.exists()
+
+
+def test_status_saves_image_from_output_images_dict(admin_client, tmp_path, monkeypatch):
+    import blueprints.forge as forge_module
+    monkeypatch.setattr(forge_module, '_FORGE_OUTPUTS', str(tmp_path))
+    import config
+    config.RUNPOD_API_KEY = 'test-key'
+    config.FORGE_ENDPOINT_ID = 'forge-endpoint'
+
+    tiny_png_b64 = (
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8'
+        'z8BQDwADhQGAWjR9awAAAABJRU5ErkJggg=='
+    )
+    mock_response = MagicMock()
+    mock_response.read.return_value = json.dumps({
+        'status': 'COMPLETED',
+        'output': {'images': [tiny_png_b64], 'seed': 42},
+    }).encode()
+    mock_response.__enter__ = lambda s: s
+    mock_response.__exit__ = MagicMock(return_value=False)
+
+    with patch('urllib.request.urlopen', return_value=mock_response):
+        resp = admin_client.get('/api/forge/status/job-save-dict?prompt=a+cat')
+
+    assert resp.status_code == 200
+    data = json.loads(resp.data)
+    assert data['status'] == 'COMPLETED'
+    assert (tmp_path / 'job-save-dict.png').exists()
 
 
 def test_status_idempotent_on_repeated_completed_poll(admin_client, tmp_path, monkeypatch):

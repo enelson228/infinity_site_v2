@@ -78,7 +78,7 @@ def api_forge_generate():
 
     negative_prompt = (data.get('negative_prompt') or '').strip()
     worker_type = data.get('worker_type', 'sdxl')
-    model = data.get('model', 'sdxl')
+    model = data.get('model', 'juggernaut-xl' if worker_type == 'forge' else 'sdxl')
 
     def _clamp(val, lo, hi, default):
         try:
@@ -93,14 +93,17 @@ def api_forge_generate():
             return default
 
     default_steps = 28 if worker_type == 'forge' else 75
-    default_width = 896 if worker_type == 'forge' else 1024
-    default_height = 896 if worker_type == 'forge' else 1024
+    default_width = 1024
+    default_height = 1024
     default_guidance = 7.0 if worker_type == 'forge' else 11.5
 
-    steps        = _clamp(data.get('steps'),          1,   150,  default_steps)
-    width        = _clamp(data.get('width'),           256, 4096, default_width)
-    height       = _clamp(data.get('height'),          256, 4096, default_height)
-    guidance     = _clamp_f(data.get('guidance_scale'), 1.0, 30.0, default_guidance)
+    max_steps = 60 if worker_type == 'forge' else 150
+    max_size = 1536 if worker_type == 'forge' else 4096
+
+    steps        = _clamp(data.get('steps'),          1,   max_steps, default_steps)
+    width        = _clamp(data.get('width'),           256, max_size,  default_width)
+    height       = _clamp(data.get('height'),          256, max_size,  default_height)
+    guidance     = _clamp_f(data.get('guidance_scale'), 1.0, 15.0 if worker_type == 'forge' else 30.0, default_guidance)
     seed_raw     = data.get('seed')
     seed         = _clamp(seed_raw, 0, 2**32 - 1, -1) if seed_raw not in (None, '', -1, '-1') else -1
 

@@ -51,7 +51,8 @@ Required secrets:
 
 Optional config (enables additional features):
 - `GITHUB_TOKEN` (Enables GitHub panel in Monitor dashboard)
-- `RUNPOD_API_KEY` + `SD_ENDPOINT_ID` (Enables Forge image generation)
+- `RUNPOD_API_KEY` + `FORGE_ENDPOINT_ID` (Enables Forge Juggernaut XL image generation)
+- `SD_ENDPOINT_ID` / `SDXL_ENDPOINT_ID` (Legacy Forge SDXL endpoint fallback)
 - `CESIUM_ION_TOKEN` (Used for mapping tools)
 - `TELEMETRY_PUBLIC` (`true`/`false`)
 - `LOGIN_RATE_LIMIT_MAX_ATTEMPTS` (default `10`)
@@ -110,6 +111,15 @@ journalctl -u infinity_site -f
 # Check status
 systemctl status infinity_site
 ```
+
+## Forge RunPod Cost Guardrails
+
+Forge is intended to use a queue-based RunPod Serverless Flex endpoint for Juggernaut XL:
+
+- Set `active_workers=0` so no GPU compute runs while idle.
+- Set `max_workers=1` to cap concurrent GPU spend.
+- Prefer `L4/A5000/3090 24GB`; use `4090 PRO 24GB` only if availability is poor.
+- Keep the endpoint idle timeout short, around `5s`, unless repeated back-to-back generations justify a warmer worker.
 
 ## Projects dashboard
 
