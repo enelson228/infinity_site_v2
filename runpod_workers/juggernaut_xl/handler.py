@@ -11,10 +11,6 @@ MODEL_FILE = os.environ.get(
     "MODEL_FILE",
     f"https://huggingface.co/{MODEL_ID}/resolve/main/juggernautXL_version2.safetensors",
 )
-MODEL_CONFIG_REPO = os.environ.get(
-    "MODEL_CONFIG_REPO",
-    "stabilityai/stable-diffusion-xl-base-1.0",
-)
 ORIGINAL_CONFIG_FILE = os.environ.get(
     "ORIGINAL_CONFIG_FILE",
     "https://raw.githubusercontent.com/Stability-AI/generative-models/main/configs/inference/sd_xl_base.yaml",
@@ -51,8 +47,7 @@ def _load_pipeline():
 
     pipe = StableDiffusionXLPipeline.from_single_file(
         MODEL_FILE,
-        config=MODEL_CONFIG_REPO,
-        original_config_file=ORIGINAL_CONFIG_FILE,
+        original_config=ORIGINAL_CONFIG_FILE,
         torch_dtype=torch.float16,
         use_safetensors=True,
         cache_dir=MODEL_CACHE_DIR,
