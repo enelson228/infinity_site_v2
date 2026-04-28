@@ -42,6 +42,7 @@ _MODEL_REGISTRY = {
     'sdxl': {
         'endpoint_attr': 'SDXL_ENDPOINT_ID',
         'worker_type': 'sdxl',
+        'display_model': 'sdxl-2.1.1',
         'default_steps': 75,
         'default_guidance': 11.5,
         'max_steps': 150,
@@ -148,6 +149,7 @@ def api_forge_generate():
     model, model_meta = _resolve_model(worker_type, data.get('model'))
     if not model or not model_meta:
         return jsonify({'error': f'Endpoint for {worker_type} not configured'}), 503
+    display_model = model_meta.get('display_model', model)
 
     def _clamp(val, lo, hi, default):
         try:
@@ -214,6 +216,8 @@ def api_forge_generate():
             'job_id': job_id,
             'endpoint_id': endpoint_id,
             'status': result.get('status', 'IN_QUEUE'),
+            'worker_type': worker_type,
+            'model': display_model,
         })
     except urllib.error.HTTPError as e:
         detail = ''
@@ -239,13 +243,20 @@ def api_forge_status(job_id):
     
     # Client should pass endpoint_id as a query param. If it does not,
     # prefer the explicit worker-specific endpoints before the legacy default.
-    endpoint_id = (
-        request.args.get('endpoint_id')
-        or config.CYBERREALISTIC_PONY_ENDPOINT_ID
-        or config.FORGE_ENDPOINT_ID
-        or config.SDXL_ENDPOINT_ID
-        or config.SD_ENDPOINT_ID
-    )
+    worker_type = request.args.get('worker_type', 'sdxl')
+    requested_model = request.args.get('model')
+    model, model_meta = _resolve_model(worker_type, requested_model)
+    display_model = (model_meta or {}).get('display_model', model)
+    endpoint_id = request.args.get('endpoint_id')
+    if not endpoint_id and model_meta and (request.args.get('worker_type') or requested_model):
+        endpoint_id = _get_endpoint(model_meta['endpoint_attr'])
+    if not endpoint_id:
+        endpoint_id = (
+            config.CYBERREALISTIC_PONY_ENDPOINT_ID
+            or config.FORGE_ENDPOINT_ID
+            or config.SDXL_ENDPOINT_ID
+            or config.SD_ENDPOINT_ID
+        )
     if not endpoint_id:
         return jsonify({'error': 'Endpoint ID missing for status check'}), 400
 
@@ -273,6 +284,8 @@ def api_forge_status(job_id):
                 'status': 'COMPLETED',
                 'image_url': f'/static/forge_outputs/{existing["filename"]}',
                 'image_id': existing['id'],
+                'model': existing.get('model') or display_model,
+                'worker_type': existing.get('worker_type') or worker_type,
             })
 
         # Extract base64 image — handle list-of-objects or dict output formats
@@ -299,11 +312,13 @@ def api_forge_status(job_id):
             logger.error(f'Forge: failed to save image {job_id}: {e}')
             return jsonify({'error': 'Failed to save image', 'status': 'FAILED'}), 500
 
-        img_id = database.add_forge_image(job_id, prompt, filename, datetime.now().isoformat())
+        img_id = database.add_forge_image(job_id, prompt, filename, datetime.now().isoformat(), display_model, worker_type)
         return jsonify({
             'status': 'COMPLETED',
             'image_url': f'/static/forge_outputs/{filename}',
             'image_id': img_id,
+            'model': display_model,
+            'worker_type': worker_type,
         })
 
     if status in _TERMINAL_STATUSES:
