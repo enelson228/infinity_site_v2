@@ -112,6 +112,35 @@ def _extract_video_url(output):
     return None
 
 
+def _extract_b64_video(output):
+    """Extract a base64-encoded video payload from supported RunPod output shapes."""
+    if isinstance(output, str):
+        if output.startswith(('http://', 'https://')):
+            return None
+        return output
+    if isinstance(output, list):
+        for item in output:
+            payload = _extract_b64_video(item)
+            if payload:
+                return payload
+        return None
+    if isinstance(output, dict):
+        if isinstance(output.get('videos'), list):
+            for item in output['videos']:
+                payload = _extract_b64_video(item)
+                if payload:
+                    return payload
+        for key in ('video_base64', 'video_b64', 'video', 'data', 'base64'):
+            value = output.get(key)
+            if isinstance(value, str) and value and not value.startswith(('http://', 'https://')):
+                return value
+            if isinstance(value, dict):
+                nested = _extract_b64_video(value)
+                if nested:
+                    return nested
+    return None
+
+
 def _get_endpoint(endpoint_attr):
     return getattr(config, endpoint_attr, '') if endpoint_attr else ''
 
@@ -532,7 +561,8 @@ def api_forge_video_status(job_id):
 
         output = result.get('output')
         video_url = _extract_video_url(output)
-        if not video_url:
+        b64_video = _extract_b64_video(output)
+        if not video_url and not b64_video:
             return jsonify({'error': 'No video in response', 'status': 'FAILED'}), 502
 
         filename = f'{job_id}.mp4'
@@ -540,9 +570,14 @@ def api_forge_video_status(job_id):
 
         try:
             os.makedirs(_FORGE_VIDEOS, exist_ok=True)
-            download_req = urllib.request.Request(video_url, headers={'User-Agent': 'InfinityForgeVideo/1.0'})
-            with urllib.request.urlopen(download_req, timeout=120) as resp:
-                video_bytes = resp.read()
+            if b64_video:
+                if b64_video.startswith('data:'):
+                    b64_video = b64_video.split(',', 1)[1]
+                video_bytes = base64.b64decode(b64_video + '=' * (-len(b64_video) % 4))
+            else:
+                download_req = urllib.request.Request(video_url, headers={'User-Agent': 'InfinityForgeVideo/1.0'})
+                with urllib.request.urlopen(download_req, timeout=120) as resp:
+                    video_bytes = resp.read()
             with open(filepath, 'wb') as f:
                 f.write(video_bytes)
         except Exception as e:

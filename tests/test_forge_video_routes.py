@@ -188,6 +188,30 @@ def test_video_status_saves_completed_video(admin_client, tmp_path, monkeypatch)
     assert (tmp_path / 'job-video-save.mp4').exists()
 
 
+def test_video_status_saves_completed_base64_video(admin_client, tmp_path, monkeypatch):
+    import blueprints.forge as forge_module
+    monkeypatch.setattr(forge_module, '_FORGE_VIDEOS', str(tmp_path))
+    import config
+    config.RUNPOD_API_KEY = 'test-key'
+    config.WAN_VIDEO_ENDPOINT_ID = 'wan-endpoint'
+
+    mock_response = MagicMock()
+    mock_response.read.return_value = json.dumps({
+        'status': 'COMPLETED',
+        'output': {'video': 'ZmFrZS1tcDQtZGF0YQ=='},
+    }).encode()
+    mock_response.__enter__ = lambda s: s
+    mock_response.__exit__ = MagicMock(return_value=False)
+
+    with patch('urllib.request.urlopen', return_value=mock_response):
+        resp = admin_client.get('/api/forge/videos/status/job-video-b64?prompt=a+test')
+
+    assert resp.status_code == 200
+    data = json.loads(resp.data)
+    assert data['status'] == 'COMPLETED'
+    assert (tmp_path / 'job-video-b64.mp4').read_bytes() == b'fake-mp4-data'
+
+
 def test_video_status_failed_job(admin_client):
     import config
     config.RUNPOD_API_KEY = 'test-key'
