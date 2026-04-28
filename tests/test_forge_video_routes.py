@@ -35,11 +35,13 @@ def test_video_generate_routes_to_wan_endpoint(admin_client):
             json={
                 'prompt': 'orbit around a mountain observatory',
                 'negative_prompt': 'text, watermark',
-                'size': '1280*720',
-                'duration': 5,
-                'num_inference_steps': 30,
-                'guidance': 5,
-                'flow_shift': 5,
+                'image_base64': 'ZmFrZS1pbWFnZQ==',
+                'width': 480,
+                'height': 832,
+                'length': 81,
+                'steps': 10,
+                'cfg': 2.0,
+                'context_overlap': 48,
                 'seed': 123,
             },
             headers={'X-CSRF-Token': token},
@@ -52,13 +54,13 @@ def test_video_generate_routes_to_wan_endpoint(admin_client):
     assert payload['input'] == {
         'prompt': 'orbit around a mountain observatory',
         'negative_prompt': 'text, watermark',
-        'size': '1280*720',
-        'num_inference_steps': 30,
-        'guidance': 5.0,
-        'duration': 5,
-        'flow_shift': 5,
-        'enable_prompt_optimization': False,
-        'enable_safety_checker': True,
+        'image_base64': 'ZmFrZS1pbWFnZQ==',
+        'width': 480,
+        'height': 832,
+        'length': 81,
+        'steps': 10,
+        'cfg': 2.0,
+        'context_overlap': 48,
         'seed': 123,
     }
 
@@ -80,8 +82,9 @@ def test_video_generate_merges_advanced_input(admin_client):
             '/api/forge/videos/generate',
             json={
                 'prompt': 'orbit around a mountain observatory',
+                'image_url': 'https://example.com/ref.png',
                 'advanced_input': {
-                    'high_noise_loras': [{'path': 'https://hf/high.safetensors', 'scale': 1.0}],
+                    'extra_param': 7,
                 },
             },
             headers={'X-CSRF-Token': token},
@@ -89,7 +92,36 @@ def test_video_generate_merges_advanced_input(admin_client):
 
     assert resp.status_code == 200
     payload = json.loads(urlopen.call_args.args[0].data.decode())
-    assert payload['input']['high_noise_loras'][0]['path'] == 'https://hf/high.safetensors'
+    assert payload['input']['image_url'] == 'https://example.com/ref.png'
+    assert payload['input']['extra_param'] == 7
+
+
+def test_video_generate_accepts_lora_pairs(admin_client):
+    import config
+    config.RUNPOD_API_KEY = 'test-key'
+    config.WAN_VIDEO_ENDPOINT_ID = 'wan-endpoint'
+    with admin_client.session_transaction() as sess:
+        token = sess['csrf_token']
+
+    mock_response = MagicMock()
+    mock_response.read.return_value = json.dumps({'id': 'job-video', 'status': 'IN_QUEUE'}).encode()
+    mock_response.__enter__ = lambda s: s
+    mock_response.__exit__ = MagicMock(return_value=False)
+
+    with patch('urllib.request.urlopen', return_value=mock_response) as urlopen:
+        resp = admin_client.post(
+            '/api/forge/videos/generate',
+            json={
+                'prompt': 'orbit around a mountain observatory',
+                'image_url': 'https://example.com/ref.png',
+                'lora_pairs': [{'high': 'high.safetensors', 'low': 'low.safetensors', 'high_weight': 1.0, 'low_weight': 1.0}],
+            },
+            headers={'X-CSRF-Token': token},
+        )
+
+    assert resp.status_code == 200
+    payload = json.loads(urlopen.call_args.args[0].data.decode())
+    assert payload['input']['lora_pairs'][0]['high'] == 'high.safetensors'
 
 
 def test_video_status_saves_completed_video(admin_client, tmp_path, monkeypatch):

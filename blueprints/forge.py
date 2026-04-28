@@ -58,11 +58,11 @@ _WORKER_DEFAULT_MODEL = {
     'sdxl': 'sdxl',
 }
 _VIDEO_DEFAULTS = {
-    'size': '1280*720',
-    'num_inference_steps': 30,
-    'guidance': 5.0,
-    'duration': 5,
-    'flow_shift': 5,
+    'width': 480,
+    'height': 832,
+    'length': 81,
+    'steps': 10,
+    'cfg': 2.0,
 }
 
 
@@ -144,6 +144,7 @@ def _resolve_model(worker_type, requested_model):
 @login_required
 def forge():
     images = database.list_forge_images()
+    videos = database.list_forge_videos()
 
     available_models = _available_models()
     has_sdxl = available_models.get('sdxl', False)
@@ -152,14 +153,17 @@ def forge():
         for model, meta in _MODEL_REGISTRY.items()
         if meta['worker_type'] == 'forge'
     )
-    endpoint_configured = bool(config.RUNPOD_API_KEY) and any(available_models.values())
+    has_wan = bool(config.WAN_VIDEO_ENDPOINT_ID)
+    endpoint_configured = bool(config.RUNPOD_API_KEY) and (any(available_models.values()) or has_wan)
 
     return render_template(
         'forge.html',
         images=images,
+        videos=videos,
         endpoint_configured=endpoint_configured,
         has_sdxl=has_sdxl,
         has_forge=has_forge,
+        has_wan=has_wan,
         available_models=available_models,
     )
 
@@ -294,6 +298,10 @@ def api_forge_video_generate():
         return jsonify({'error': 'Prompt must be 500 characters or fewer'}), 400
 
     negative_prompt = (data.get('negative_prompt') or '').strip()
+    image_base64 = (data.get('image_base64') or '').strip()
+    image_url = (data.get('image_url') or '').strip()
+    if not image_base64 and not image_url:
+        return jsonify({'error': 'Reference image is required'}), 400
 
     def _clamp(val, lo, hi, default):
         try:
@@ -307,30 +315,37 @@ def api_forge_video_generate():
         except (TypeError, ValueError):
             return default
 
-    size = str(data.get('size') or _VIDEO_DEFAULTS['size']).strip()
-    if size not in {'1280*720', '720*1280', '1024*1024'}:
-        size = _VIDEO_DEFAULTS['size']
-
-    steps = _clamp(data.get('num_inference_steps'), 1, 50, _VIDEO_DEFAULTS['num_inference_steps'])
-    guidance = _clamp_f(data.get('guidance'), 0.0, 10.0, _VIDEO_DEFAULTS['guidance'])
-    duration = _clamp(data.get('duration'), 1, 8, _VIDEO_DEFAULTS['duration'])
-    flow_shift = _clamp(data.get('flow_shift'), 1, 10, _VIDEO_DEFAULTS['flow_shift'])
+    width = _clamp(data.get('width'), 256, 1280, _VIDEO_DEFAULTS['width'])
+    height = _clamp(data.get('height'), 256, 1280, _VIDEO_DEFAULTS['height'])
+    length = _clamp(data.get('length'), 1, 161, _VIDEO_DEFAULTS['length'])
+    steps = _clamp(data.get('steps'), 1, 50, _VIDEO_DEFAULTS['steps'])
+    cfg = _clamp_f(data.get('cfg'), 0.1, 20.0, _VIDEO_DEFAULTS['cfg'])
+    context_overlap = _clamp(data.get('context_overlap'), 1, 64, 48)
     seed_raw = data.get('seed')
     seed = _clamp(seed_raw, 0, 2**32 - 1, -1) if seed_raw not in (None, '', -1, '-1') else -1
 
     gen_input = {
         'prompt': prompt,
         'negative_prompt': negative_prompt,
-        'size': size,
-        'num_inference_steps': steps,
-        'guidance': guidance,
-        'duration': duration,
-        'flow_shift': flow_shift,
-        'enable_prompt_optimization': bool(data.get('enable_prompt_optimization', False)),
-        'enable_safety_checker': bool(data.get('enable_safety_checker', True)),
+        'width': width,
+        'height': height,
+        'length': length,
+        'steps': steps,
+        'cfg': cfg,
+        'context_overlap': context_overlap,
     }
+    if image_base64:
+        gen_input['image_base64'] = image_base64
+    if image_url:
+        gen_input['image_url'] = image_url
     if seed >= 0:
         gen_input['seed'] = seed
+
+    lora_pairs = data.get('lora_pairs')
+    if lora_pairs not in (None, '', []):
+        if not isinstance(lora_pairs, list):
+            return jsonify({'error': 'LoRA pairs must be a JSON array'}), 400
+        gen_input['lora_pairs'] = lora_pairs
 
     advanced_input = data.get('advanced_input')
     if advanced_input not in (None, '', {}):

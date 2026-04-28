@@ -11,11 +11,6 @@
     <p style="font-family: var(--font-mono); font-size: 0.65rem; color: rgba(34,211,238,0.4); letter-spacing: 0.2em; margin: 0;">// IMAGE SYNTHESIS — RUNPOD MULTI-MODEL SERVERLESS</p>
   </div>
 
-  <div style="display: flex; gap: 10px; margin-bottom: var(--spacing-lg); flex-wrap: wrap;">
-    <a href="{{ url_for('forge.forge') }}" style="font-family: var(--font-mono); font-size: 0.65rem; letter-spacing: 0.12em; padding: 8px 14px; border: 1px solid rgba(34,211,238,0.35); color: var(--reach-cyan); text-decoration: none; background: rgba(34,211,238,0.08);">IMAGE FORGE</a>
-    <a href="{{ url_for('forge.forge_video') }}" style="font-family: var(--font-mono); font-size: 0.65rem; letter-spacing: 0.12em; padding: 8px 14px; border: 1px solid rgba(34,211,238,0.18); color: rgba(34,211,238,0.55); text-decoration: none;">VIDEO FORGE</a>
-  </div>
-
   <!-- Generation Panel -->
   <div class="terminal-panel" style="margin-bottom: var(--spacing-xl); padding: var(--spacing-lg);">
 
@@ -65,7 +60,8 @@
           <select id="forge-backend"
             style="width: 100%; background: rgba(0,0,0,0.4); border: 1px solid rgba(34,211,238,0.2); color: var(--text-primary); font-family: var(--font-mono); font-size: 0.75rem; padding: 7px 10px; outline: none; cursor: pointer;">
             <option value="forge" {% if has_forge %}selected{% endif %}>Forge Models</option>
-            <option value="sdxl" {% if not has_forge %}selected{% endif %}>Legacy SDXL</option>
+            <option value="video" {% if not has_forge and has_wan %}selected{% endif %} {% if not has_wan %}disabled{% endif %}>WAN 2.2 Video</option>
+            <option value="sdxl" {% if not has_forge and not has_wan %}selected{% endif %}>Legacy SDXL</option>
           </select>
         </div>
 
@@ -77,7 +73,8 @@
             style="width: 100%; background: rgba(0,0,0,0.4); border: 1px solid rgba(34,211,238,0.2); color: var(--text-primary); font-family: var(--font-mono); font-size: 0.75rem; padding: 7px 10px; outline: none; cursor: pointer;">
             <option value="juggernaut-xl" {% if available_models.get('juggernaut-xl') %}selected{% endif %} {% if not available_models.get('juggernaut-xl') %}disabled{% endif %}>Juggernaut XL</option>
             <option value="cyberrealistic-pony" {% if not available_models.get('juggernaut-xl') and available_models.get('cyberrealistic-pony') %}selected{% endif %} {% if not available_models.get('cyberrealistic-pony') %}disabled{% endif %}>CyberRealistic Pony</option>
-            <option value="sdxl" {% if not has_forge and available_models.get('sdxl') %}selected{% endif %} {% if not available_models.get('sdxl') %}disabled{% endif %}>SDXL 1.0</option>
+            <option value="wan22-i2v" {% if not has_forge and has_wan %}selected{% endif %} {% if not has_wan %}disabled{% endif %}>WAN 2.2 Animate</option>
+            <option value="sdxl" {% if not has_forge and not has_wan and available_models.get('sdxl') %}selected{% endif %} {% if not available_models.get('sdxl') %}disabled{% endif %}>SDXL 1.0</option>
           </select>
         </div>
 
@@ -96,6 +93,28 @@
         <input type="hidden" id="forge-height" value="1024">
         <input type="hidden" id="forge-steps" value="28">
         <input type="hidden" id="forge-guidance" value="7">
+
+        <div id="wan-reference-panel" style="grid-column: 1 / -1; display: none; border: 1px solid rgba(34,211,238,0.12); padding: 12px; background: rgba(0,0,0,0.2);">
+          <label style="font-family: var(--font-mono); font-size: 0.6rem; color: rgba(34,211,238,0.5); letter-spacing: 0.12em; display: block; margin-bottom: 6px;">REFERENCE IMAGE</label>
+          <div style="font-family: var(--font-mono); font-size: 0.55rem; color: rgba(34,211,238,0.3); margin-bottom: 10px;">Upload an image or use ANIMATE on a generated image below.</div>
+          <div style="display: flex; gap: 12px; align-items: flex-start; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 240px;">
+              <input type="file" id="wan-reference-upload" accept="image/png,image/jpeg,image/webp"
+                style="width: 100%; background: rgba(0,0,0,0.4); border: 1px solid rgba(34,211,238,0.2); color: var(--text-primary); font-family: var(--font-mono); font-size: 0.75rem; padding: 7px 10px; box-sizing: border-box;">
+              <div style="display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap;">
+                <button id="wan-clear-reference-btn" type="button"
+                  style="font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.1em; padding: 7px 14px; background: transparent; border: 1px solid rgba(34,211,238,0.25); color: rgba(34,211,238,0.5); cursor: pointer;">CLEAR REF</button>
+                <span id="wan-reference-label" style="font-family: var(--font-mono); font-size: 0.6rem; color: rgba(34,211,238,0.4); align-self: center;">NONE SELECTED</span>
+              </div>
+            </div>
+            <div id="wan-reference-preview-shell" style="width: 120px; display: none;">
+              <img id="wan-reference-preview" src="" alt="Reference preview" style="width: 120px; height: 120px; object-fit: cover; display: block; border: 1px solid rgba(34,211,238,0.2);">
+            </div>
+          </div>
+          <input type="hidden" id="wan-reference-url" value="">
+          <input type="hidden" id="wan-video-length" value="81">
+          <input type="hidden" id="wan-context-overlap" value="48">
+        </div>
 
         <!-- Seed (full width) -->
         <div style="grid-column: 1 / -1;">
@@ -119,6 +138,12 @@
               CLEAR
             </button>
           </div>
+        </div>
+
+        <div id="wan-lora-panel" style="grid-column: 1 / -1; display: none;">
+          <label style="font-family: var(--font-mono); font-size: 0.6rem; color: rgba(34,211,238,0.5); letter-spacing: 0.12em; display: block; margin-bottom: 4px;">LORA PAIRS JSON (optional)</label>
+          <textarea id="wan-lora-pairs" rows="5" placeholder='[{"high":"high.safetensors","low":"low.safetensors","high_weight":1.0,"low_weight":1.0}]'
+            style="width: 100%; background: rgba(0,0,0,0.4); border: 1px solid rgba(34,211,238,0.15); color: var(--text-primary); font-family: var(--font-mono); font-size: 0.75rem; padding: 10px 12px; resize: vertical; outline: none; box-sizing: border-box;"></textarea>
         </div>
 
       </div>
@@ -210,6 +235,14 @@
                style="font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.1em; padding: 3px 10px; background: transparent; border: 1px solid rgba(34,211,238,0.3); color: rgba(34,211,238,0.6); cursor: pointer; text-decoration: none; display: inline-block;"
                onmouseover="this.style.background='rgba(34,211,238,0.08)';this.style.color='var(--reach-cyan)'"
                onmouseout="this.style.background='transparent';this.style.color='rgba(34,211,238,0.6)'">DL</a>
+            {% if has_wan %}
+            <button
+              onclick="animateImage('/static/forge_outputs/{{ img.filename }}', '{{ img.prompt | e }}')"
+              style="font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.1em; padding: 3px 10px; background: transparent; border: 1px solid rgba(34,211,238,0.3); color: rgba(34,211,238,0.6); cursor: pointer;"
+              onmouseover="this.style.background='rgba(34,211,238,0.08)'"
+              onmouseout="this.style.background='transparent'"
+            >ANIMATE</button>
+            {% endif %}
             <button
               onclick="forgeDelete({{ img.id }}, this)"
               style="font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.1em; padding: 3px 10px; background: transparent; border: 1px solid rgba(234,88,12,0.4); color: var(--reach-orange); cursor: pointer;"
@@ -222,6 +255,32 @@
     </div>
     {% else %}
     <p id="forge-empty" style="font-family: var(--font-mono); font-size: 0.7rem; color: rgba(34,211,238,0.3); letter-spacing: 0.1em; grid-column: 1 / -1;">NO IMAGES GENERATED YET.</p>
+    {% endfor %}
+  </div>
+
+  <div style="margin: var(--spacing-xl) 0 var(--spacing-md) 0;">
+    <h2 style="font-family: var(--font-display); font-size: 1rem; letter-spacing: 0.15em; color: rgba(34,211,238,0.7); margin: 0 0 var(--spacing-md) 0;">GENERATED VIDEOS</h2>
+  </div>
+
+  <div id="forge-video-gallery" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: var(--spacing-md);">
+    {% for video in videos %}
+    <div class="video-card" data-id="{{ video.id }}" style="background: rgba(21,25,42,0.85); border: 1px solid rgba(34,211,238,0.15); border-radius: 10px; overflow: hidden;">
+      <video src="/static/forge_videos/{{ video.filename }}" controls preload="metadata" style="width: 100%; display: block; aspect-ratio: 16 / 9; background: #000;"></video>
+      <div style="padding: 10px 12px;">
+        <p style="font-family: var(--font-mono); font-size: 0.65rem; color: rgba(34,211,238,0.5); margin: 0 0 8px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ video.prompt }}">{{ video.prompt }}</p>
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px;">
+          <span style="font-family: var(--font-mono); font-size: 0.55rem; color: rgba(34,211,238,0.3); flex-shrink: 0;">{{ video.created_at[:16] }}</span>
+          <div style="display: flex; gap: 6px; align-items: center;">
+            <a href="/static/forge_videos/{{ video.filename }}" download="{{ video.filename }}"
+               style="font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.1em; padding: 3px 10px; background: transparent; border: 1px solid rgba(34,211,238,0.3); color: rgba(34,211,238,0.6); cursor: pointer; text-decoration: none; display: inline-block;">DL</a>
+            <button onclick="forgeVideoDelete({{ video.id }}, this)"
+              style="font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.1em; padding: 3px 10px; background: transparent; border: 1px solid rgba(234,88,12,0.4); color: var(--reach-orange); cursor: pointer;">DEL</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% else %}
+    <p id="forge-video-empty" style="font-family: var(--font-mono); font-size: 0.7rem; color: rgba(34,211,238,0.3); letter-spacing: 0.1em; grid-column: 1 / -1;">NO VIDEOS GENERATED YET.</p>
     {% endfor %}
   </div>
 
@@ -291,6 +350,7 @@ document.getElementById('forge-guidance')?.addEventListener('input', e => {
 const modelConfig = {
   'juggernaut-xl': { backend: 'forge' },
   'cyberrealistic-pony': { backend: 'forge' },
+  'wan22-i2v': { backend: 'video' },
   'sdxl': { backend: 'sdxl' },
 };
 
@@ -328,6 +388,11 @@ const fullPresets = {
     { value: '1x1-balanced',  label: '1:1 Balanced — 30stp / CFG 5 / 1024×1024',        steps: 30, guidance: 5.0, width: 1024, height: 1024 },
     { value: '16x9-hd',       label: '16:9 HD — 32stp / CFG 5 / 1280×720',              steps: 32, guidance: 5.0, width: 1280, height: 720  },
   ],
+  'wan22-i2v': [
+    { value: 'portrait-anim', label: 'Portrait Animate — 10stp / CFG 2 / 480×832 / 81f', steps: 10, guidance: 2.0, width: 480, height: 832, length: 81, contextOverlap: 48 },
+    { value: 'landscape-anim', label: 'Landscape Animate — 10stp / CFG 2 / 832×480 / 81f', steps: 10, guidance: 2.0, width: 832, height: 480, length: 81, contextOverlap: 48 },
+    { value: 'detail-anim', label: 'Detail Animate — 14stp / CFG 2.5 / 480×832 / 81f', steps: 14, guidance: 2.5, width: 480, height: 832, length: 81, contextOverlap: 48 },
+  ],
 };
 
 document.getElementById('forge-backend')?.addEventListener('change', syncModelSelection);
@@ -359,6 +424,19 @@ function syncBackendSelection() {
   const backendSelect = document.getElementById('forge-backend');
   if (backendSelect) backendSelect.value = backend;
   updatePresets();
+}
+
+function isVideoModel(model) {
+  return model === 'wan22-i2v';
+}
+
+function updateForgeModeUI() {
+  const model = document.getElementById('forge-model')?.value || 'sdxl';
+  const isVideo = isVideoModel(model);
+  document.getElementById('wan-reference-panel').style.display = isVideo ? 'block' : 'none';
+  document.getElementById('wan-lora-panel').style.display = isVideo ? 'block' : 'none';
+  const button = document.getElementById('forge-generate-btn');
+  if (button) button.textContent = isVideo ? 'GENERATE VIDEO' : 'GENERATE';
 }
 
 function updatePresets() {
@@ -394,6 +472,9 @@ function applyPreset() {
   if (guidanceVal) guidanceVal.textContent = preset.guidance.toFixed(1);
   document.getElementById('forge-width').value = preset.width;
   document.getElementById('forge-height').value = preset.height;
+  document.getElementById('wan-video-length').value = preset.length || 81;
+  document.getElementById('wan-context-overlap').value = preset.contextOverlap || 48;
+  updateForgeModeUI();
 }
 
 // Seed helpers
@@ -403,6 +484,45 @@ document.getElementById('random-seed-btn')?.addEventListener('click', () => {
 document.getElementById('clear-seed-btn')?.addEventListener('click', () => {
   document.getElementById('forge-seed').value = -1;
 });
+
+document.getElementById('wan-reference-upload')?.addEventListener('change', event => {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  document.getElementById('wan-reference-url').value = '';
+  document.getElementById('wan-reference-label').textContent = file.name;
+  const reader = new FileReader();
+  reader.onload = () => {
+    const dataUrl = reader.result?.toString() || '';
+    document.getElementById('wan-reference-preview').src = dataUrl;
+    document.getElementById('wan-reference-preview-shell').style.display = dataUrl ? 'block' : 'none';
+  };
+  reader.readAsDataURL(file);
+});
+
+document.getElementById('wan-clear-reference-btn')?.addEventListener('click', clearWanReference);
+
+function clearWanReference() {
+  document.getElementById('wan-reference-upload').value = '';
+  document.getElementById('wan-reference-url').value = '';
+  document.getElementById('wan-reference-label').textContent = 'NONE SELECTED';
+  document.getElementById('wan-reference-preview').src = '';
+  document.getElementById('wan-reference-preview-shell').style.display = 'none';
+}
+
+function animateImage(imageUrl, prompt='') {
+  document.getElementById('forge-backend').value = 'video';
+  document.getElementById('forge-model').value = 'wan22-i2v';
+  document.getElementById('wan-reference-url').value = imageUrl;
+  document.getElementById('wan-reference-label').textContent = 'GALLERY IMAGE SELECTED';
+  document.getElementById('wan-reference-preview').src = imageUrl;
+  document.getElementById('wan-reference-preview-shell').style.display = 'block';
+  updatePresets();
+  if (promptEl && !promptEl.value.trim() && prompt) {
+    promptEl.value = prompt;
+    countEl.textContent = prompt.length;
+  }
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
 
 // Generate
 document.getElementById('forge-generate-btn')?.addEventListener('click', async () => {
@@ -417,21 +537,71 @@ document.getElementById('forge-generate-btn')?.addEventListener('click', async (
   const width    = parseInt(document.getElementById('forge-width')?.value || 1024);
   const height   = parseInt(document.getElementById('forge-height')?.value || 1024);
   const seed     = parseInt(document.getElementById('forge-seed')?.value ?? -1);
+  const isVideo  = isVideoModel(model);
 
   setGenerating(true);
   showError('');
   showStatus('SUBMITTING...');
 
   try {
-    const resp = await fetch('/api/forge/generate', {
+    let url = '/api/forge/generate';
+    let body = { prompt, negative_prompt: negative, steps, guidance_scale: guidance, width, height, seed, worker_type: backend, model };
+
+    if (isVideo) {
+      const referenceFile = document.getElementById('wan-reference-upload')?.files?.[0];
+      const referenceUrl = document.getElementById('wan-reference-url')?.value || '';
+      let imageBase64 = '';
+      if (referenceFile) {
+        imageBase64 = await readFileAsBase64(referenceFile);
+      }
+      if (!imageBase64 && !referenceUrl) {
+        showError('WAN 2.2 requires a reference image. Upload one or use ANIMATE from the gallery.');
+        setGenerating(false);
+        showStatus('');
+        return;
+      }
+      let loraPairs = [];
+      const loraRaw = document.getElementById('wan-lora-pairs')?.value.trim();
+      if (loraRaw) {
+        try {
+          loraPairs = JSON.parse(loraRaw);
+        } catch (e) {
+          showError('LoRA pairs must be valid JSON.');
+          setGenerating(false);
+          showStatus('');
+          return;
+        }
+      }
+      url = '/api/forge/videos/generate';
+      body = {
+        prompt,
+        negative_prompt: negative,
+        width,
+        height,
+        length: parseInt(document.getElementById('wan-video-length')?.value || 81),
+        steps,
+        cfg: guidance,
+        context_overlap: parseInt(document.getElementById('wan-context-overlap')?.value || 48),
+        seed,
+        image_url: referenceUrl,
+        image_base64: imageBase64,
+        lora_pairs: loraPairs,
+      };
+    }
+
+    const resp = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
-      body: JSON.stringify({ prompt, negative_prompt: negative, steps, guidance_scale: guidance, width, height, seed, worker_type: backend, model }),
+      body: JSON.stringify(body),
     });
     if (resp.status === 401) { showError('Session expired — please reload and log in again.'); setGenerating(false); return; }
     const data = await resp.json();
     if (!resp.ok) { showError(data.error || 'Generation failed.'); setGenerating(false); return; }
-    pollStatus(data.job_id, data.endpoint_id, prompt);
+    if (isVideo) {
+      pollVideoStatus(data.job_id, data.endpoint_id, prompt);
+    } else {
+      pollStatus(data.job_id, data.endpoint_id, prompt);
+    }
   } catch (e) {
     showError('Network error. Try again.');
     setGenerating(false);
@@ -475,6 +645,42 @@ function pollStatus(jobId, endpointId, prompt) {
   setTimeout(tick, 2000);
 }
 
+function pollVideoStatus(jobId, endpointId, prompt) {
+  showStatus('QUEUED...');
+  let polls = 0;
+  const maxPolls = 240;
+
+  async function tick() {
+    if (++polls > maxPolls) {
+      showError('Video generation timed out. The job may still be running on RunPod.');
+      showStatus('');
+      setGenerating(false);
+      return;
+    }
+    try {
+      const url = `/api/forge/videos/status/${jobId}?prompt=${encodeURIComponent(prompt)}&endpoint_id=${encodeURIComponent(endpointId || '')}`;
+      const resp = await fetch(url);
+      const data = await resp.json();
+      if (data.status === 'COMPLETED') {
+        showStatus('');
+        setGenerating(false);
+        prependVideoCard(data.video_id, data.video_url, prompt);
+      } else if (data.status === 'FAILED') {
+        showError(data.error || 'Video generation failed.');
+        showStatus('');
+        setGenerating(false);
+      } else {
+        showStatus(data.status === 'IN_PROGRESS' ? 'GENERATING...' : 'QUEUED...');
+        setTimeout(tick, 4000);
+      }
+    } catch (e) {
+      setTimeout(tick, 4000);
+    }
+  }
+
+  setTimeout(tick, 4000);
+}
+
 function prependImageCard(imageId, imageUrl, prompt) {
   const gallery = document.getElementById('forge-gallery');
   const empty = document.getElementById('forge-empty');
@@ -506,9 +712,38 @@ function prependImageCard(imageId, imageUrl, prompt) {
              style="font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.1em;padding:3px 10px;background:transparent;border:1px solid rgba(34,211,238,0.3);color:rgba(34,211,238,0.6);cursor:pointer;text-decoration:none;display:inline-block;"
              onmouseover="this.style.background='rgba(34,211,238,0.08)';this.style.color='var(--reach-cyan)'"
              onmouseout="this.style.background='transparent';this.style.color='rgba(34,211,238,0.6)'">DL</a>
+          <button onclick="animateImage('${imageUrl}','${ep}')"
+            style="font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.1em;padding:3px 10px;background:transparent;border:1px solid rgba(34,211,238,0.3);color:rgba(34,211,238,0.6);cursor:pointer;"
+            onmouseover="this.style.background='rgba(34,211,238,0.08)'" onmouseout="this.style.background='transparent'">ANIMATE</button>
           <button onclick="forgeDelete(${imageId},this)"
             style="font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.1em;padding:3px 10px;background:transparent;border:1px solid rgba(234,88,12,0.4);color:var(--reach-orange);cursor:pointer;"
             onmouseover="this.style.background='rgba(234,88,12,0.1)'" onmouseout="this.style.background='transparent'">DEL</button>
+        </div>
+      </div>
+    </div>`;
+  gallery.prepend(card);
+}
+
+function prependVideoCard(videoId, videoUrl, prompt) {
+  const gallery = document.getElementById('forge-video-gallery');
+  const empty = document.getElementById('forge-video-empty');
+  if (empty) empty.remove();
+  const now = new Date().toISOString().slice(0, 16);
+  const ep = escapeHtml(prompt);
+  const filename = videoUrl.split('/').pop();
+  const card = document.createElement('div');
+  card.className = 'video-card';
+  card.dataset.id = videoId;
+  card.style.cssText = 'background:rgba(21,25,42,0.85);border:1px solid rgba(34,211,238,0.15);border-radius:10px;overflow:hidden;';
+  card.innerHTML = `
+    <video src="${videoUrl}" controls preload="metadata" style="width:100%;display:block;aspect-ratio:16/9;background:#000;"></video>
+    <div style="padding:10px 12px;">
+      <p style="font-family:var(--font-mono);font-size:0.65rem;color:rgba(34,211,238,0.5);margin:0 0 8px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${ep}">${ep}</p>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;">
+        <span style="font-family:var(--font-mono);font-size:0.55rem;color:rgba(34,211,238,0.3);flex-shrink:0;">${now}</span>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <a href="${videoUrl}" download="${filename}" style="font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.1em;padding:3px 10px;background:transparent;border:1px solid rgba(34,211,238,0.3);color:rgba(34,211,238,0.6);cursor:pointer;text-decoration:none;display:inline-block;">DL</a>
+          <button onclick="forgeVideoDelete(${videoId},this)" style="font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.1em;padding:3px 10px;background:transparent;border:1px solid rgba(234,88,12,0.4);color:var(--reach-orange);cursor:pointer;">DEL</button>
         </div>
       </div>
     </div>`;
@@ -528,6 +763,28 @@ async function forgeDelete(imageId, btn) {
       if (!document.querySelector('.forge-card')) {
         document.getElementById('forge-gallery').innerHTML =
           '<p id="forge-empty" style="font-family:var(--font-mono);font-size:0.7rem;color:rgba(34,211,238,0.3);letter-spacing:0.1em;grid-column:1/-1;">NO IMAGES GENERATED YET.</p>';
+      }
+    } else {
+      btn.disabled = false;
+    }
+  } catch (e) {
+    btn.disabled = false;
+  }
+}
+
+async function forgeVideoDelete(videoId, btn) {
+  btn.disabled = true;
+  try {
+    const resp = await fetch(`/api/forge/videos/${videoId}`, {
+      method: 'DELETE',
+      headers: { 'X-CSRF-Token': csrfToken },
+    });
+    if (resp.ok) {
+      const card = document.querySelector(`.video-card[data-id="${videoId}"]`);
+      if (card) card.remove();
+      if (!document.querySelector('.video-card')) {
+        document.getElementById('forge-video-gallery').innerHTML =
+          '<p id="forge-video-empty" style="font-family:var(--font-mono);font-size:0.7rem;color:rgba(34,211,238,0.3);letter-spacing:0.1em;grid-column:1/-1;">NO VIDEOS GENERATED YET.</p>';
       }
     } else {
       btn.disabled = false;
@@ -617,6 +874,18 @@ function showError(msg) {
 }
 function escapeHtml(str) {
   return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+function readFileAsBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const value = reader.result?.toString() || '';
+      resolve(value.includes(',') ? value.split(',', 2)[1] : value);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
 }
 </script>
 {% endblock %}

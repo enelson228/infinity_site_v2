@@ -16,10 +16,12 @@ def test_forge_page_renders_when_logged_in(admin_client):
     config.RUNPOD_API_KEY = 'test-key'
     config.FORGE_ENDPOINT_ID = 'forge-endpoint'
     config.CYBERREALISTIC_PONY_ENDPOINT_ID = 'cyber-endpoint'
+    config.WAN_VIDEO_ENDPOINT_ID = 'wan-endpoint'
     resp = admin_client.get('/forge')
     assert resp.status_code == 200
     assert b'FORGE' in resp.data
     assert b'CyberRealistic Pony' in resp.data
+    assert b'WAN 2.2 Animate' in resp.data
 
 
 # ── Generate endpoint ─────────────────────────────────────────────────────────
