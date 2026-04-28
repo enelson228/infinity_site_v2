@@ -69,3 +69,27 @@ def test_delete_forge_image_nonexistent(app):
     with app.app_context():
         # Should not raise
         database.delete_forge_image(99999)
+
+
+def test_add_and_list_forge_videos(app):
+    import database
+    with app.app_context():
+        video_id = database.add_forge_video('job-v001', 'a moving skyline', 'job-v001.mp4', datetime.now().isoformat())
+        assert isinstance(video_id, int)
+
+        videos = database.list_forge_videos()
+        assert len(videos) == 1
+        assert videos[0]['job_id'] == 'job-v001'
+        assert videos[0]['filename'] == 'job-v001.mp4'
+
+
+def test_get_and_delete_forge_video(app):
+    import database
+    with app.app_context():
+        video_id = database.add_forge_video('job-v002', 'a moving skyline', 'job-v002.mp4', datetime.now().isoformat())
+        row = database.get_forge_video(video_id)
+        assert row is not None
+        assert row['job_id'] == 'job-v002'
+        assert database.get_forge_video_by_job_id('job-v002')['filename'] == 'job-v002.mp4'
+        database.delete_forge_video(video_id)
+        assert database.get_forge_video(video_id) is None

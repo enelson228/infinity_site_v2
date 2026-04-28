@@ -55,7 +55,7 @@ SD_ENDPOINT_ID = os.environ.get('SD_ENDPOINT_ID', '')
 SDXL_ENDPOINT_ID = os.environ.get('SDXL_ENDPOINT_ID', SD_ENDPOINT_ID)
 FORGE_ENDPOINT_ID = os.environ.get('FORGE_ENDPOINT_ID', '')
 CYBERREALISTIC_PONY_ENDPOINT_ID = os.environ.get('CYBERREALISTIC_PONY_ENDPOINT_ID', '')
-WAN_VIDEO_ID = os.environ.get('WAN_VIDEO_ID', '')
+WAN_VIDEO_ENDPOINT_ID = os.environ.get('WAN_VIDEO_ENDPOINT_ID', '')
 
 
 # AI model for monitor recommendations (optional override)

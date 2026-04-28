@@ -19,6 +19,10 @@ _FORGE_OUTPUTS = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
     'static', 'forge_outputs'
 )
+_FORGE_VIDEOS = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+    'static', 'forge_videos'
+)
 
 _RUNPOD_BASE = 'https://api.runpod.ai/v2'
 
@@ -42,7 +46,6 @@ _MODEL_REGISTRY = {
     'sdxl': {
         'endpoint_attr': 'SDXL_ENDPOINT_ID',
         'worker_type': 'sdxl',
-        'display_model': 'sdxl-2.1.1',
         'default_steps': 75,
         'default_guidance': 11.5,
         'max_steps': 150,
@@ -53,6 +56,13 @@ _MODEL_REGISTRY = {
 _WORKER_DEFAULT_MODEL = {
     'forge': 'juggernaut-xl',
     'sdxl': 'sdxl',
+}
+_VIDEO_DEFAULTS = {
+    'size': '1280*720',
+    'num_inference_steps': 30,
+    'guidance': 5.0,
+    'duration': 5,
+    'flow_shift': 5,
 }
 
 
@@ -71,6 +81,33 @@ def _extract_b64_image(output):
         if 'images' in output and isinstance(output['images'], list) and output['images']:
             return output['images'][0]
         return output.get('image') or (output.get('images') or [None])[0]
+    return None
+
+
+def _extract_video_url(output):
+    """Extract the first video URL from supported RunPod output shapes."""
+    if isinstance(output, str):
+        return output
+    if isinstance(output, list):
+        for item in output:
+            video_url = _extract_video_url(item)
+            if video_url:
+                return video_url
+        return None
+    if isinstance(output, dict):
+        if isinstance(output.get('videos'), list):
+            for item in output['videos']:
+                video_url = _extract_video_url(item)
+                if video_url:
+                    return video_url
+        for key in ('video_url', 'video', 'url'):
+            value = output.get(key)
+            if isinstance(value, str) and value:
+                return value
+            if isinstance(value, dict):
+                nested = _extract_video_url(value)
+                if nested:
+                    return nested
     return None
 
 
@@ -127,6 +164,18 @@ def forge():
     )
 
 
+@forge_bp.route('/forge/video')
+@login_required
+def forge_video():
+    videos = database.list_forge_videos()
+    endpoint_configured = bool(config.RUNPOD_API_KEY and config.WAN_VIDEO_ENDPOINT_ID)
+    return render_template(
+        'forge_video.html',
+        videos=videos,
+        endpoint_configured=endpoint_configured,
+    )
+
+
 @forge_bp.route('/api/forge/generate', methods=['POST'])
 @login_required
 def api_forge_generate():
@@ -149,7 +198,6 @@ def api_forge_generate():
     model, model_meta = _resolve_model(worker_type, data.get('model'))
     if not model or not model_meta:
         return jsonify({'error': f'Endpoint for {worker_type} not configured'}), 503
-    display_model = model_meta.get('display_model', model)
 
     def _clamp(val, lo, hi, default):
         try:
@@ -216,8 +264,6 @@ def api_forge_generate():
             'job_id': job_id,
             'endpoint_id': endpoint_id,
             'status': result.get('status', 'IN_QUEUE'),
-            'worker_type': worker_type,
-            'model': display_model,
         })
     except urllib.error.HTTPError as e:
         detail = ''
@@ -232,6 +278,101 @@ def api_forge_generate():
         return jsonify({'error': f'RunPod error: {e}'}), 502
 
 
+@forge_bp.route('/api/forge/videos/generate', methods=['POST'])
+@login_required
+def api_forge_video_generate():
+    if not config.RUNPOD_API_KEY:
+        return jsonify({'error': 'RunPod API Key not configured'}), 503
+    if not config.WAN_VIDEO_ENDPOINT_ID:
+        return jsonify({'error': 'WAN video endpoint not configured'}), 503
+
+    data = request.get_json(silent=True) or {}
+    prompt = (data.get('prompt') or '').strip()
+    if not prompt:
+        return jsonify({'error': 'Prompt is required'}), 400
+    if len(prompt) > 500:
+        return jsonify({'error': 'Prompt must be 500 characters or fewer'}), 400
+
+    negative_prompt = (data.get('negative_prompt') or '').strip()
+
+    def _clamp(val, lo, hi, default):
+        try:
+            return max(lo, min(hi, int(val)))
+        except (TypeError, ValueError):
+            return default
+
+    def _clamp_f(val, lo, hi, default):
+        try:
+            return max(lo, min(hi, float(val)))
+        except (TypeError, ValueError):
+            return default
+
+    size = str(data.get('size') or _VIDEO_DEFAULTS['size']).strip()
+    if size not in {'1280*720', '720*1280', '1024*1024'}:
+        size = _VIDEO_DEFAULTS['size']
+
+    steps = _clamp(data.get('num_inference_steps'), 1, 50, _VIDEO_DEFAULTS['num_inference_steps'])
+    guidance = _clamp_f(data.get('guidance'), 0.0, 10.0, _VIDEO_DEFAULTS['guidance'])
+    duration = _clamp(data.get('duration'), 1, 8, _VIDEO_DEFAULTS['duration'])
+    flow_shift = _clamp(data.get('flow_shift'), 1, 10, _VIDEO_DEFAULTS['flow_shift'])
+    seed_raw = data.get('seed')
+    seed = _clamp(seed_raw, 0, 2**32 - 1, -1) if seed_raw not in (None, '', -1, '-1') else -1
+
+    gen_input = {
+        'prompt': prompt,
+        'negative_prompt': negative_prompt,
+        'size': size,
+        'num_inference_steps': steps,
+        'guidance': guidance,
+        'duration': duration,
+        'flow_shift': flow_shift,
+        'enable_prompt_optimization': bool(data.get('enable_prompt_optimization', False)),
+        'enable_safety_checker': bool(data.get('enable_safety_checker', True)),
+    }
+    if seed >= 0:
+        gen_input['seed'] = seed
+
+    advanced_input = data.get('advanced_input')
+    if advanced_input not in (None, '', {}):
+        if not isinstance(advanced_input, dict):
+            return jsonify({'error': 'Advanced input must be a JSON object'}), 400
+        gen_input.update(advanced_input)
+
+    payload = json.dumps({'input': gen_input}).encode()
+    url = f'{_RUNPOD_BASE}/{config.WAN_VIDEO_ENDPOINT_ID}/run'
+    req = urllib.request.Request(url, data=payload, headers=_runpod_headers(), method='POST')
+
+    try:
+        with urllib.request.urlopen(req, timeout=20) as resp:
+            result = json.loads(resp.read().decode())
+        job_id = result.get('id')
+        if not job_id:
+            logger.error("RunPod WAN Generate missing job ID: %s", result)
+            return jsonify({
+                'error': (
+                    'RunPod did not return a job ID. '
+                    'Check that WAN_VIDEO_ENDPOINT_ID points to an async queue-based endpoint.'
+                ),
+                'runpod_status': result.get('status'),
+            }), 502
+        return jsonify({
+            'job_id': job_id,
+            'endpoint_id': config.WAN_VIDEO_ENDPOINT_ID,
+            'status': result.get('status', 'IN_QUEUE'),
+        })
+    except urllib.error.HTTPError as e:
+        detail = ''
+        try:
+            detail = e.read().decode()
+        except Exception:
+            detail = str(e)
+        logger.error("RunPod WAN Generate HTTP error: %s", detail)
+        return jsonify({'error': f'RunPod error: {detail or e}'}), 502
+    except Exception as e:
+        logger.error("RunPod WAN Generate error: %s", e)
+        return jsonify({'error': f'RunPod error: {e}'}), 502
+
+
 _TERMINAL_STATUSES = {'COMPLETED', 'FAILED', 'CANCELLED', 'TIMED_OUT'}
 
 
@@ -243,20 +384,13 @@ def api_forge_status(job_id):
     
     # Client should pass endpoint_id as a query param. If it does not,
     # prefer the explicit worker-specific endpoints before the legacy default.
-    worker_type = request.args.get('worker_type', 'sdxl')
-    requested_model = request.args.get('model')
-    model, model_meta = _resolve_model(worker_type, requested_model)
-    display_model = (model_meta or {}).get('display_model', model)
-    endpoint_id = request.args.get('endpoint_id')
-    if not endpoint_id and model_meta and (request.args.get('worker_type') or requested_model):
-        endpoint_id = _get_endpoint(model_meta['endpoint_attr'])
-    if not endpoint_id:
-        endpoint_id = (
-            config.CYBERREALISTIC_PONY_ENDPOINT_ID
-            or config.FORGE_ENDPOINT_ID
-            or config.SDXL_ENDPOINT_ID
-            or config.SD_ENDPOINT_ID
-        )
+    endpoint_id = (
+        request.args.get('endpoint_id')
+        or config.CYBERREALISTIC_PONY_ENDPOINT_ID
+        or config.FORGE_ENDPOINT_ID
+        or config.SDXL_ENDPOINT_ID
+        or config.SD_ENDPOINT_ID
+    )
     if not endpoint_id:
         return jsonify({'error': 'Endpoint ID missing for status check'}), 400
 
@@ -284,8 +418,6 @@ def api_forge_status(job_id):
                 'status': 'COMPLETED',
                 'image_url': f'/static/forge_outputs/{existing["filename"]}',
                 'image_id': existing['id'],
-                'model': existing.get('model') or display_model,
-                'worker_type': existing.get('worker_type') or worker_type,
             })
 
         # Extract base64 image — handle list-of-objects or dict output formats
@@ -312,13 +444,76 @@ def api_forge_status(job_id):
             logger.error(f'Forge: failed to save image {job_id}: {e}')
             return jsonify({'error': 'Failed to save image', 'status': 'FAILED'}), 500
 
-        img_id = database.add_forge_image(job_id, prompt, filename, datetime.now().isoformat(), display_model, worker_type)
+        img_id = database.add_forge_image(job_id, prompt, filename, datetime.now().isoformat())
         return jsonify({
             'status': 'COMPLETED',
             'image_url': f'/static/forge_outputs/{filename}',
             'image_id': img_id,
-            'model': display_model,
-            'worker_type': worker_type,
+        })
+
+    if status in _TERMINAL_STATUSES:
+        return jsonify({'status': 'FAILED', 'error': result.get('error', status)})
+
+    return jsonify({'status': status})
+
+
+@forge_bp.route('/api/forge/videos/status/<job_id>')
+@login_required
+def api_forge_video_status(job_id):
+    if not re.match(r'^[a-zA-Z0-9_-]+$', job_id):
+        return jsonify({'error': 'Invalid job ID'}), 400
+
+    endpoint_id = request.args.get('endpoint_id') or config.WAN_VIDEO_ENDPOINT_ID
+    if not endpoint_id:
+        return jsonify({'error': 'Endpoint ID missing for status check'}), 400
+    if not config.RUNPOD_API_KEY:
+        return jsonify({'error': 'Endpoint not configured'}), 503
+
+    prompt = request.args.get('prompt', '')
+    url = f'{_RUNPOD_BASE}/{endpoint_id}/status/{job_id}'
+    req = urllib.request.Request(url, headers=_runpod_headers())
+
+    try:
+        with urllib.request.urlopen(req, timeout=20) as resp:
+            result = json.loads(resp.read().decode())
+    except Exception as e:
+        return jsonify({'error': f'RunPod error: {e}'}), 502
+
+    status = result.get('status', 'UNKNOWN')
+
+    if status == 'COMPLETED':
+        existing = database.get_forge_video_by_job_id(job_id)
+        if existing:
+            return jsonify({
+                'status': 'COMPLETED',
+                'video_url': f'/static/forge_videos/{existing["filename"]}',
+                'video_id': existing['id'],
+            })
+
+        output = result.get('output')
+        video_url = _extract_video_url(output)
+        if not video_url:
+            return jsonify({'error': 'No video in response', 'status': 'FAILED'}), 502
+
+        filename = f'{job_id}.mp4'
+        filepath = os.path.join(_FORGE_VIDEOS, filename)
+
+        try:
+            os.makedirs(_FORGE_VIDEOS, exist_ok=True)
+            download_req = urllib.request.Request(video_url, headers={'User-Agent': 'InfinityForgeVideo/1.0'})
+            with urllib.request.urlopen(download_req, timeout=120) as resp:
+                video_bytes = resp.read()
+            with open(filepath, 'wb') as f:
+                f.write(video_bytes)
+        except Exception as e:
+            logger.error('Forge Video: failed to save video %s: %s', job_id, e)
+            return jsonify({'error': 'Failed to save video', 'status': 'FAILED'}), 500
+
+        video_id = database.add_forge_video(job_id, prompt, filename, datetime.now().isoformat())
+        return jsonify({
+            'status': 'COMPLETED',
+            'video_url': f'/static/forge_videos/{filename}',
+            'video_id': video_id,
         })
 
     if status in _TERMINAL_STATUSES:
@@ -341,4 +536,21 @@ def api_forge_delete(image_id):
         logger.error(f'Forge: could not delete file {filepath}: {e}')
 
     database.delete_forge_image(image_id)
+    return jsonify({'success': True})
+
+
+@forge_bp.route('/api/forge/videos/<int:video_id>', methods=['DELETE'])
+@login_required
+def api_forge_video_delete(video_id):
+    row = database.get_forge_video(video_id)
+    if not row:
+        return jsonify({'error': 'Not found'}), 404
+
+    filepath = os.path.join(_FORGE_VIDEOS, row['filename'])
+    try:
+        os.remove(filepath)
+    except OSError as e:
+        logger.error('Forge Video: could not delete file %s: %s', filepath, e)
+
+    database.delete_forge_video(video_id)
     return jsonify({'success': True})

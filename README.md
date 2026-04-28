@@ -9,7 +9,7 @@ Personal website and homelab dashboard running at [mjolnirarmory.com](https://mj
 - **Telemetry** — Live system metrics dashboard (CPU, RAM, disk, network, load avg) with Halo Reach military HUD aesthetic
 - **Uplink Cache** — Authenticated file upload/download portal (100MB max per file)
 - **Terminal** — AI terminal with per-user memory (explicit `REMEMBER` / `RECALL`)
-- **Forge** — AI image generation (RunPod serverless; Juggernaut XL and CyberRealistic Pony)
+- **Forge** — AI image and video generation (RunPod serverless; Juggernaut XL, CyberRealistic Pony, and WAN 2.2)
 - **Monitor** — Admin-only dashboard for services, GitHub repo status, and AI-driven recommendations
 - **COMS-UPLINK** — Radio & electromagnetic spectrum training module
 - **Control** — Admin console for user and memory management with audit log
@@ -53,6 +53,7 @@ Optional config (enables additional features):
 - `GITHUB_TOKEN` (Enables GitHub panel in Monitor dashboard)
 - `RUNPOD_API_KEY` + `FORGE_ENDPOINT_ID` (Juggernaut XL Forge endpoint)
 - `CYBERREALISTIC_PONY_ENDPOINT_ID` (CyberRealistic Pony Forge endpoint)
+- `WAN_VIDEO_ENDPOINT_ID` (WAN 2.2 video endpoint)
 - `SD_ENDPOINT_ID` / `SDXL_ENDPOINT_ID` (Legacy Forge SDXL endpoint fallback)
 - `CESIUM_ION_TOKEN` (Used for mapping tools)
 - `TELEMETRY_PUBLIC` (`true`/`false`)

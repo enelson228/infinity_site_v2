@@ -1,0 +1,297 @@
+{% extends "base.html" %}
+
+{% block title %}Forge Video{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: var(--spacing-xl); padding-bottom: var(--spacing-xl);">
+  <div style="margin-bottom: var(--spacing-xl);">
+    <h1 style="font-family: var(--font-display); font-size: 1.8rem; letter-spacing: 0.15em; color: var(--reach-cyan); text-shadow: 0 0 12px rgba(34,211,238,0.4); margin: 0 0 4px 0;">FORGE VIDEO</h1>
+    <p style="font-family: var(--font-mono); font-size: 0.65rem; color: rgba(34,211,238,0.4); letter-spacing: 0.2em; margin: 0;">// WAN 2.2 TEXT-TO-VIDEO — RUNPOD SERVERLESS</p>
+  </div>
+
+  <div style="display: flex; gap: 10px; margin-bottom: var(--spacing-lg); flex-wrap: wrap;">
+    <a href="{{ url_for('forge.forge') }}" style="font-family: var(--font-mono); font-size: 0.65rem; letter-spacing: 0.12em; padding: 8px 14px; border: 1px solid rgba(34,211,238,0.18); color: rgba(34,211,238,0.55); text-decoration: none;">IMAGE FORGE</a>
+    <a href="{{ url_for('forge.forge_video') }}" style="font-family: var(--font-mono); font-size: 0.65rem; letter-spacing: 0.12em; padding: 8px 14px; border: 1px solid rgba(34,211,238,0.35); color: var(--reach-cyan); text-decoration: none; background: rgba(34,211,238,0.08);">VIDEO FORGE</a>
+  </div>
+
+  <div class="terminal-panel" style="margin-bottom: var(--spacing-xl); padding: var(--spacing-lg);">
+    {% if not endpoint_configured %}
+    <div style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--reach-orange); letter-spacing: 0.1em; padding: var(--spacing-md); border: 1px solid rgba(234,88,12,0.3); background: rgba(234,88,12,0.05); margin-bottom: var(--spacing-md);">
+      ⚠ ENDPOINT NOT CONFIGURED — Set RUNPOD_API_KEY and WAN_VIDEO_ENDPOINT_ID in Doppler.
+    </div>
+    {% endif %}
+
+    <div style="margin-bottom: var(--spacing-md);">
+      <label style="font-family: var(--font-mono); font-size: 0.65rem; color: rgba(34,211,238,0.6); letter-spacing: 0.15em; display: block; margin-bottom: 6px;">PROMPT</label>
+      <textarea id="video-prompt" rows="3" maxlength="500" placeholder="Describe the motion, framing, and scene..." {% if not endpoint_configured %}disabled{% endif %}
+        style="width: 100%; background: rgba(0,0,0,0.4); border: 1px solid rgba(34,211,238,0.2); color: var(--text-primary); font-family: var(--font-mono); font-size: 0.8rem; padding: 10px 12px; resize: vertical; outline: none; box-sizing: border-box;"></textarea>
+      <div style="font-family: var(--font-mono); font-size: 0.6rem; color: rgba(34,211,238,0.3); text-align: right; margin-top: 3px;"><span id="video-prompt-count">0</span>/500</div>
+    </div>
+
+    <details style="margin-bottom: var(--spacing-md);">
+      <summary style="font-family: var(--font-mono); font-size: 0.65rem; color: rgba(34,211,238,0.4); letter-spacing: 0.1em; cursor: pointer; user-select: none;">NEGATIVE PROMPT (optional)</summary>
+      <textarea id="video-negative" rows="2" maxlength="500" placeholder="Low quality, flicker, text, watermark..." {% if not endpoint_configured %}disabled{% endif %}
+        style="width: 100%; margin-top: 8px; background: rgba(0,0,0,0.4); border: 1px solid rgba(34,211,238,0.15); color: var(--text-primary); font-family: var(--font-mono); font-size: 0.8rem; padding: 10px 12px; resize: vertical; outline: none; box-sizing: border-box;"></textarea>
+    </details>
+
+    <details open style="margin-bottom: var(--spacing-md);">
+      <summary style="font-family: var(--font-mono); font-size: 0.65rem; color: rgba(34,211,238,0.4); letter-spacing: 0.1em; cursor: pointer; user-select: none; margin-bottom: 12px;">GENERATION PARAMETERS</summary>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-top: 12px;">
+        <div>
+          <label style="font-family: var(--font-mono); font-size: 0.6rem; color: rgba(34,211,238,0.5); letter-spacing: 0.12em; display: block; margin-bottom: 4px;">SIZE</label>
+          <select id="video-size" style="width: 100%; background: rgba(0,0,0,0.4); border: 1px solid rgba(34,211,238,0.2); color: var(--text-primary); font-family: var(--font-mono); font-size: 0.75rem; padding: 7px 10px; outline: none; cursor: pointer;">
+            <option value="1280*720" selected>16:9 HD — 1280×720</option>
+            <option value="720*1280">9:16 Vertical — 720×1280</option>
+            <option value="1024*1024">1:1 Square — 1024×1024</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-family: var(--font-mono); font-size: 0.6rem; color: rgba(34,211,238,0.5); letter-spacing: 0.12em; display: block; margin-bottom: 4px;">DURATION</label>
+          <select id="video-duration" style="width: 100%; background: rgba(0,0,0,0.4); border: 1px solid rgba(34,211,238,0.2); color: var(--text-primary); font-family: var(--font-mono); font-size: 0.75rem; padding: 7px 10px; outline: none; cursor: pointer;">
+            <option value="5" selected>5 seconds</option>
+            <option value="8">8 seconds</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-family: var(--font-mono); font-size: 0.6rem; color: rgba(34,211,238,0.5); letter-spacing: 0.12em; display: block; margin-bottom: 4px;">STEPS</label>
+          <input id="video-steps" type="number" value="30" min="1" max="50"
+            style="width: 100%; background: rgba(0,0,0,0.4); border: 1px solid rgba(34,211,238,0.2); color: var(--text-primary); font-family: var(--font-mono); font-size: 0.75rem; padding: 7px 10px; outline: none; box-sizing: border-box;">
+        </div>
+        <div>
+          <label style="font-family: var(--font-mono); font-size: 0.6rem; color: rgba(34,211,238,0.5); letter-spacing: 0.12em; display: block; margin-bottom: 4px;">GUIDANCE</label>
+          <input id="video-guidance" type="number" value="5" min="0" max="10" step="0.1"
+            style="width: 100%; background: rgba(0,0,0,0.4); border: 1px solid rgba(34,211,238,0.2); color: var(--text-primary); font-family: var(--font-mono); font-size: 0.75rem; padding: 7px 10px; outline: none; box-sizing: border-box;">
+        </div>
+        <div>
+          <label style="font-family: var(--font-mono); font-size: 0.6rem; color: rgba(34,211,238,0.5); letter-spacing: 0.12em; display: block; margin-bottom: 4px;">FLOW SHIFT</label>
+          <input id="video-flow-shift" type="number" value="5" min="1" max="10"
+            style="width: 100%; background: rgba(0,0,0,0.4); border: 1px solid rgba(34,211,238,0.2); color: var(--text-primary); font-family: var(--font-mono); font-size: 0.75rem; padding: 7px 10px; outline: none; box-sizing: border-box;">
+        </div>
+        <div>
+          <label style="font-family: var(--font-mono); font-size: 0.6rem; color: rgba(34,211,238,0.5); letter-spacing: 0.12em; display: block; margin-bottom: 4px;">SEED</label>
+          <input id="video-seed" type="number" value="-1" min="-1" max="4294967295"
+            style="width: 100%; background: rgba(0,0,0,0.4); border: 1px solid rgba(34,211,238,0.2); color: var(--text-primary); font-family: var(--font-mono); font-size: 0.75rem; padding: 7px 10px; outline: none; box-sizing: border-box;">
+        </div>
+      </div>
+    </details>
+
+    <details style="margin-bottom: var(--spacing-md);">
+      <summary style="font-family: var(--font-mono); font-size: 0.65rem; color: rgba(34,211,238,0.4); letter-spacing: 0.1em; cursor: pointer; user-select: none;">ADVANCED INPUT JSON (optional)</summary>
+      <textarea id="video-advanced-input" rows="6" placeholder='{"high_noise_loras":[{"path":"https://...","scale":1.0}],"low_noise_loras":[{"path":"https://...","scale":1.0}]}' {% if not endpoint_configured %}disabled{% endif %}
+        style="width: 100%; margin-top: 8px; background: rgba(0,0,0,0.4); border: 1px solid rgba(34,211,238,0.15); color: var(--text-primary); font-family: var(--font-mono); font-size: 0.75rem; padding: 10px 12px; resize: vertical; outline: none; box-sizing: border-box;"></textarea>
+    </details>
+
+    <div style="display: flex; align-items: center; gap: var(--spacing-md); flex-wrap: wrap;">
+      <button id="video-generate-btn" {% if not endpoint_configured %}disabled{% endif %}
+        style="font-family: var(--font-display); font-size: 0.8rem; letter-spacing: 0.15em; padding: 10px 28px; background: transparent; border: 1px solid var(--reach-cyan); color: var(--reach-cyan); cursor: pointer; transition: all 0.2s;"
+        onmouseover="if(!this.disabled)this.style.background='rgba(34,211,238,0.1)'"
+        onmouseout="this.style.background='transparent'">GENERATE VIDEO</button>
+      <span id="video-status" style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--reach-amber); letter-spacing: 0.1em; display: none;"></span>
+    </div>
+    <div id="video-error" style="display: none; margin-top: var(--spacing-sm); font-family: var(--font-mono); font-size: 0.7rem; color: var(--reach-orange); letter-spacing: 0.05em;"></div>
+  </div>
+
+  <div style="margin-bottom: var(--spacing-md);">
+    <h2 style="font-family: var(--font-display); font-size: 1rem; letter-spacing: 0.15em; color: rgba(34,211,238,0.7); margin: 0 0 var(--spacing-md) 0;">GENERATED VIDEOS</h2>
+  </div>
+
+  <div id="video-gallery" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: var(--spacing-md);">
+    {% for video in videos %}
+    <div class="video-card" data-id="{{ video.id }}" data-url="/static/forge_videos/{{ video.filename }}" data-prompt="{{ video.prompt | e }}"
+         style="background: rgba(21,25,42,0.85); border: 1px solid rgba(34,211,238,0.15); border-radius: 10px; overflow: hidden;">
+      <video src="/static/forge_videos/{{ video.filename }}" controls preload="metadata" style="width: 100%; display: block; aspect-ratio: 16 / 9; background: #000;"></video>
+      <div style="padding: 10px 12px;">
+        <p style="font-family: var(--font-mono); font-size: 0.65rem; color: rgba(34,211,238,0.5); margin: 0 0 8px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ video.prompt }}">{{ video.prompt }}</p>
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px;">
+          <span style="font-family: var(--font-mono); font-size: 0.55rem; color: rgba(34,211,238,0.3); flex-shrink: 0;">{{ video.created_at[:16] }}</span>
+          <div style="display: flex; gap: 6px; align-items: center;">
+            <a href="/static/forge_videos/{{ video.filename }}" download="{{ video.filename }}"
+               style="font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.1em; padding: 3px 10px; background: transparent; border: 1px solid rgba(34,211,238,0.3); color: rgba(34,211,238,0.6); cursor: pointer; text-decoration: none; display: inline-block;">DL</a>
+            <button onclick="forgeVideoDelete({{ video.id }}, this)"
+              style="font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.1em; padding: 3px 10px; background: transparent; border: 1px solid rgba(234,88,12,0.4); color: var(--reach-orange); cursor: pointer;">DEL</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% else %}
+    <p id="video-empty" style="font-family: var(--font-mono); font-size: 0.7rem; color: rgba(34,211,238,0.3); letter-spacing: 0.1em; grid-column: 1 / -1;">NO VIDEOS GENERATED YET.</p>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+const videoPromptEl = document.getElementById('video-prompt');
+const videoCountEl = document.getElementById('video-prompt-count');
+
+if (videoPromptEl) {
+  videoPromptEl.addEventListener('input', () => { videoCountEl.textContent = videoPromptEl.value.length; });
+}
+
+document.getElementById('video-generate-btn')?.addEventListener('click', async () => {
+  const prompt = videoPromptEl.value.trim();
+  if (!prompt) { showVideoError('Prompt is required.'); return; }
+
+  let advancedInput = {};
+  const advancedRaw = document.getElementById('video-advanced-input')?.value.trim();
+  if (advancedRaw) {
+    try {
+      advancedInput = JSON.parse(advancedRaw);
+    } catch (err) {
+      showVideoError('Advanced input must be valid JSON.');
+      return;
+    }
+  }
+
+  setVideoGenerating(true);
+  showVideoError('');
+  showVideoStatus('SUBMITTING...');
+
+  try {
+    const resp = await fetch('/api/forge/videos/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
+      body: JSON.stringify({
+        prompt,
+        negative_prompt: document.getElementById('video-negative')?.value.trim() || '',
+        size: document.getElementById('video-size')?.value || '1280*720',
+        duration: parseInt(document.getElementById('video-duration')?.value || 5),
+        num_inference_steps: parseInt(document.getElementById('video-steps')?.value || 30),
+        guidance: parseFloat(document.getElementById('video-guidance')?.value || 5),
+        flow_shift: parseInt(document.getElementById('video-flow-shift')?.value || 5),
+        seed: parseInt(document.getElementById('video-seed')?.value ?? -1),
+        advanced_input: advancedInput,
+      }),
+    });
+    const data = await resp.json();
+    if (!resp.ok) { showVideoError(data.error || 'Generation failed.'); setVideoGenerating(false); return; }
+    pollVideoStatus(data.job_id, data.endpoint_id, prompt);
+  } catch (err) {
+    showVideoError('Network error. Try again.');
+    setVideoGenerating(false);
+  }
+});
+
+function pollVideoStatus(jobId, endpointId, prompt) {
+  showVideoStatus('QUEUED...');
+  let polls = 0;
+  const maxPolls = 240;
+
+  async function tick() {
+    if (++polls > maxPolls) {
+      showVideoError('Generation timed out. The job may still be running on RunPod.');
+      showVideoStatus('');
+      setVideoGenerating(false);
+      return;
+    }
+    try {
+      const url = `/api/forge/videos/status/${jobId}?prompt=${encodeURIComponent(prompt)}&endpoint_id=${encodeURIComponent(endpointId || '')}`;
+      const resp = await fetch(url);
+      const data = await resp.json();
+      if (data.status === 'COMPLETED') {
+        showVideoStatus('');
+        setVideoGenerating(false);
+        prependVideoCard(data.video_id, data.video_url, prompt);
+      } else if (data.status === 'FAILED') {
+        showVideoError(data.error || 'Generation failed.');
+        showVideoStatus('');
+        setVideoGenerating(false);
+      } else {
+        showVideoStatus(data.status === 'IN_PROGRESS' ? 'GENERATING...' : 'QUEUED...');
+        setTimeout(tick, 4000);
+      }
+    } catch (err) {
+      setTimeout(tick, 4000);
+    }
+  }
+
+  setTimeout(tick, 4000);
+}
+
+function prependVideoCard(videoId, videoUrl, prompt) {
+  const gallery = document.getElementById('video-gallery');
+  const empty = document.getElementById('video-empty');
+  if (empty) empty.remove();
+
+  const now = new Date().toISOString().slice(0, 16);
+  const escapedPrompt = escapeHtml(prompt);
+  const filename = videoUrl.split('/').pop();
+
+  const card = document.createElement('div');
+  card.className = 'video-card';
+  card.dataset.id = videoId;
+  card.dataset.url = videoUrl;
+  card.dataset.prompt = prompt;
+  card.style.cssText = 'background:rgba(21,25,42,0.85);border:1px solid rgba(34,211,238,0.15);border-radius:10px;overflow:hidden;';
+  card.innerHTML = `
+    <video src="${videoUrl}" controls preload="metadata" style="width:100%;display:block;aspect-ratio:16/9;background:#000;"></video>
+    <div style="padding:10px 12px;">
+      <p style="font-family:var(--font-mono);font-size:0.65rem;color:rgba(34,211,238,0.5);margin:0 0 8px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${escapedPrompt}">${escapedPrompt}</p>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;">
+        <span style="font-family:var(--font-mono);font-size:0.55rem;color:rgba(34,211,238,0.3);flex-shrink:0;">${now}</span>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <a href="${videoUrl}" download="${filename}" style="font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.1em;padding:3px 10px;background:transparent;border:1px solid rgba(34,211,238,0.3);color:rgba(34,211,238,0.6);cursor:pointer;text-decoration:none;display:inline-block;">DL</a>
+          <button onclick="forgeVideoDelete(${videoId},this)" style="font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.1em;padding:3px 10px;background:transparent;border:1px solid rgba(234,88,12,0.4);color:var(--reach-orange);cursor:pointer;">DEL</button>
+        </div>
+      </div>
+    </div>`;
+  gallery.prepend(card);
+}
+
+async function forgeVideoDelete(videoId, btn) {
+  btn.disabled = true;
+  try {
+    const resp = await fetch(`/api/forge/videos/${videoId}`, {
+      method: 'DELETE',
+      headers: { 'X-CSRF-Token': csrfToken },
+    });
+    if (resp.ok) {
+      const card = document.querySelector(`.video-card[data-id="${videoId}"]`);
+      if (card) card.remove();
+      if (!document.querySelector('.video-card')) {
+        document.getElementById('video-gallery').innerHTML =
+          '<p id="video-empty" style="font-family:var(--font-mono);font-size:0.7rem;color:rgba(34,211,238,0.3);letter-spacing:0.1em;grid-column:1/-1;">NO VIDEOS GENERATED YET.</p>';
+      }
+    } else {
+      btn.disabled = false;
+    }
+  } catch (err) {
+    btn.disabled = false;
+  }
+}
+
+function setVideoGenerating(isGenerating) {
+  const btn = document.getElementById('video-generate-btn');
+  if (btn) {
+    btn.disabled = isGenerating;
+    btn.textContent = isGenerating ? 'GENERATING...' : 'GENERATE VIDEO';
+  }
+}
+
+function showVideoStatus(message) {
+  const el = document.getElementById('video-status');
+  if (!el) return;
+  el.textContent = message;
+  el.style.display = message ? 'inline' : 'none';
+}
+
+function showVideoError(message) {
+  const el = document.getElementById('video-error');
+  if (!el) return;
+  el.textContent = message;
+  el.style.display = message ? 'block' : 'none';
+}
+
+function escapeHtml(value) {
+  return value.replace(/[&<>"']/g, char => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+  }[char]));
+}
+</script>
+{% endblock %}
