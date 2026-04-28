@@ -185,6 +185,7 @@ def test_video_status_saves_completed_video(admin_client, tmp_path, monkeypatch)
     assert resp.status_code == 200
     data = json.loads(resp.data)
     assert data['status'] == 'COMPLETED'
+    assert data['video_url'] == '/forge/videos/file/job-video-save.mp4'
     assert (tmp_path / 'job-video-save.mp4').exists()
 
 
@@ -209,7 +210,22 @@ def test_video_status_saves_completed_base64_video(admin_client, tmp_path, monke
     assert resp.status_code == 200
     data = json.loads(resp.data)
     assert data['status'] == 'COMPLETED'
+    assert data['video_url'] == '/forge/videos/file/job-video-b64.mp4'
     assert (tmp_path / 'job-video-b64.mp4').read_bytes() == b'fake-mp4-data'
+
+
+def test_video_file_route_serves_mp4(admin_client, tmp_path, monkeypatch):
+    import blueprints.forge as forge_module
+    monkeypatch.setattr(forge_module, '_FORGE_VIDEOS', str(tmp_path))
+
+    video_path = tmp_path / 'served.mp4'
+    video_path.write_bytes(b'fake-mp4-data')
+
+    resp = admin_client.get('/forge/videos/file/served.mp4')
+
+    assert resp.status_code == 200
+    assert resp.content_type == 'video/mp4'
+    assert resp.data == b'fake-mp4-data'
 
 
 def test_video_status_failed_job(admin_client):

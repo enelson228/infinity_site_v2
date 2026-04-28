@@ -7,7 +7,7 @@ from pathlib import Path
 import urllib.error
 import urllib.request
 from datetime import datetime
-from flask import Blueprint, jsonify, render_template, request
+from flask import Blueprint, abort, jsonify, render_template, request, send_file
 import config
 import database
 from auth import login_required
@@ -47,6 +47,7 @@ _MODEL_REGISTRY = {
     'sdxl': {
         'endpoint_attr': 'SDXL_ENDPOINT_ID',
         'worker_type': 'sdxl',
+        'display_model': 'sdxl-2.1.1',
         'default_steps': 75,
         'default_guidance': 11.5,
         'max_steps': 150,
@@ -145,6 +146,19 @@ def _get_endpoint(endpoint_attr):
     return getattr(config, endpoint_attr, '') if endpoint_attr else ''
 
 
+def _row_value(row, key, default=None):
+    if row is None:
+        return default
+    try:
+        return row[key]
+    except Exception:
+        return default
+
+
+def _video_public_url(filename):
+    return f'/forge/videos/file/{filename}'
+
+
 def _forge_static_url_to_base64(image_url):
     if not image_url or not image_url.startswith('/static/forge_outputs/'):
         return None
@@ -214,6 +228,7 @@ def forge():
         has_forge=has_forge,
         has_wan=has_wan,
         available_models=available_models,
+        video_url_for=_video_public_url,
     )
 
 
@@ -226,7 +241,23 @@ def forge_video():
         'forge_video.html',
         videos=videos,
         endpoint_configured=endpoint_configured,
+        video_url_for=_video_public_url,
     )
+
+
+@forge_bp.route('/forge/videos/file/<path:filename>')
+@login_required
+def forge_video_file(filename):
+    safe_name = os.path.basename(filename)
+    file_path = Path(_FORGE_VIDEOS) / safe_name
+    try:
+        resolved = file_path.resolve(strict=True)
+        videos_root = Path(_FORGE_VIDEOS).resolve()
+        resolved.relative_to(videos_root)
+    except (FileNotFoundError, ValueError):
+        abort(404)
+
+    return send_file(resolved, mimetype='video/mp4', conditional=True, etag=True, max_age=0)
 
 
 @forge_bp.route('/api/forge/generate', methods=['POST'])
@@ -251,6 +282,7 @@ def api_forge_generate():
     model, model_meta = _resolve_model(worker_type, data.get('model'))
     if not model or not model_meta:
         return jsonify({'error': f'Endpoint for {worker_type} not configured'}), 503
+    display_model = model_meta.get('display_model', model)
 
     def _clamp(val, lo, hi, default):
         try:
@@ -317,6 +349,8 @@ def api_forge_generate():
             'job_id': job_id,
             'endpoint_id': endpoint_id,
             'status': result.get('status', 'IN_QUEUE'),
+            'worker_type': worker_type,
+            'model': display_model,
         })
     except urllib.error.HTTPError as e:
         detail = ''
@@ -453,13 +487,20 @@ def api_forge_status(job_id):
     
     # Client should pass endpoint_id as a query param. If it does not,
     # prefer the explicit worker-specific endpoints before the legacy default.
-    endpoint_id = (
-        request.args.get('endpoint_id')
-        or config.CYBERREALISTIC_PONY_ENDPOINT_ID
-        or config.FORGE_ENDPOINT_ID
-        or config.SDXL_ENDPOINT_ID
-        or config.SD_ENDPOINT_ID
-    )
+    worker_type = request.args.get('worker_type', 'sdxl')
+    requested_model = request.args.get('model')
+    model, model_meta = _resolve_model(worker_type, requested_model)
+    display_model = (model_meta or {}).get('display_model', model)
+    endpoint_id = request.args.get('endpoint_id')
+    if not endpoint_id and model_meta and (request.args.get('worker_type') or requested_model):
+        endpoint_id = _get_endpoint(model_meta['endpoint_attr'])
+    if not endpoint_id:
+        endpoint_id = (
+            config.CYBERREALISTIC_PONY_ENDPOINT_ID
+            or config.FORGE_ENDPOINT_ID
+            or config.SDXL_ENDPOINT_ID
+            or config.SD_ENDPOINT_ID
+        )
     if not endpoint_id:
         return jsonify({'error': 'Endpoint ID missing for status check'}), 400
 
@@ -487,6 +528,8 @@ def api_forge_status(job_id):
                 'status': 'COMPLETED',
                 'image_url': f'/static/forge_outputs/{existing["filename"]}',
                 'image_id': existing['id'],
+                'model': _row_value(existing, 'model') or display_model,
+                'worker_type': _row_value(existing, 'worker_type') or worker_type,
             })
 
         # Extract base64 image — handle list-of-objects or dict output formats
@@ -513,18 +556,22 @@ def api_forge_status(job_id):
             logger.error(f'Forge: failed to save image {job_id}: {e}')
             return jsonify({'error': 'Failed to save image', 'status': 'FAILED'}), 500
 
-        img_id = database.add_forge_image(job_id, prompt, filename, datetime.now().isoformat())
+        try:
+            img_id = database.add_forge_image(job_id, prompt, filename, datetime.now().isoformat(), display_model, worker_type)
+        except TypeError:
+            img_id = database.add_forge_image(job_id, prompt, filename, datetime.now().isoformat())
         return jsonify({
             'status': 'COMPLETED',
             'image_url': f'/static/forge_outputs/{filename}',
             'image_id': img_id,
+            'model': display_model,
+            'worker_type': worker_type,
         })
 
     if status in _TERMINAL_STATUSES:
         return jsonify({'status': 'FAILED', 'error': result.get('error', status)})
 
     return jsonify({'status': status})
-
 
 
 @forge_bp.route('/api/forge/videos/status/<job_id>')
@@ -556,7 +603,7 @@ def api_forge_video_status(job_id):
         if existing:
             return jsonify({
                 'status': 'COMPLETED',
-                'video_url': f'/static/forge_videos/{existing["filename"]}',
+                'video_url': _video_public_url(existing["filename"]),
                 'video_id': existing['id'],
             })
 
@@ -588,7 +635,7 @@ def api_forge_video_status(job_id):
         video_id = database.add_forge_video(job_id, prompt, filename, datetime.now().isoformat())
         return jsonify({
             'status': 'COMPLETED',
-            'video_url': f'/static/forge_videos/{filename}',
+            'video_url': _video_public_url(filename),
             'video_id': video_id,
         })
 

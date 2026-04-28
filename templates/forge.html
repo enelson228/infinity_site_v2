@@ -274,13 +274,13 @@
   <div id="forge-video-gallery" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: var(--spacing-md);">
     {% for video in videos %}
     <div class="video-card" data-id="{{ video.id }}" style="background: rgba(21,25,42,0.85); border: 1px solid rgba(34,211,238,0.15); border-radius: 10px; overflow: hidden;">
-      <video src="/static/forge_videos/{{ video.filename }}" controls preload="metadata" style="width: 100%; display: block; aspect-ratio: 16 / 9; background: #000;"></video>
+      <video src="{{ video_url_for(video.filename) }}" controls preload="metadata" style="width: 100%; display: block; aspect-ratio: 16 / 9; background: #000;"></video>
       <div style="padding: 10px 12px;">
         <p style="font-family: var(--font-mono); font-size: 0.65rem; color: rgba(34,211,238,0.5); margin: 0 0 8px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ video.prompt }}">{{ video.prompt }}</p>
         <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px;">
           <span style="font-family: var(--font-mono); font-size: 0.55rem; color: rgba(34,211,238,0.3); flex-shrink: 0;">{{ video.created_at[:16] }}</span>
           <div style="display: flex; gap: 6px; align-items: center;">
-            <a href="/static/forge_videos/{{ video.filename }}" download="{{ video.filename }}"
+            <a href="{{ video_url_for(video.filename) }}" download="{{ video.filename }}"
                style="font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.1em; padding: 3px 10px; background: transparent; border: 1px solid rgba(34,211,238,0.3); color: rgba(34,211,238,0.6); cursor: pointer; text-decoration: none; display: inline-block;">DL</a>
             <button onclick="forgeVideoDelete({{ video.id }}, this)"
               style="font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.1em; padding: 3px 10px; background: transparent; border: 1px solid rgba(234,88,12,0.4); color: var(--reach-orange); cursor: pointer;">DEL</button>
