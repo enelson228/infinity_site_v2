@@ -71,6 +71,31 @@ def test_generate_returns_job_id(admin_client):
     data = json.loads(resp.data)
     assert data['job_id'] == 'job-abc123'
     assert data['status'] == 'IN_QUEUE'
+    assert data['worker_type'] == 'sdxl'
+    assert data['model'] == 'sdxl-2.1.1'
+
+
+def test_generate_uses_forge_profile_model(admin_client):
+    import config
+    config.RUNPOD_API_KEY = 'test-key'
+    config.FORGE_ENDPOINT_ID = 'forge-endpoint'
+    with admin_client.session_transaction() as sess:
+        token = sess['csrf_token']
+
+    mock_response = MagicMock()
+    mock_response.read.return_value = json.dumps({'id': 'job-forge', 'status': 'IN_QUEUE'}).encode()
+    mock_response.__enter__ = lambda s: s
+    mock_response.__exit__ = MagicMock(return_value=False)
+
+    with patch('urllib.request.urlopen', return_value=mock_response) as urlopen:
+        resp = admin_client.post('/api/forge/generate',
+                                 json={'prompt': 'a red dragon', 'worker_type': 'forge', 'model': 'sdxl'},
+                                 headers={'X-CSRF-Token': token})
+
+    assert resp.status_code == 200
+    req = urlopen.call_args.args[0]
+    payload = json.loads(req.data.decode())
+    assert payload['input']['model'] == 'juggernaut-xl'
 
 
 def test_generate_routes_juggernaut_payload_to_forge_endpoint(admin_client):
@@ -360,7 +385,7 @@ def test_status_failed_job(admin_client):
     assert data['status'] == 'FAILED'
 
 
-def test_status_prefers_forge_endpoint_without_query_param(admin_client):
+def test_status_defaults_to_sdxl_endpoint_without_query_param(admin_client):
     import config
     config.RUNPOD_API_KEY = 'test-key'
     config.SD_ENDPOINT_ID = 'legacy-endpoint'
@@ -374,6 +399,48 @@ def test_status_prefers_forge_endpoint_without_query_param(admin_client):
 
     with patch('urllib.request.urlopen', return_value=mock_response) as urlopen:
         resp = admin_client.get('/api/forge/status/job-fail?prompt=test')
+
+    data = json.loads(resp.data)
+    assert data['status'] == 'FAILED'
+    req = urlopen.call_args.args[0]
+    assert req.full_url == 'https://api.runpod.ai/v2/sdxl-endpoint/status/job-fail'
+
+
+def test_status_prefers_sdxl_endpoint_for_sdxl_worker(admin_client):
+    import config
+    config.RUNPOD_API_KEY = 'test-key'
+    config.SD_ENDPOINT_ID = 'legacy-endpoint'
+    config.SDXL_ENDPOINT_ID = 'sdxl-endpoint'
+    config.FORGE_ENDPOINT_ID = 'forge-endpoint'
+
+    mock_response = MagicMock()
+    mock_response.read.return_value = json.dumps({'status': 'FAILED', 'error': 'OOM'}).encode()
+    mock_response.__enter__ = lambda s: s
+    mock_response.__exit__ = MagicMock(return_value=False)
+
+    with patch('urllib.request.urlopen', return_value=mock_response) as urlopen:
+        resp = admin_client.get('/api/forge/status/job-fail?prompt=test&worker_type=sdxl')
+
+    data = json.loads(resp.data)
+    assert data['status'] == 'FAILED'
+    req = urlopen.call_args.args[0]
+    assert req.full_url == 'https://api.runpod.ai/v2/sdxl-endpoint/status/job-fail'
+
+
+def test_status_prefers_forge_endpoint_for_forge_worker(admin_client):
+    import config
+    config.RUNPOD_API_KEY = 'test-key'
+    config.SD_ENDPOINT_ID = 'legacy-endpoint'
+    config.SDXL_ENDPOINT_ID = 'sdxl-endpoint'
+    config.FORGE_ENDPOINT_ID = 'forge-endpoint'
+
+    mock_response = MagicMock()
+    mock_response.read.return_value = json.dumps({'status': 'FAILED', 'error': 'OOM'}).encode()
+    mock_response.__enter__ = lambda s: s
+    mock_response.__exit__ = MagicMock(return_value=False)
+
+    with patch('urllib.request.urlopen', return_value=mock_response) as urlopen:
+        resp = admin_client.get('/api/forge/status/job-fail?prompt=test&worker_type=forge')
 
     data = json.loads(resp.data)
     assert data['status'] == 'FAILED'

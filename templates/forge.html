@@ -3,264 +3,290 @@
 {% block title %}Forge{% endblock %}
 
 {% block content %}
-<div class="container" style="padding-top: var(--spacing-xl); padding-bottom: var(--spacing-xl);">
+<div class="container forge-page">
+  <header class="forge-header">
+    <h1>FORGE</h1>
+    <p>// IMAGE + VIDEO SYNTHESIS — RUNPOD SERVERLESS</p>
+  </header>
 
-  <!-- Header -->
-  <div style="margin-bottom: var(--spacing-xl);">
-    <h1 style="font-family: var(--font-display); font-size: 1.8rem; letter-spacing: 0.15em; color: var(--reach-cyan); text-shadow: 0 0 12px rgba(34,211,238,0.4); margin: 0 0 4px 0;">FORGE</h1>
-    <p style="font-family: var(--font-mono); font-size: 0.65rem; color: rgba(34,211,238,0.4); letter-spacing: 0.2em; margin: 0;">// IMAGE SYNTHESIS — RUNPOD JUGGERNAUT XL SERVERLESS</p>
-  </div>
-
-  <!-- Generation Panel -->
-  <div class="terminal-panel" style="margin-bottom: var(--spacing-xl); padding: var(--spacing-lg);">
-
+  <section class="terminal-panel forge-panel" aria-label="Forge generation controls">
     {% if not endpoint_configured %}
-    <div style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--reach-orange); letter-spacing: 0.1em; padding: var(--spacing-md); border: 1px solid rgba(234,88,12,0.3); background: rgba(234,88,12,0.05); margin-bottom: var(--spacing-md);">
-      ⚠ ENDPOINT NOT CONFIGURED — Set RUNPOD_API_KEY and FORGE_ENDPOINT_ID in Doppler.
+    <div class="forge-alert">
+      ENDPOINT NOT CONFIGURED - Set RUNPOD_API_KEY and at least one Forge endpoint id in Doppler.
     </div>
     {% endif %}
 
-    <!-- Prompt -->
-    <div style="margin-bottom: var(--spacing-md);">
-      <label style="font-family: var(--font-mono); font-size: 0.65rem; color: rgba(34,211,238,0.6); letter-spacing: 0.15em; display: block; margin-bottom: 6px;">PROMPT</label>
-      <textarea
-        id="forge-prompt"
-        rows="3"
-        maxlength="500"
-        placeholder="[Subject] + [Action] + [Environment] + [Lighting] + [Style]... e.g. A rugged Viking warrior, kneeling in the snow, cinematic sunset, RAW photo, 8k"
-        {% if not endpoint_configured %}disabled{% endif %}
-        style="width: 100%; background: rgba(0,0,0,0.4); border: 1px solid rgba(34,211,238,0.2); color: var(--text-primary); font-family: var(--font-mono); font-size: 0.8rem; padding: 10px 12px; resize: vertical; outline: none; box-sizing: border-box;"
-      ></textarea>
-      <div style="font-family: var(--font-mono); font-size: 0.6rem; color: rgba(34,211,238,0.3); text-align: right; margin-top: 3px;"><span id="prompt-count">0</span>/500</div>
-    </div>
-
-    <!-- Negative Prompt -->
-    <details style="margin-bottom: var(--spacing-md);">
-      <summary style="font-family: var(--font-mono); font-size: 0.65rem; color: rgba(34,211,238,0.4); letter-spacing: 0.1em; cursor: pointer; user-select: none;">NEGATIVE PROMPT (optional)</summary>
-      <textarea
-        id="forge-negative"
-        rows="3"
-        maxlength="500"
-        placeholder="Things to exclude..."
-        {% if not endpoint_configured %}disabled{% endif %}
-        style="width: 100%; margin-top: 8px; background: rgba(0,0,0,0.4); border: 1px solid rgba(34,211,238,0.15); color: var(--text-primary); font-family: var(--font-mono); font-size: 0.8rem; padding: 10px 12px; resize: vertical; outline: none; box-sizing: border-box;"
-      >(worst quality, low quality, normal quality:1.2), lowres, blurry, jpeg artifacts, watermark, signature, text, logo, username, bad anatomy, bad hands, extra fingers, fewer fingers, missing fingers, extra limbs, fused fingers, too many fingers, mutated hands, poorly drawn hands, poorly drawn face, long neck, cross-eyed, deformed iris</textarea>
-    </details>
-
-    <!-- Generation Parameters -->
-    <details id="params-details" open style="margin-bottom: var(--spacing-md);">
-      <summary style="font-family: var(--font-mono); font-size: 0.65rem; color: rgba(34,211,238,0.4); letter-spacing: 0.1em; cursor: pointer; user-select: none; margin-bottom: 12px;">GENERATION PARAMETERS</summary>
-
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-top: 12px;">
-
-        <!-- Compute Backend -->
-        <div>
-          <label style="font-family: var(--font-mono); font-size: 0.6rem; color: rgba(34,211,238,0.5); letter-spacing: 0.12em; display: block; margin-bottom: 4px;">COMPUTE BACKEND</label>
-          <div style="font-family: var(--font-mono); font-size: 0.55rem; color: rgba(34,211,238,0.3); margin-bottom: 6px;">GPU endpoint for generation.</div>
-          <select id="forge-backend"
-            style="width: 100%; background: rgba(0,0,0,0.4); border: 1px solid rgba(34,211,238,0.2); color: var(--text-primary); font-family: var(--font-mono); font-size: 0.75rem; padding: 7px 10px; outline: none; cursor: pointer;">
-            <option value="forge" {% if has_forge %}selected{% endif %}>Juggernaut XL</option>
-            <option value="sdxl" {% if not has_forge %}selected{% endif %}>Legacy SDXL</option>
-          </select>
+    <div class="forge-workbench">
+      <div class="forge-compose">
+        <div class="forge-field forge-field-full">
+          <label for="forge-prompt">PROMPT</label>
+          <textarea
+            id="forge-prompt"
+            rows="5"
+            maxlength="500"
+            placeholder="[Subject] + [Action] + [Environment] + [Lighting] + [Style]..."
+            {% if not endpoint_configured %}disabled{% endif %}
+          ></textarea>
+          <div class="forge-count"><span id="prompt-count">0</span>/500</div>
         </div>
 
-        <!-- Model -->
-        <div>
-          <label style="font-family: var(--font-mono); font-size: 0.6rem; color: rgba(34,211,238,0.5); letter-spacing: 0.12em; display: block; margin-bottom: 4px;">MODEL</label>
-          <div style="font-family: var(--font-mono); font-size: 0.55rem; color: rgba(34,211,238,0.3); margin-bottom: 6px;">Base model for generation.</div>
-          <select id="forge-model"
-            style="width: 100%; background: rgba(0,0,0,0.4); border: 1px solid rgba(34,211,238,0.2); color: var(--text-primary); font-family: var(--font-mono); font-size: 0.75rem; padding: 7px 10px; outline: none; cursor: pointer;">
-            <option value="juggernaut-xl" selected>Juggernaut XL</option>
-            <option value="sdxl">SDXL 1.0</option>
-            <option value="sdxl-turbo">SDXL Turbo (Fast)</option>
-            <option value="pony">Pony Diffusion XL</option>
-            <option value="sd15">Stable Diffusion 1.5</option>
-          </select>
-        </div>
+        <details class="forge-disclosure">
+          <summary>NEGATIVE PROMPT (optional)</summary>
+          <textarea
+            id="forge-negative"
+            rows="3"
+            maxlength="500"
+            placeholder="Things to exclude..."
+            {% if not endpoint_configured %}disabled{% endif %}
+          >(worst quality, low quality, normal quality:1.2), lowres, blurry, jpeg artifacts, watermark, signature, text, logo, username, bad anatomy, bad hands, extra fingers, fewer fingers, missing fingers, extra limbs, fused fingers, too many fingers, mutated hands, poorly drawn hands, poorly drawn face, long neck, cross-eyed, deformed iris</textarea>
+        </details>
 
-        <!-- Preset Selector -->
-        <div style="grid-column: 1 / -1;">
-          <label style="font-family: var(--font-mono); font-size: 0.6rem; color: rgba(34,211,238,0.5); letter-spacing: 0.12em; display: block; margin-bottom: 4px;">PRESET</label>
-          <div style="font-family: var(--font-mono); font-size: 0.55rem; color: rgba(34,211,238,0.3); margin-bottom: 6px;">Steps, CFG, and dimensions optimized per backend.</div>
-          <select id="forge-preset"
-            style="width: 100%; background: rgba(0,0,0,0.4); border: 1px solid rgba(34,211,238,0.2); color: var(--text-primary); font-family: var(--font-mono); font-size: 0.75rem; padding: 7px 10px; outline: none; cursor: pointer;"
-            onchange="applyPreset()">
-          </select>
-        </div>
-
-        <!-- Hidden inputs for generation params -->
-        <input type="hidden" id="forge-width" value="1024">
-        <input type="hidden" id="forge-height" value="1024">
-
-        <!-- Steps -->
-        <div>
-          <label style="font-family: var(--font-mono); font-size: 0.6rem; color: rgba(34,211,238,0.5); letter-spacing: 0.12em; display: flex; justify-content: space-between; margin-bottom: 4px;">
-            <span>STEPS</span>
-            <span id="steps-val" style="color: var(--reach-amber);">28</span>
-          </label>
-          <div style="font-family: var(--font-mono); font-size: 0.55rem; color: rgba(34,211,238,0.3); margin-bottom: 6px;">How many denoising passes. More = sharper detail, slower.</div>
-          <input type="range" id="forge-steps" min="1" max="150" value="28" step="1"
-            style="width: 100%; accent-color: var(--reach-amber);">
-          <div style="display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 0.5rem; color: rgba(34,211,238,0.25); margin-top: 2px;"><span>1</span><span>150</span></div>
-        </div>
-
-        <!-- Guidance Scale -->
-        <div>
-          <label style="font-family: var(--font-mono); font-size: 0.6rem; color: rgba(34,211,238,0.5); letter-spacing: 0.12em; display: flex; justify-content: space-between; margin-bottom: 4px;">
-            <span>GUIDANCE SCALE (CFG)</span>
-            <span id="guidance-val" style="color: var(--reach-amber);">7.0</span>
-          </label>
-          <div style="font-family: var(--font-mono); font-size: 0.55rem; color: rgba(34,211,238,0.3); margin-bottom: 6px;">How strictly the model follows your prompt. High = literal, low = creative.</div>
-          <input type="range" id="forge-guidance" min="1" max="30" value="7" step="0.5"
-            style="width: 100%; accent-color: var(--reach-amber);">
-          <div style="display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 0.5rem; color: rgba(34,211,238,0.25); margin-top: 2px;"><span>1</span><span>30</span></div>
-        </div>
-
-        <!-- Seed (full width) -->
-        <div style="grid-column: 1 / -1;">
-          <label style="font-family: var(--font-mono); font-size: 0.6rem; color: rgba(34,211,238,0.5); letter-spacing: 0.12em; display: block; margin-bottom: 4px;">
-            SEED <span style="color: rgba(34,211,238,0.3);">(-1 = random)</span>
-          </label>
-          <div style="font-family: var(--font-mono); font-size: 0.55rem; color: rgba(34,211,238,0.3); margin-bottom: 6px;">Locks the random noise — same seed + same prompt = same image every time.</div>
-          <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-            <input type="number" id="forge-seed" value="-1" min="-1" max="4294967295"
-              style="flex: 1; background: rgba(0,0,0,0.4); border: 1px solid rgba(34,211,238,0.2); color: var(--text-primary); font-family: var(--font-mono); font-size: 0.75rem; padding: 7px 10px; outline: none; box-sizing: border-box;">
-            <button id="random-seed-btn" type="button"
-              style="font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.1em; padding: 7px 14px; background: transparent; border: 1px solid rgba(34,211,238,0.25); color: rgba(34,211,238,0.5); cursor: pointer; white-space: nowrap;"
-              onmouseover="this.style.borderColor='rgba(34,211,238,0.5)';this.style.color='var(--reach-cyan)'"
-              onmouseout="this.style.borderColor='rgba(34,211,238,0.25)';this.style.color='rgba(34,211,238,0.5)'">
-              RANDOM
-            </button>
-            <button id="clear-seed-btn" type="button"
-              style="font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.1em; padding: 7px 14px; background: transparent; border: 1px solid rgba(34,211,238,0.25); color: rgba(34,211,238,0.5); cursor: pointer; white-space: nowrap;"
-              onmouseover="this.style.borderColor='rgba(34,211,238,0.5)';this.style.color='var(--reach-cyan)'"
-              onmouseout="this.style.borderColor='rgba(34,211,238,0.25)';this.style.color='rgba(34,211,238,0.5)'">
-              CLEAR
-            </button>
+        <div id="forge-image-container" class="forge-image-upload">
+          <label>INPUT IMAGE <span>(required for video)</span></label>
+          <div class="forge-image-row">
+            <div id="image-preview-container" class="forge-image-preview">
+              <span id="image-preview-placeholder">NO IMAGE</span>
+              <img id="image-preview" src="" alt="Selected image preview">
+            </div>
+            <div class="forge-image-pick">
+              <input type="file" id="forge-image-input" accept="image/*">
+              <button type="button" class="forge-button forge-button-secondary" onclick="document.getElementById('forge-image-input').click()">CHOOSE IMAGE</button>
+              <div id="image-filename">No file selected</div>
+            </div>
+            <button id="clear-image-btn" class="forge-button forge-button-danger" type="button">REMOVE</button>
           </div>
         </div>
 
+        <div class="forge-actions">
+          <button
+            id="forge-generate-btn"
+            class="forge-button forge-button-primary"
+            {% if not endpoint_configured %}disabled{% endif %}
+          >GENERATE</button>
+          <span id="forge-status" class="forge-status"></span>
+        </div>
+
+        <div id="forge-error" class="forge-error"></div>
       </div>
-    </details>
 
-    <div style="display: flex; align-items: center; gap: var(--spacing-md);">
-      <button
-        id="forge-generate-btn"
-        {% if not endpoint_configured %}disabled{% endif %}
-        style="font-family: var(--font-display); font-size: 0.8rem; letter-spacing: 0.15em; padding: 10px 28px; background: transparent; border: 1px solid var(--reach-cyan); color: var(--reach-cyan); cursor: pointer; transition: all 0.2s;"
-        onmouseover="if(!this.disabled)this.style.background='rgba(34,211,238,0.1)'"
-        onmouseout="this.style.background='transparent'"
-      >GENERATE</button>
-      <span id="forge-status" style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--reach-amber); letter-spacing: 0.1em; display: none;"></span>
+      <aside class="forge-controls">
+        <details id="params-details" class="forge-disclosure" open>
+          <summary>GENERATION PARAMETERS</summary>
+
+          <div class="forge-param-grid">
+            <div class="forge-field">
+              <label for="forge-backend">COMPUTE BACKEND</label>
+              <div class="forge-help">RunPod endpoint. Presets and model lock to this selection.</div>
+              <select id="forge-backend">
+                {% if has_sdxl %}<option value="sdxl" {% if default_worker_type == 'sdxl' %}selected{% endif %}>SDXL 2.1.1 Serverless</option>{% endif %}
+                {% if has_forge %}<option value="forge" {% if default_worker_type == 'forge' %}selected{% endif %}>Forge Juggernaut XL</option>{% endif %}
+                {% if endpoint_profiles.wan %}<option value="wan" {% if default_worker_type == 'wan' %}selected{% endif %}>Wan2.2 Video Serverless</option>{% endif %}
+              </select>
+            </div>
+
+            <div class="forge-field">
+              <label for="forge-model">MODEL</label>
+              <div class="forge-help">Resolved automatically from the selected endpoint.</div>
+              <div id="forge-model-label" class="forge-model-display"></div>
+              <input type="hidden" id="forge-model" value="">
+            </div>
+
+            <div class="forge-field forge-field-full">
+              <label for="forge-preset">PRESET</label>
+              <div class="forge-help">Steps, CFG, and dimensions optimized for the selected endpoint model.</div>
+              <select id="forge-preset" onchange="applyPreset()">
+              </select>
+            </div>
+
+            <input type="hidden" id="forge-width" value="1024">
+            <input type="hidden" id="forge-height" value="1024">
+
+            <div class="forge-field">
+              <label for="forge-steps" class="forge-range-label">
+                <span>STEPS</span>
+                <span id="steps-val">30</span>
+              </label>
+              <div class="forge-help">Denoising passes. More can sharpen detail but costs time.</div>
+              <input type="range" id="forge-steps" min="1" max="150" value="30" step="1">
+            </div>
+
+            <div class="forge-field">
+              <label for="forge-guidance" class="forge-range-label">
+                <span>GUIDANCE SCALE (CFG)</span>
+                <span id="guidance-val">7.5</span>
+              </label>
+              <div class="forge-help">How strictly the model follows the prompt.</div>
+              <input type="range" id="forge-guidance" min="1" max="30" value="7.5" step="0.5">
+            </div>
+
+            <div class="forge-field forge-field-full">
+              <label for="forge-seed">SEED <span>(-1 = random)</span></label>
+              <div class="forge-help">Locks the random noise — same seed + same prompt = same image every time.</div>
+              <div class="forge-seed-row">
+                <input type="number" id="forge-seed" value="-1" min="-1" max="4294967295">
+                <button id="random-seed-btn" class="forge-button forge-button-secondary" type="button">RANDOM</button>
+                <button id="clear-seed-btn" class="forge-button forge-button-secondary" type="button">CLEAR</button>
+              </div>
+            </div>
+          </div>
+        </details>
+
+        <details class="forge-disclosure forge-reference">
+          <summary>OPTIMIZATION REFERENCE</summary>
+          <div class="forge-table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>MODE</th>
+                  <th>STEPS</th>
+                  <th>CFG</th>
+                  <th>RES</th>
+                  <th>RESULT</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Balanced</td>
+                  <td>30</td>
+                  <td>7.5</td>
+                  <td>1024x1024</td>
+                  <td>Standard quality, fast.</td>
+                </tr>
+                <tr>
+                  <td>High Detail</td>
+                  <td>60</td>
+                  <td>9.0</td>
+                  <td>1024x1024</td>
+                  <td>Noticeably sharper edges.</td>
+                </tr>
+                <tr class="is-highlighted">
+                  <td>Sweet Spot</td>
+                  <td>75</td>
+                  <td>11.5</td>
+                  <td>1024x1024</td>
+                  <td>Peak clarity and color depth.</td>
+                </tr>
+                <tr>
+                  <td>Extreme</td>
+                  <td>120</td>
+                  <td>12.0</td>
+                  <td>1024x1024</td>
+                  <td>Diminishing returns.</td>
+                </tr>
+                <tr>
+                  <td>Max Stability</td>
+                  <td>100</td>
+                  <td>20.0</td>
+                  <td>1536x1536</td>
+                  <td>High load, very high detail.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </details>
+      </aside>
     </div>
+  </section>
 
-    <div id="forge-error" style="display: none; margin-top: var(--spacing-sm); font-family: var(--font-mono); font-size: 0.7rem; color: var(--reach-orange); letter-spacing: 0.05em;"></div>
-  </div>
+  <section class="forge-gallery-section" aria-label="Generated images">
+    <h2>GENERATED IMAGES</h2>
 
-  <!-- Gallery -->
-  <div style="margin-bottom: var(--spacing-md);">
-    <h2 style="font-family: var(--font-display); font-size: 1rem; letter-spacing: 0.15em; color: rgba(34,211,238,0.7); margin: 0 0 var(--spacing-md) 0;">GENERATED IMAGES</h2>
-  </div>
-
-  <div id="forge-gallery" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--spacing-md);">
+    <div id="forge-gallery" class="forge-gallery">
     {% for img in images %}
-    <div class="forge-card" data-id="{{ img.id }}" data-url="/static/forge_outputs/{{ img.filename }}" data-prompt="{{ img.prompt | e }}"
-         style="background: rgba(21,25,42,0.85); border: 1px solid rgba(34,211,238,0.15); border-radius: 10px; overflow: hidden;">
-      <div style="position: relative; cursor: zoom-in;" >
-        <img src="/static/forge_outputs/{{ img.filename }}" alt="Generated image" loading="lazy"
-             style="width: 100%; display: block; aspect-ratio: 1; object-fit: cover;">
+    <div class="forge-card" data-id="{{ img.id }}" data-url="/static/forge_outputs/{{ img.filename }}" data-prompt="{{ img.prompt | e }}">
+      <div class="forge-card-image" onclick="openLightbox('/static/forge_outputs/{{ img.filename }}', '{{ img.prompt | e }}')">
+        {% if img.filename.endswith('.mp4') %}
+        <video src="/static/forge_outputs/{{ img.filename }}" autoplay loop muted playsinline></video>
+        {% else %}
+        <img src="/static/forge_outputs/{{ img.filename }}" alt="Generated image" loading="lazy">
+        {% endif %}
         <div class="forge-zoom-hint">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
         </div>
         {% if img.model %}
-        <div style="position:absolute;top:8px;left:8px;background:rgba(8,10,18,0.75);border:1px solid rgba(34,211,238,0.3);color:var(--reach-amber);font-family:var(--font-mono);font-size:0.5rem;letter-spacing:0.1em;padding:3px 7px;border-radius:3px;">{{ img.model|upper }}</div>
+        <div class="forge-model-badge">{{ img.model|upper }}</div>
         {% endif %}
       </div>
-      <div style="padding: 10px 12px;">
-        <p style="font-family: var(--font-mono); font-size: 0.65rem; color: rgba(34,211,238,0.5); margin: 0 0 8px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ img.prompt }}">{{ img.prompt }}</p>
-        <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px;">
-          <span style="font-family: var(--font-mono); font-size: 0.55rem; color: rgba(34,211,238,0.3); flex-shrink: 0;">{{ img.created_at[:16] }}</span>
-          <div style="display: flex; gap: 6px; align-items: center;">
-            <a href="/static/forge_outputs/{{ img.filename }}" download="{{ img.filename }}"
-               style="font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.1em; padding: 3px 10px; background: transparent; border: 1px solid rgba(34,211,238,0.3); color: rgba(34,211,238,0.6); cursor: pointer; text-decoration: none; display: inline-block;"
-               onmouseover="this.style.background='rgba(34,211,238,0.08)';this.style.color='var(--reach-cyan)'"
-               onmouseout="this.style.background='transparent';this.style.color='rgba(34,211,238,0.6)'">DL</a>
+      <div class="forge-card-body">
+        <p class="forge-card-prompt" title="{{ img.prompt }}">{{ img.prompt }}</p>
+        <div class="forge-card-meta">
+          <span>{{ img.created_at[:16] }}</span>
+          <div class="forge-card-actions">
+            {% if not img.filename.endswith('.mp4') %}
+            <button onclick="forgeAnimate('{{ img.filename }}')">ANIMATE</button>
+            {% endif %}
+            <a href="/static/forge_outputs/{{ img.filename }}" download="{{ img.filename }}">DL</a>
             <button
               onclick="forgeDelete({{ img.id }}, this)"
-              style="font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.1em; padding: 3px 10px; background: transparent; border: 1px solid rgba(234,88,12,0.4); color: var(--reach-orange); cursor: pointer;"
-              onmouseover="this.style.background='rgba(234,88,12,0.1)'"
-              onmouseout="this.style.background='transparent'"
             >DEL</button>
           </div>
         </div>
       </div>
     </div>
     {% else %}
-    <p id="forge-empty" style="font-family: var(--font-mono); font-size: 0.7rem; color: rgba(34,211,238,0.3); letter-spacing: 0.1em; grid-column: 1 / -1;">NO IMAGES GENERATED YET.</p>
+    <p id="forge-empty" class="forge-empty">NO IMAGES GENERATED YET.</p>
     {% endfor %}
-  </div>
-
+    </div>
+  </section>
 </div>
 
 <!-- Lightbox -->
-<div id="forge-lightbox" style="display:none; position:fixed; inset:0; z-index:100000; background:rgba(8,10,18,0.94); backdrop-filter:blur(6px); cursor:zoom-out; align-items:center; justify-content:center; flex-direction:column; gap:16px;">
-  <button id="lb-close" onclick="closeLightbox()"
-    style="position:absolute; top:20px; right:24px; background:transparent; border:1px solid rgba(34,211,238,0.3); color:rgba(34,211,238,0.7); font-family:var(--font-mono); font-size:0.7rem; letter-spacing:0.15em; padding:6px 14px; cursor:pointer;"
-    onmouseover="this.style.background='rgba(34,211,238,0.08)'" onmouseout="this.style.background='transparent'">✕ CLOSE</button>
-  <img id="lb-img" src="" alt="Preview" style="max-width:90vw; max-height:82vh; object-fit:contain; border:1px solid rgba(34,211,238,0.15); box-shadow:0 0 60px rgba(34,211,238,0.06);">
-  <div style="display:flex; gap:14px; align-items:center;">
-    <p id="lb-prompt" style="font-family:var(--font-mono); font-size:0.65rem; color:rgba(34,211,238,0.45); letter-spacing:0.05em; max-width:70vw; text-align:center; margin:0;"></p>
-    <a id="lb-download" href="#" download
-      style="font-family:var(--font-mono); font-size:0.65rem; letter-spacing:0.12em; padding:5px 14px; background:transparent; border:1px solid rgba(34,211,238,0.35); color:rgba(34,211,238,0.7); text-decoration:none; white-space:nowrap;"
-      onmouseover="this.style.background='rgba(34,211,238,0.08)';this.style.color='var(--reach-cyan)'"
-      onmouseout="this.style.background='transparent';this.style.color='rgba(34,211,238,0.7)'">↓ DOWNLOAD</a>
+<div id="forge-lightbox" class="forge-lightbox">
+  <button id="lb-close" class="forge-lightbox-close" onclick="closeLightbox()">CLOSE</button>
+  <button id="lb-prev" class="forge-lightbox-nav forge-lightbox-prev" onclick="lbPrev()">‹</button>
+  <button id="lb-next" class="forge-lightbox-nav forge-lightbox-next" onclick="lbNext()">›</button>
+  <img id="lb-img" src="" alt="Preview">
+  <video id="lb-video" src="" controls autoplay loop></video>
+  <div class="forge-lightbox-meta">
+    <span id="lb-counter"></span>
+    <p id="lb-prompt"></p>
+    <a id="lb-download" href="#" download>DOWNLOAD</a>
   </div>
 </div>
-
-<style>
-.forge-zoom-hint {
-  position: absolute; top: 8px; right: 8px;
-  background: rgba(8,10,18,0.65);
-  border: 1px solid rgba(34,211,238,0.2);
-  color: rgba(34,211,238,0.6);
-  padding: 5px;
-  border-radius: 3px;
-  opacity: 0;
-  transition: opacity 0.15s;
-  pointer-events: none;
-  line-height: 0;
-}
-.forge-card:hover .forge-zoom-hint { opacity: 1; }
-
-.preset-btn {
-  font-family: var(--font-mono);
-  font-size: 0.6rem;
-  letter-spacing: 0.1em;
-  padding: 6px 12px;
-  background: rgba(34,211,238,0.05);
-  border: 1px solid rgba(34,211,238,0.2);
-  color: rgba(34,211,238,0.6);
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.preset-btn:hover {
-  background: rgba(34,211,238,0.15);
-  border-color: rgba(34,211,238,0.5);
-  color: var(--reach-cyan);
-  box-shadow: 0 0 10px rgba(34,211,238,0.2);
-}
-.preset-btn.active {
-  background: rgba(34,211,238,0.2);
-  border-color: var(--reach-cyan);
-  color: var(--reach-cyan);
-}
-</style>
-
 {% endblock %}
 
 {% block scripts %}
 <script>
 const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+const endpointProfiles = {{ endpoint_profiles|tojson }};
+const fallbackWorkerType = {{ default_worker_type|tojson }};
+let uploadedImageB64 = null;
+
+const imageInput = document.getElementById('forge-image-input');
+const imagePreview = document.getElementById('image-preview');
+const imagePlaceholder = document.getElementById('image-preview-placeholder');
+const imageFilename = document.getElementById('image-filename');
+const clearImageBtn = document.getElementById('clear-image-btn');
+const imageContainer = document.getElementById('forge-image-container');
+
+imageInput?.addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  handleImageFile(file);
+});
+
+function handleImageFile(file) {
+  imageFilename.textContent = file.name;
+  const reader = new FileReader();
+  reader.onload = e => {
+    uploadedImageB64 = e.target.result;
+    imagePreview.src = uploadedImageB64;
+    imagePreview.style.display = 'block';
+    imagePlaceholder.style.display = 'none';
+    clearImageBtn.style.display = 'inline-flex';
+  };
+  reader.readAsDataURL(file);
+}
+
+clearImageBtn?.addEventListener('click', () => {
+  uploadedImageB64 = null;
+  imageInput.value = '';
+  imagePreview.src = '';
+  imagePreview.style.display = 'none';
+  imagePlaceholder.style.display = 'block';
+  imageFilename.textContent = 'No file selected';
+  clearImageBtn.style.display = 'none';
+});
 
 // Prompt character counter
 const promptEl = document.getElementById('forge-prompt');
@@ -279,63 +305,30 @@ document.getElementById('forge-guidance')?.addEventListener('input', e => {
   if (guidanceVal) guidanceVal.textContent = parseFloat(e.target.value).toFixed(1);
 });
 
-// Seed helpers
-document.getElementById('random-seed-btn')?.addEventListener('click', () => {
-  document.getElementById('forge-seed').value = Math.floor(Math.random() * 4294967295);
-});
-document.getElementById('clear-seed-btn')?.addEventListener('click', () => {
-  document.getElementById('forge-seed').value = -1;
-});
+function getActiveProfile() {
+  const backend = document.getElementById('forge-backend')?.value || fallbackWorkerType;
+  return endpointProfiles[backend] || endpointProfiles[fallbackWorkerType];
+}
 
-// Full presets: steps, cfg, dimensions per backend
-const fullPresets = {
-  sdxl: [
-    { value: '1x1-balanced',   label: '1:1 Balanced — 30stp / CFG 7.5 / 1024×1024',    steps: 30,  guidance: 7.5,  width: 1024, height: 1024 },
-    { value: '1x1-detail',     label: '1:1 Detail — 60stp / CFG 9 / 1024×1024',         steps: 60,  guidance: 9.0,  width: 1024, height: 1024 },
-    { value: '1x1-sweetspot',   label: '1:1 Sweet Spot — 75stp / CFG 11.5 / 1024×1024', steps: 75,  guidance: 11.5, width: 1024, height: 1024 },
-    { value: '1x1-extreme',     label: '1:1 Extreme — 120stp / CFG 12 / 1024×1024',      steps: 120, guidance: 12.0, width: 1024, height: 1024 },
-    { value: '1x1-max',        label: '1:1 Max — 100stp / CFG 20 / 1536×1536',          steps: 100, guidance: 20.0, width: 1536, height: 1536 },
-    { value: '4x3-balanced',    label: '4:3 Balanced — 30stp / CFG 7.5 / 1152×896',      steps: 30,  guidance: 7.5,  width: 1152, height: 896  },
-    { value: '4x3-detail',     label: '4:3 Detail — 60stp / CFG 9 / 1152×896',          steps: 60,  guidance: 9.0,  width: 1152, height: 896  },
-    { value: '3x2-detail',     label: '3:2 Detail — 60stp / CFG 9 / 1216×832',           steps: 60,  guidance: 9.0,  width: 1216, height: 832  },
-    { value: '16x9-detail',    label: '16:9 Detail — 60stp / CFG 9 / 1344×768',          steps: 60,  guidance: 9.0,  width: 1344, height: 768  },
-    { value: '3x4-portrait',   label: '3:4 Portrait — 60stp / CFG 9 / 896×1152',        steps: 60,  guidance: 9.0,  width: 896,  height: 1152 },
-    { value: '9x16-portrait',  label: '9:16 Portrait — 60stp / CFG 9 / 768×1344',       steps: 60,  guidance: 9.0,  width: 768,  height: 1344 },
-  ],
-  forge: [
-    { value: '1x1-economy',    label: '1:1 Economy — 24stp / CFG 6 / 1024×1024',         steps: 24,  guidance: 6.0,  width: 1024, height: 1024 },
-    { value: '1x1-balanced',   label: '1:1 Balanced — 28stp / CFG 7 / 1024×1024',        steps: 28,  guidance: 7.0,  width: 1024, height: 1024 },
-    { value: '1x1-detail',     label: '1:1 Detail — 35stp / CFG 8 / 1024×1024',          steps: 35,  guidance: 8.0,  width: 1024, height: 1024 },
-    { value: '4x3-balanced',   label: '4:3 Balanced — 20stp / CFG 5 / 1152×896',         steps: 20,  guidance: 5.0,  width: 1152, height: 896  },
-    { value: '4x3-detail',    label: '4:3 Detail — 35stp / CFG 8 / 1152×896',           steps: 35,  guidance: 8.0,  width: 1152, height: 896  },
-    { value: '16x9-hd',       label: '16:9 HD — 28stp / CFG 7 / 1280×720',              steps: 28,  guidance: 7.0,  width: 1280, height: 720  },
-    { value: '3x2-jxl',       label: '3:2 JXL — 35stp / CFG 8 / 1536×1024',             steps: 35,  guidance: 8.0,  width: 1536, height: 1024 },
-    { value: '3x4-portrait',  label: '3:4 Portrait — 28stp / CFG 7 / 896×1152',         steps: 28,  guidance: 7.0,  width: 896,  height: 1152 },
-    { value: '9x16-hd',       label: '9:16 HD — 28stp / CFG 7 / 720×1280',              steps: 28,  guidance: 7.0,  width: 720,  height: 1280 },
-  ],
-};
-
-// Backend change → update presets
-document.getElementById('forge-backend')?.addEventListener('change', updatePresets);
-
-// Init presets on load after preset data exists
-updatePresets();
+function syncModelLabel() {
+  const profile = getActiveProfile();
+  const modelLabel = document.getElementById('forge-model-label');
+  const modelInput = document.getElementById('forge-model');
+  if (!profile || !modelLabel || !modelInput) return;
+  modelLabel.textContent = profile.model_label;
+  modelInput.value = profile.model;
+}
 
 function updatePresets() {
-  const backend = document.getElementById('forge-backend')?.value || 'sdxl';
+  const profile = getActiveProfile();
   const select = document.getElementById('forge-preset');
-  const modelSelect = document.getElementById('forge-model');
-  if (modelSelect) {
-    if (backend === 'forge') {
-      modelSelect.value = 'juggernaut-xl';
-    } else if (modelSelect.value === 'juggernaut-xl') {
-      modelSelect.value = 'sdxl';
-    }
-  }
-  if (!select) return;
+  if (!select || !profile) return;
+
+  imageContainer.style.display = profile.value === 'wan' ? 'block' : 'none';
+
   const current = select.value;
   select.innerHTML = '';
-  const presets = fullPresets[backend] || fullPresets.sdxl;
+  const presets = profile.presets || [];
   presets.forEach(p => {
     const opt = document.createElement('option');
     opt.value = p.value;
@@ -344,25 +337,35 @@ function updatePresets() {
   });
   const match = presets.find(p => p.value === current);
   select.value = match ? current : presets[0].value;
+  syncModelLabel();
   applyPreset();
 }
 
 function applyPreset() {
-  const backend = document.getElementById('forge-backend')?.value || 'sdxl';
+  const profile = getActiveProfile();
   const select = document.getElementById('forge-preset');
-  if (!select) return;
-  const presets = fullPresets[backend] || fullPresets.sdxl;
+  if (!select || !profile) return;
+  const presets = profile.presets || [];
   const preset = presets.find(p => p.value === select.value);
   if (!preset) return;
   document.getElementById('forge-steps').value = preset.steps;
   document.getElementById('forge-guidance').value = preset.guidance;
-  const stepsVal = document.getElementById('steps-val');
-  const guidanceVal = document.getElementById('guidance-val');
-  if (stepsVal) stepsVal.textContent = preset.steps;
-  if (guidanceVal) guidanceVal.textContent = preset.guidance.toFixed(1);
+  document.getElementById('steps-val').textContent = preset.steps;
+  document.getElementById('guidance-val').textContent = preset.guidance.toFixed(1);
   document.getElementById('forge-width').value = preset.width;
   document.getElementById('forge-height').value = preset.height;
 }
+
+document.getElementById('forge-backend')?.addEventListener('change', updatePresets);
+updatePresets();
+
+// Seed helpers
+document.getElementById('random-seed-btn')?.addEventListener('click', () => {
+  document.getElementById('forge-seed').value = Math.floor(Math.random() * 4294967295);
+});
+document.getElementById('clear-seed-btn')?.addEventListener('click', () => {
+  document.getElementById('forge-seed').value = -1;
+});
 
 // Generate
 document.getElementById('forge-generate-btn')?.addEventListener('click', async () => {
@@ -370,13 +373,18 @@ document.getElementById('forge-generate-btn')?.addEventListener('click', async (
   const negative = document.getElementById('forge-negative')?.value.trim() || '';
   if (!prompt) { showError('Prompt is required.'); return; }
 
+  const backend = document.getElementById('forge-backend')?.value || fallbackWorkerType;
+  const model = document.getElementById('forge-model')?.value || (getActiveProfile()?.model ?? 'sdxl-2.1.1');
   const steps    = parseInt(document.getElementById('forge-steps')?.value || 20);
   const guidance = parseFloat(document.getElementById('forge-guidance')?.value || 7.5);
   const width    = parseInt(document.getElementById('forge-width')?.value || 1024);
   const height   = parseInt(document.getElementById('forge-height')?.value || 1024);
   const seed     = parseInt(document.getElementById('forge-seed')?.value ?? -1);
-  const backend = document.getElementById('forge-backend')?.value || 'sdxl';
-  const model = document.getElementById('forge-model')?.value || 'sdxl';
+
+  if (backend === 'wan' && !uploadedImageB64) {
+    showError('Image upload is required for Wan2.2 Video Generation.');
+    return;
+  }
 
   setGenerating(true);
   showError('');
@@ -386,12 +394,12 @@ document.getElementById('forge-generate-btn')?.addEventListener('click', async (
     const resp = await fetch('/api/forge/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
-      body: JSON.stringify({ prompt, negative_prompt: negative, steps, guidance_scale: guidance, width, height, seed, worker_type: backend, model }),
+      body: JSON.stringify({ prompt, negative_prompt: negative, steps, guidance_scale: guidance, width, height, seed, worker_type: backend, model, image_base64: uploadedImageB64 }),
     });
     if (resp.status === 401) { showError('Session expired — please reload and log in again.'); setGenerating(false); return; }
     const data = await resp.json();
     if (!resp.ok) { showError(data.error || 'Generation failed.'); setGenerating(false); return; }
-    pollStatus(data.job_id, prompt, data.endpoint_id, data.status, backend, model);
+    pollStatus(data.job_id, prompt, data.endpoint_id, data.status, data.worker_type || backend, data.model || model);
   } catch (e) {
     showError('Network error. Try again.');
     setGenerating(false);
@@ -419,7 +427,6 @@ function pollStatus(jobId, prompt, endpointId, initialStatus, workerType, model)
       if (endpointId) url += `&endpoint_id=${encodeURIComponent(endpointId)}`;
       if (workerType) url += `&worker_type=${encodeURIComponent(workerType)}`;
       if (model) url += `&model=${encodeURIComponent(model)}`;
-
       const resp = await fetch(url);
       const data = await resp.json();
 
@@ -451,6 +458,7 @@ function prependImageCard(imageId, imageUrl, prompt, model) {
   const now = new Date().toISOString().slice(0, 16);
   const ep  = escapeHtml(prompt);
   const filename = imageUrl.split('/').pop();
+  const isVideo = filename.toLowerCase().endsWith('.mp4');
   const modelLabel = model ? model.toUpperCase() : '';
 
   const card = document.createElement('div');
@@ -458,31 +466,57 @@ function prependImageCard(imageId, imageUrl, prompt, model) {
   card.dataset.id  = imageId;
   card.dataset.url = imageUrl;
   card.dataset.prompt = prompt;
-  card.style.cssText = 'background:rgba(21,25,42,0.85);border:1px solid rgba(34,211,238,0.15);border-radius:10px;overflow:hidden;';
+  const mediaHtml = isVideo
+    ? `<video src="${imageUrl}" autoplay loop muted playsinline></video>`
+    : `<img src="${imageUrl}" alt="Generated image">`;
+  const animateButton = !isVideo ? `<button onclick="forgeAnimate('${filename}')">ANIMATE</button>` : '';
   card.innerHTML = `
-    <div style="position:relative;cursor:zoom-in;" >
-      <img src="${imageUrl}" alt="Generated image" style="width:100%;display:block;aspect-ratio:1;object-fit:cover;">
+    <div class="forge-card-image" onclick="openLightbox('${imageUrl}','${ep}')">
+      ${mediaHtml}
       <div class="forge-zoom-hint">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
       </div>
-      ${modelLabel ? `<div style="position:absolute;top:8px;left:8px;background:rgba(8,10,18,0.75);border:1px solid rgba(34,211,238,0.3);color:var(--reach-amber);font-family:var(--font-mono);font-size:0.5rem;letter-spacing:0.1em;padding:3px 7px;border-radius:3px;">${modelLabel}</div>` : ''}
+      ${modelLabel ? `<div class="forge-model-badge">${modelLabel}</div>` : ''}
     </div>
-    <div style="padding:10px 12px;">
-      <p style="font-family:var(--font-mono);font-size:0.65rem;color:rgba(34,211,238,0.5);margin:0 0 8px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${ep}">${ep}</p>
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;">
-        <span style="font-family:var(--font-mono);font-size:0.55rem;color:rgba(34,211,238,0.3);flex-shrink:0;">${now}</span>
-        <div style="display:flex;gap:6px;align-items:center;">
-          <a href="${imageUrl}" download="${filename}"
-             style="font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.1em;padding:3px 10px;background:transparent;border:1px solid rgba(34,211,238,0.3);color:rgba(34,211,238,0.6);cursor:pointer;text-decoration:none;display:inline-block;"
-             onmouseover="this.style.background='rgba(34,211,238,0.08)';this.style.color='var(--reach-cyan)'"
-             onmouseout="this.style.background='transparent';this.style.color='rgba(34,211,238,0.6)'">DL</a>
-          <button onclick="forgeDelete(${imageId},this)"
-            style="font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.1em;padding:3px 10px;background:transparent;border:1px solid rgba(234,88,12,0.4);color:var(--reach-orange);cursor:pointer;"
-            onmouseover="this.style.background='rgba(234,88,12,0.1)'" onmouseout="this.style.background='transparent'">DEL</button>
+    <div class="forge-card-body">
+      <p class="forge-card-prompt" title="${ep}">${ep}</p>
+      <div class="forge-card-meta">
+        <span>${now}</span>
+        <div class="forge-card-actions">
+          ${animateButton}
+          <a href="${imageUrl}" download="${filename}">DL</a>
+          <button onclick="forgeDelete(${imageId},this)">DEL</button>
         </div>
       </div>
     </div>`;
   gallery.prepend(card);
+}
+
+async function forgeAnimate(filename) {
+  const url = `/static/forge_outputs/${filename}`;
+  try {
+    const resp = await fetch(url);
+    const blob = await resp.blob();
+    const reader = new FileReader();
+    reader.onload = e => {
+      uploadedImageB64 = e.target.result;
+      imagePreview.src = uploadedImageB64;
+      imagePreview.style.display = 'block';
+      imagePlaceholder.style.display = 'none';
+      imageFilename.textContent = filename;
+      clearImageBtn.style.display = 'inline-flex';
+
+      const backendSelect = document.getElementById('forge-backend');
+      if (endpointProfiles.wan && backendSelect) {
+        backendSelect.value = 'wan';
+        updatePresets();
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+    reader.readAsDataURL(blob);
+  } catch (e) {
+    showError('Could not load source image for animation.');
+  }
 }
 
 async function forgeDelete(imageId, btn) {
@@ -497,7 +531,7 @@ async function forgeDelete(imageId, btn) {
       if (card) card.remove();
       if (!document.querySelector('.forge-card')) {
         document.getElementById('forge-gallery').innerHTML =
-          '<p id="forge-empty" style="font-family:var(--font-mono);font-size:0.7rem;color:rgba(34,211,238,0.3);letter-spacing:0.1em;grid-column:1/-1;">NO IMAGES GENERATED YET.</p>';
+          '<p id="forge-empty" class="forge-empty">NO IMAGES GENERATED YET.</p>';
       }
     } else {
       btn.disabled = false;
@@ -507,28 +541,83 @@ async function forgeDelete(imageId, btn) {
   }
 }
 
-document.getElementById('forge-gallery').addEventListener('click', e => {   const clickable = e.target.closest('[style*="cursor: zoom-in"]');   if (!clickable) return;   const card = clickable.closest('.forge-card');   if (!card) return;   openLightbox(card.dataset.url, card.dataset.prompt); });
-// Lightbox
+// Lightbox with gallery navigation
+let lbImages = [];
+let lbIndex = 0;
+
+function getGalleryImages() {
+  const cards = document.querySelectorAll('.forge-card');
+  lbImages = Array.from(cards).map(card => ({
+    url: card.dataset.url,
+    prompt: card.dataset.prompt,
+  }));
+}
+
 function openLightbox(url, prompt) {
+  getGalleryImages();
+  lbIndex = lbImages.findIndex(img => img.url === url);
+  if (lbIndex === -1) lbIndex = 0;
+  updateLightboxImage();
   const lb = document.getElementById('forge-lightbox');
-  document.getElementById('lb-img').src = url;
-  document.getElementById('lb-prompt').textContent = prompt;
-  const dl = document.getElementById('lb-download');
-  dl.href = url;
-  dl.download = url.split('/').pop();
   lb.style.display = 'flex';
   document.body.style.overflow = 'hidden';
 }
+
+function updateLightboxImage() {
+  const img = lbImages[lbIndex];
+  if (!img) return;
+  const lbImg = document.getElementById('lb-img');
+  const lbVideo = document.getElementById('lb-video');
+  const isVideo = img.url.toLowerCase().endsWith('.mp4');
+  if (isVideo) {
+    lbVideo.src = img.url;
+    lbVideo.style.display = 'block';
+    lbImg.style.display = 'none';
+    lbImg.src = '';
+  } else {
+    lbImg.src = img.url;
+    lbImg.style.display = 'block';
+    lbVideo.pause();
+    lbVideo.src = '';
+    lbVideo.style.display = 'none';
+  }
+  document.getElementById('lb-prompt').textContent = img.prompt;
+  const dl = document.getElementById('lb-download');
+  dl.href = img.url;
+  dl.download = img.url.split('/').pop();
+  const counter = document.getElementById('lb-counter');
+  counter.textContent = lbImages.length > 1 ? `${lbIndex + 1} / ${lbImages.length}` : '';
+  document.getElementById('lb-prev').style.display = lbImages.length > 1 ? 'block' : 'none';
+  document.getElementById('lb-next').style.display = lbImages.length > 1 ? 'block' : 'none';
+}
+
+function lbPrev() {
+  lbIndex = (lbIndex - 1 + lbImages.length) % lbImages.length;
+  updateLightboxImage();
+}
+
+function lbNext() {
+  lbIndex = (lbIndex + 1) % lbImages.length;
+  updateLightboxImage();
+}
+
 function closeLightbox() {
   document.getElementById('forge-lightbox').style.display = 'none';
   document.body.style.overflow = '';
   document.getElementById('lb-img').src = '';
+  const lbVideo = document.getElementById('lb-video');
+  lbVideo.pause();
+  lbVideo.src = '';
 }
 document.getElementById('forge-lightbox')?.addEventListener('click', e => {
   if (e.target === document.getElementById('forge-lightbox')) closeLightbox();
 });
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') closeLightbox();
+  if (document.getElementById('forge-lightbox').style.display === 'flex') {
+    if (e.key === 'Escape') closeLightbox();
+    if (e.key === 'ArrowLeft') lbPrev();
+    if (e.key === 'ArrowRight') lbNext();
+  }
 });
 
 function setGenerating(on) {

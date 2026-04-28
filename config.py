@@ -54,6 +54,7 @@ SD_ENDPOINT_ID = os.environ.get('SD_ENDPOINT_ID', '')
 # Specific endpoint overrides. FORGE_ENDPOINT_ID is the Juggernaut XL endpoint.
 SDXL_ENDPOINT_ID = os.environ.get('SDXL_ENDPOINT_ID', SD_ENDPOINT_ID)
 FORGE_ENDPOINT_ID = os.environ.get('FORGE_ENDPOINT_ID', '')
+WAN_VIDEO_ID = os.environ.get('WAN_VIDEO_ID', '')
 
 
 # AI model for monitor recommendations (optional override)
