@@ -526,6 +526,7 @@ def api_forge_status(job_id):
     return jsonify({'status': status})
 
 
+
 @forge_bp.route('/api/forge/videos/status/<job_id>')
 @login_required
 def api_forge_video_status(job_id):

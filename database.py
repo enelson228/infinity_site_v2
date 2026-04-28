@@ -146,6 +146,19 @@ def init_db():
                 job_id     TEXT NOT NULL UNIQUE,
                 prompt     TEXT NOT NULL,
                 filename   TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                model      TEXT,
+                worker_type TEXT
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS forge_videos (
+                id         INTEGER PRIMARY KEY AUTOINCREMENT,
+                job_id     TEXT NOT NULL UNIQUE,
+                prompt     TEXT NOT NULL,
+                filename   TEXT NOT NULL,
                 created_at TEXT NOT NULL
             )
             """
