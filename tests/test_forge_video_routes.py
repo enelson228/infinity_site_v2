@@ -96,6 +96,41 @@ def test_video_generate_merges_advanced_input(admin_client):
     assert payload['input']['extra_param'] == 7
 
 
+def test_video_generate_converts_local_forge_image_url_to_base64(admin_client, tmp_path, monkeypatch):
+    import blueprints.forge as forge_module
+    import config
+
+    monkeypatch.setattr(forge_module, '_FORGE_OUTPUTS', str(tmp_path))
+    config.RUNPOD_API_KEY = 'test-key'
+    config.WAN_VIDEO_ENDPOINT_ID = 'wan-endpoint'
+
+    image_bytes = b'fake-png-bytes'
+    (tmp_path / 'job-ref.png').write_bytes(image_bytes)
+
+    with admin_client.session_transaction() as sess:
+        token = sess['csrf_token']
+
+    mock_response = MagicMock()
+    mock_response.read.return_value = json.dumps({'id': 'job-video', 'status': 'IN_QUEUE'}).encode()
+    mock_response.__enter__ = lambda s: s
+    mock_response.__exit__ = MagicMock(return_value=False)
+
+    with patch('urllib.request.urlopen', return_value=mock_response) as urlopen:
+        resp = admin_client.post(
+            '/api/forge/videos/generate',
+            json={
+                'prompt': 'animate this',
+                'image_url': '/static/forge_outputs/job-ref.png',
+            },
+            headers={'X-CSRF-Token': token},
+        )
+
+    assert resp.status_code == 200
+    payload = json.loads(urlopen.call_args.args[0].data.decode())
+    assert payload['input']['image_base64'] == 'ZmFrZS1wbmctYnl0ZXM='
+    assert 'image_url' not in payload['input']
+
+
 def test_video_generate_accepts_lora_pairs(admin_client):
     import config
     config.RUNPOD_API_KEY = 'test-key'

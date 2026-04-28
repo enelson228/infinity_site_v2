@@ -3,6 +3,7 @@ import json
 import logging
 import os
 import re
+from pathlib import Path
 import urllib.error
 import urllib.request
 from datetime import datetime
@@ -113,6 +114,25 @@ def _extract_video_url(output):
 
 def _get_endpoint(endpoint_attr):
     return getattr(config, endpoint_attr, '') if endpoint_attr else ''
+
+
+def _forge_static_url_to_base64(image_url):
+    if not image_url or not image_url.startswith('/static/forge_outputs/'):
+        return None
+
+    filename = image_url.rsplit('/', 1)[-1]
+    if not filename:
+        return None
+
+    file_path = Path(_FORGE_OUTPUTS) / filename
+    try:
+        resolved = file_path.resolve(strict=True)
+        outputs_root = Path(_FORGE_OUTPUTS).resolve()
+        resolved.relative_to(outputs_root)
+    except (FileNotFoundError, ValueError):
+        return None
+
+    return base64.b64encode(resolved.read_bytes()).decode('ascii')
 
 
 def _available_models():
@@ -300,6 +320,11 @@ def api_forge_video_generate():
     negative_prompt = (data.get('negative_prompt') or '').strip()
     image_base64 = (data.get('image_base64') or '').strip()
     image_url = (data.get('image_url') or '').strip()
+    if not image_base64:
+        local_image_base64 = _forge_static_url_to_base64(image_url)
+        if local_image_base64:
+            image_base64 = local_image_base64
+            image_url = ''
     if not image_base64 and not image_url:
         return jsonify({'error': 'Reference image is required'}), 400
 
