@@ -29,6 +29,7 @@ def _fake_torch(monkeypatch):
 
 def test_generate_image_matches_forge_contract(monkeypatch):
     _fake_torch(monkeypatch)
+    monkeypatch.setattr(worker, "MODEL_SLUG", "juggernaut-xl")
     pipeline = MagicMock(return_value=SimpleNamespace(images=[FakeImage()]))
 
     result = worker.generate_image(
@@ -61,6 +62,7 @@ def test_generate_image_matches_forge_contract(monkeypatch):
 
 def test_generate_image_clamps_expensive_inputs(monkeypatch):
     _fake_torch(monkeypatch)
+    monkeypatch.setattr(worker, "MODEL_SLUG", "juggernaut-xl")
     pipeline = MagicMock(return_value=SimpleNamespace(images=[FakeImage()]))
 
     result = worker.generate_image(
@@ -84,3 +86,13 @@ def test_generate_image_clamps_expensive_inputs(monkeypatch):
 def test_handler_returns_error_for_missing_prompt():
     result = worker.handler({"input": {"prompt": ""}})
     assert "prompt is required" in result["error"]
+
+
+def test_generate_image_uses_configured_model_slug(monkeypatch):
+    _fake_torch(monkeypatch)
+    monkeypatch.setattr(worker, "MODEL_SLUG", "cyberrealistic-pony")
+    pipeline = MagicMock(return_value=SimpleNamespace(images=[FakeImage()]))
+
+    result = worker.generate_image({"prompt": "portrait"}, pipeline=pipeline)
+
+    assert result["model"] == "cyberrealistic-pony"

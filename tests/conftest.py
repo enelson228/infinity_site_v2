@@ -49,13 +49,13 @@ def reset_runpod_config():
     original_endpoint = config.SD_ENDPOINT_ID
     original_sdxl_endpoint = config.SDXL_ENDPOINT_ID
     original_forge_endpoint = config.FORGE_ENDPOINT_ID
-    original_wan_endpoint = config.WAN_VIDEO_ID
+    original_cyberrealistic_pony_endpoint = config.CYBERREALISTIC_PONY_ENDPOINT_ID
     yield
     config.RUNPOD_API_KEY = original_key
     config.SD_ENDPOINT_ID = original_endpoint
     config.SDXL_ENDPOINT_ID = original_sdxl_endpoint
     config.FORGE_ENDPOINT_ID = original_forge_endpoint
-    config.WAN_VIDEO_ID = original_wan_endpoint
+    config.CYBERREALISTIC_PONY_ENDPOINT_ID = original_cyberrealistic_pony_endpoint
 
 
 @pytest.fixture

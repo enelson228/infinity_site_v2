@@ -9,7 +9,7 @@ Personal website and homelab dashboard running at [mjolnirarmory.com](https://mj
 - **Telemetry** — Live system metrics dashboard (CPU, RAM, disk, network, load avg) with Halo Reach military HUD aesthetic
 - **Uplink Cache** — Authenticated file upload/download portal (100MB max per file)
 - **Terminal** — AI terminal with per-user memory (explicit `REMEMBER` / `RECALL`)
-- **Forge** — AI image generation (Stable Diffusion via RunPod serverless)
+- **Forge** — AI image generation (RunPod serverless; Juggernaut XL and CyberRealistic Pony)
 - **Monitor** — Admin-only dashboard for services, GitHub repo status, and AI-driven recommendations
 - **COMS-UPLINK** — Radio & electromagnetic spectrum training module
 - **Control** — Admin console for user and memory management with audit log
@@ -51,7 +51,8 @@ Required secrets:
 
 Optional config (enables additional features):
 - `GITHUB_TOKEN` (Enables GitHub panel in Monitor dashboard)
-- `RUNPOD_API_KEY` + `FORGE_ENDPOINT_ID` (Enables Forge Juggernaut XL image generation)
+- `RUNPOD_API_KEY` + `FORGE_ENDPOINT_ID` (Juggernaut XL Forge endpoint)
+- `CYBERREALISTIC_PONY_ENDPOINT_ID` (CyberRealistic Pony Forge endpoint)
 - `SD_ENDPOINT_ID` / `SDXL_ENDPOINT_ID` (Legacy Forge SDXL endpoint fallback)
 - `CESIUM_ION_TOKEN` (Used for mapping tools)
 - `TELEMETRY_PUBLIC` (`true`/`false`)
@@ -114,12 +115,13 @@ systemctl status infinity_site
 
 ## Forge RunPod Cost Guardrails
 
-Forge is intended to use a queue-based RunPod Serverless Flex endpoint for Juggernaut XL:
+Forge is intended to use queue-based RunPod Serverless Flex endpoints for each heavyweight model:
 
 - Set `active_workers=0` so no GPU compute runs while idle.
 - Set `max_workers=1` to cap concurrent GPU spend.
 - Prefer `L4/A5000/3090 24GB`; use `4090 PRO 24GB` only if availability is poor.
 - Keep the endpoint idle timeout short, around `5s`, unless repeated back-to-back generations justify a warmer worker.
+- Pin each model to its own endpoint (`FORGE_ENDPOINT_ID` for Juggernaut XL, `CYBERREALISTIC_PONY_ENDPOINT_ID` for CyberRealistic Pony) so cold starts and VRAM stay isolated.
 
 ## Projects dashboard
 

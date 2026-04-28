@@ -7,6 +7,7 @@ from typing import Any
 
 MODEL_ID = os.environ.get("MODEL_ID", "RunDiffusion/Juggernaut-XL")
 MODEL_CACHE_DIR = os.environ.get("MODEL_CACHE_DIR", "/runpod-volume/huggingface")
+MODEL_SLUG = os.environ.get("MODEL_SLUG", "juggernaut-xl")
 MODEL_FILE = os.environ.get(
     "MODEL_FILE",
     f"https://huggingface.co/{MODEL_ID}/blob/main/juggernautXL_version2.safetensors",
@@ -47,7 +48,7 @@ def _load_pipeline():
 
     pipe = StableDiffusionXLPipeline.from_single_file(
         MODEL_FILE,
-        original_config=ORIGINAL_CONFIG_FILE,
+        original_config_file=ORIGINAL_CONFIG_FILE,
         torch_dtype=torch.float16,
         use_safetensors=True,
         cache_dir=MODEL_CACHE_DIR,
@@ -106,7 +107,7 @@ def generate_image(input_data: dict[str, Any], pipeline=None) -> dict[str, Any]:
     return {
         "image": _png_to_b64(result.images[0]),
         "seed": seed,
-        "model": "juggernaut-xl",
+        "model": MODEL_SLUG,
         "width": width,
         "height": height,
         "num_inference_steps": steps,
