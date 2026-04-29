@@ -20,7 +20,7 @@ ghcr.io/enelson228/infinity-site-v2-juggernaut-xl:latest
 Create a queue-based Serverless endpoint with:
 
 - Worker image: `ghcr.io/enelson228/infinity-site-v2-juggernaut-xl:latest`
-- GPU: `L4/A5000/3090 24GB` first; use `4090 PRO 24GB` only as an availability fallback
+- GPU: `L4/A5000/A6000/A40/3090/4090 24GB` first. RTX 5090 requires the CUDA 12.8+ worker image in this directory.
 - Active workers: `0`
 - Max workers: `1`
 - GPUs per worker: `1`
@@ -33,7 +33,7 @@ Set the endpoint ID in the app environment as `FORGE_ENDPOINT_ID` for Juggernaut
 ## Worker Environment
 
 - `MODEL_ID`: defaults to `RunDiffusion/Juggernaut-XL`
-- `MODEL_FILE`: defaults to the repo's `juggernautXL_version2.safetensors` single-file checkpoint
+- `MODEL_FILE`: defaults to the repo's `juggernautXL_version2.safetensors` single-file checkpoint using a direct `/resolve/main/` Hugging Face URL
 - `MODEL_SLUG`: response model label returned to Forge, defaults to `juggernaut-xl`
 - `ORIGINAL_CONFIG_FILE`: defaults to Stability AI's `sd_xl_base.yaml`
 - `MODEL_CACHE_DIR`: defaults to `/runpod-volume/huggingface`
@@ -46,7 +46,8 @@ To reuse the same image for CyberRealistic Pony, create a second RunPod template
 
 - `MODEL_SLUG=cyberrealistic-pony`
 - `MODEL_ID=cyberdelia/CyberRealisticPony`
-- `MODEL_FILE=https://huggingface.co/cyberdelia/CyberRealisticPony/blob/main/CyberRealisticPony_V17.0_FP16.safetensors`
+- `MODEL_FILE=https://huggingface.co/cyberdelia/CyberRealisticPony/resolve/main/CyberRealisticPony_V17.0_FP16.safetensors`
+- `ENABLE_XFORMERS=false`
 
 ## Smoke Payload
 
