@@ -33,7 +33,7 @@ Set the endpoint ID in the app environment as `FORGE_ENDPOINT_ID` for Juggernaut
 ## Worker Environment
 
 - `MODEL_ID`: defaults to `RunDiffusion/Juggernaut-XL`
-- `MODEL_FILE`: defaults to the repo's `juggernautXL_version2.safetensors` single-file checkpoint using a direct `/resolve/main/` Hugging Face URL
+- `MODEL_FILE`: defaults to the repo's `juggernautXL_version2.safetensors` single-file checkpoint
 - `MODEL_SLUG`: response model label returned to Forge, defaults to `juggernaut-xl`
 - `ORIGINAL_CONFIG_FILE`: defaults to Stability AI's `sd_xl_base.yaml`
 - `MODEL_CACHE_DIR`: defaults to `/runpod-volume/huggingface`
@@ -46,7 +46,7 @@ To reuse the same image for CyberRealistic Pony, create a second RunPod template
 
 - `MODEL_SLUG=cyberrealistic-pony`
 - `MODEL_ID=cyberdelia/CyberRealisticPony`
-- `MODEL_FILE=https://huggingface.co/cyberdelia/CyberRealisticPony/resolve/main/CyberRealisticPony_V17.0_FP16.safetensors`
+- `MODEL_FILE=https://huggingface.co/cyberdelia/CyberRealisticPony/blob/main/CyberRealisticPony_V17.0_FP16.safetensors`
 - `ENABLE_XFORMERS=false`
 
 ## Smoke Payload
