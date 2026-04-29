@@ -20,6 +20,10 @@ from blueprints.projects import projects_bp
 from blueprints.monitor import monitor_bp
 from blueprints.forge import forge_bp
 from blueprints.coms_uplink import coms_uplink_bp
+try:
+    from blueprints.osint import osint_bp
+except ModuleNotFoundError:
+    osint_bp = None
 
 app = Flask(__name__)
 app.secret_key = config.SECRET_KEY
@@ -36,6 +40,7 @@ database.init_db()
 os.makedirs(config.UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(app.instance_path, exist_ok=True)
 os.makedirs(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', 'forge_outputs'), exist_ok=True)
+os.makedirs(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', 'forge_videos'), exist_ok=True)
 
 # Register Blueprints
 app.register_blueprint(auth_bp)
@@ -47,6 +52,8 @@ app.register_blueprint(projects_bp)
 app.register_blueprint(monitor_bp)
 app.register_blueprint(forge_bp)
 app.register_blueprint(coms_uplink_bp)
+if osint_bp is not None:
+    app.register_blueprint(osint_bp)
 
 @app.after_request
 def add_security_headers(response):

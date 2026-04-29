@@ -1,4 +1,4 @@
-# Juggernaut XL RunPod Worker
+# Forge SDXL RunPod Worker
 
 Queue-based RunPod Serverless worker for the Forge page. It accepts the same input shape that `blueprints/forge.py` sends today and returns a base64 PNG that the existing gallery code can save.
 
@@ -28,18 +28,25 @@ Create a queue-based Serverless endpoint with:
 - Execution timeout: `300-600s`
 - FlashBoot: enabled
 
-Set the endpoint ID in the app environment as `FORGE_ENDPOINT_ID`. Keep `RUNPOD_API_KEY` configured for the Flask app.
+Set the endpoint ID in the app environment as `FORGE_ENDPOINT_ID` for Juggernaut XL or `CYBERREALISTIC_PONY_ENDPOINT_ID` for CyberRealistic Pony. Keep `RUNPOD_API_KEY` configured for the Flask app.
 
 ## Worker Environment
 
 - `MODEL_ID`: defaults to `RunDiffusion/Juggernaut-XL`
 - `MODEL_FILE`: defaults to the repo's `juggernautXL_version2.safetensors` single-file checkpoint
+- `MODEL_SLUG`: response model label returned to Forge, defaults to `juggernaut-xl`
 - `ORIGINAL_CONFIG_FILE`: defaults to Stability AI's `sd_xl_base.yaml`
 - `MODEL_CACHE_DIR`: defaults to `/runpod-volume/huggingface`
 - `DEFAULT_NEGATIVE_PROMPT`: optional fallback negative prompt
 - `ENABLE_XFORMERS`: optional `true` if the image includes a compatible xFormers build
 
 Using a network volume for `/runpod-volume/huggingface` reduces repeated model downloads after the first cold start, but it adds storage cost. For lowest monthly cost, start without a volume and add one only if cold starts are too slow.
+
+To reuse the same image for CyberRealistic Pony, create a second RunPod template with:
+
+- `MODEL_SLUG=cyberrealistic-pony`
+- `MODEL_ID=cyberdelia/CyberRealisticPony`
+- `MODEL_FILE=https://huggingface.co/cyberdelia/CyberRealisticPony/blob/main/CyberRealisticPony_V17.0_FP16.safetensors`
 
 ## Smoke Payload
 

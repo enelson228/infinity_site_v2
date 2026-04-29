@@ -29,6 +29,16 @@
       "icon": "server",
       "category": "Tools",
       "updated": "2026-04-06"
+    },
+    {
+      "id": "osint",
+      "name": "OSINT Toolkit",
+      "description": "Access to the 10 most popular OSINT tools for reconnaissance and investigation",
+      "status": "online",
+      "detail_url": "/osint",
+      "icon": "search",
+      "category": "Tools",
+      "updated": "2026-04-23"
     }
   ]
 }

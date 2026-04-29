@@ -146,6 +146,19 @@ def init_db():
                 job_id     TEXT NOT NULL UNIQUE,
                 prompt     TEXT NOT NULL,
                 filename   TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                model      TEXT,
+                worker_type TEXT
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS forge_videos (
+                id         INTEGER PRIMARY KEY AUTOINCREMENT,
+                job_id     TEXT NOT NULL UNIQUE,
+                prompt     TEXT NOT NULL,
+                filename   TEXT NOT NULL,
                 created_at TEXT NOT NULL
             )
             """
@@ -164,6 +177,13 @@ def init_db():
         if "last_ping" not in cols:
             conn.execute("ALTER TABLE projects ADD COLUMN last_ping TEXT")
             conn.execute("ALTER TABLE projects ADD COLUMN response_time INTEGER")
+            conn.commit()
+
+        cur = conn.execute("PRAGMA table_info(forge_images)")
+        cols = {row["name"] for row in cur.fetchall()}
+        if "model" not in cols:
+            conn.execute("ALTER TABLE forge_images ADD COLUMN model TEXT")
+            conn.execute("ALTER TABLE forge_images ADD COLUMN worker_type TEXT")
             conn.commit()
 
         cur = conn.execute("SELECT COUNT(*) AS c FROM users")
@@ -507,11 +527,11 @@ def clear_recommendations(source: str = None):
 
 # ── Forge Images ──────────────────────────────────────────────────────────────
 
-def add_forge_image(job_id: str, prompt: str, filename: str, created_at: str) -> int:
+def add_forge_image(job_id: str, prompt: str, filename: str, created_at: str, model: str = None, worker_type: str = None) -> int:
     with _db_conn() as conn:
         cur = conn.execute(
-            "INSERT INTO forge_images (job_id, prompt, filename, created_at) VALUES (?, ?, ?, ?)",
-            (job_id, prompt, filename, created_at),
+            "INSERT INTO forge_images (job_id, prompt, filename, created_at, model, worker_type) VALUES (?, ?, ?, ?, ?, ?)",
+            (job_id, prompt, filename, created_at, model, worker_type),
         )
         conn.commit()
         return cur.lastrowid
@@ -520,6 +540,36 @@ def list_forge_images() -> list:
     with _db_conn() as conn:
         cur = conn.execute(
             "SELECT * FROM forge_images ORDER BY id DESC"
+        )
+        return [dict(row) for row in cur.fetchall()]
+
+def list_forge_media() -> list:
+    with _db_conn() as conn:
+        cur = conn.execute(
+            """
+            SELECT
+                id,
+                job_id,
+                prompt,
+                filename,
+                created_at,
+                model,
+                worker_type,
+                'image' AS media_type
+            FROM forge_images
+            UNION ALL
+            SELECT
+                id,
+                job_id,
+                prompt,
+                filename,
+                created_at,
+                NULL AS model,
+                NULL AS worker_type,
+                'video' AS media_type
+            FROM forge_videos
+            ORDER BY created_at DESC, id DESC
+            """
         )
         return [dict(row) for row in cur.fetchall()]
 
@@ -538,5 +588,42 @@ def get_forge_image_by_job_id(job_id: str) -> dict:
 def delete_forge_image(image_id: int) -> bool:
     with _db_conn() as conn:
         cur = conn.execute("DELETE FROM forge_images WHERE id = ?", (image_id,))
+        conn.commit()
+        return cur.rowcount > 0
+
+
+# ── Forge Videos ──────────────────────────────────────────────────────────────
+
+def add_forge_video(job_id: str, prompt: str, filename: str, created_at: str) -> int:
+    with _db_conn() as conn:
+        cur = conn.execute(
+            "INSERT INTO forge_videos (job_id, prompt, filename, created_at) VALUES (?, ?, ?, ?)",
+            (job_id, prompt, filename, created_at),
+        )
+        conn.commit()
+        return cur.lastrowid
+
+def list_forge_videos() -> list:
+    with _db_conn() as conn:
+        cur = conn.execute(
+            "SELECT * FROM forge_videos ORDER BY id DESC"
+        )
+        return [dict(row) for row in cur.fetchall()]
+
+def get_forge_video(video_id: int) -> dict:
+    with _db_conn() as conn:
+        cur = conn.execute("SELECT * FROM forge_videos WHERE id = ?", (video_id,))
+        row = cur.fetchone()
+        return dict(row) if row else None
+
+def get_forge_video_by_job_id(job_id: str) -> dict:
+    with _db_conn() as conn:
+        cur = conn.execute("SELECT * FROM forge_videos WHERE job_id = ?", (job_id,))
+        row = cur.fetchone()
+        return dict(row) if row else None
+
+def delete_forge_video(video_id: int) -> bool:
+    with _db_conn() as conn:
+        cur = conn.execute("DELETE FROM forge_videos WHERE id = ?", (video_id,))
         conn.commit()
         return cur.rowcount > 0

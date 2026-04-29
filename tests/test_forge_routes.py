@@ -12,9 +12,27 @@ def test_forge_page_requires_login(client):
 
 
 def test_forge_page_renders_when_logged_in(admin_client):
+    import config
+    import database
+    config.RUNPOD_API_KEY = 'test-key'
+    config.FORGE_ENDPOINT_ID = 'forge-endpoint'
+    config.CYBERREALISTIC_PONY_ENDPOINT_ID = 'cyber-endpoint'
+    config.WAN_VIDEO_ENDPOINT_ID = 'wan-endpoint'
+    database.add_forge_image('job-route-img', 'route image prompt', 'job-route-img.png', '2026-01-01T00:00:00', 'juggernaut-xl', 'forge')
+    database.add_forge_video('job-route-video', 'route video prompt', 'job-route-video.mp4', '2026-01-02T00:00:00')
+
     resp = admin_client.get('/forge')
+
     assert resp.status_code == 200
     assert b'FORGE' in resp.data
+    assert b'FORGE GALLERY' in resp.data
+    assert b'CyberRealistic Pony' in resp.data
+    assert b'WAN 2.2 Animate' in resp.data
+    assert b'route image prompt' in resp.data
+    assert b'route video prompt' in resp.data
+    assert b'class="forge-media-card video-card"' in resp.data
+    assert b'autoplay muted loop playsinline preload="metadata"' in resp.data
+    assert b'ANIMATE' in resp.data
 
 
 # ── Generate endpoint ─────────────────────────────────────────────────────────
@@ -118,6 +136,50 @@ def test_generate_routes_juggernaut_payload_to_forge_endpoint(admin_client):
     }
 
 
+def test_generate_routes_cyberrealistic_pony_to_dedicated_endpoint(admin_client):
+    import config
+    config.RUNPOD_API_KEY = 'test-key'
+    config.FORGE_ENDPOINT_ID = 'forge-endpoint'
+    config.CYBERREALISTIC_PONY_ENDPOINT_ID = 'cyber-endpoint'
+    with admin_client.session_transaction() as sess:
+        token = sess['csrf_token']
+
+    mock_response = MagicMock()
+    mock_response.read.return_value = json.dumps({'id': 'job-cyber', 'status': 'IN_QUEUE'}).encode()
+    mock_response.__enter__ = lambda s: s
+    mock_response.__exit__ = MagicMock(return_value=False)
+
+    with patch('urllib.request.urlopen', return_value=mock_response) as urlopen:
+        resp = admin_client.post(
+            '/api/forge/generate',
+            json={
+                'prompt': 'cinematic portrait',
+                'negative_prompt': 'blurry',
+                'worker_type': 'forge',
+                'model': 'cyberrealistic-pony',
+                'steps': 36,
+                'width': 896,
+                'height': 1152,
+                'guidance_scale': 5.5,
+            },
+            headers={'X-CSRF-Token': token},
+        )
+
+    assert resp.status_code == 200
+    req = urlopen.call_args.args[0]
+    assert req.full_url == 'https://api.runpod.ai/v2/cyber-endpoint/run'
+    payload = json.loads(req.data.decode())
+    assert payload['input'] == {
+        'prompt': 'cinematic portrait',
+        'negative_prompt': 'blurry',
+        'num_inference_steps': 36,
+        'width': 896,
+        'height': 1152,
+        'guidance_scale': 5.5,
+        'model': 'cyberrealistic-pony',
+    }
+
+
 def test_generate_clamps_juggernaut_cost_heavy_values(admin_client):
     import config
     config.RUNPOD_API_KEY = 'test-key'
@@ -150,6 +212,33 @@ def test_generate_clamps_juggernaut_cost_heavy_values(admin_client):
     assert payload['input']['width'] == 1536
     assert payload['input']['height'] == 1536
     assert payload['input']['guidance_scale'] == 15.0
+
+
+def test_generate_falls_back_to_juggernaut_when_requested_forge_model_is_unconfigured(admin_client):
+    import config
+    config.RUNPOD_API_KEY = 'test-key'
+    config.FORGE_ENDPOINT_ID = 'forge-endpoint'
+    config.CYBERREALISTIC_PONY_ENDPOINT_ID = ''
+    with admin_client.session_transaction() as sess:
+        token = sess['csrf_token']
+
+    mock_response = MagicMock()
+    mock_response.read.return_value = json.dumps({'id': 'job-fallback', 'status': 'IN_QUEUE'}).encode()
+    mock_response.__enter__ = lambda s: s
+    mock_response.__exit__ = MagicMock(return_value=False)
+
+    with patch('urllib.request.urlopen', return_value=mock_response) as urlopen:
+        resp = admin_client.post(
+            '/api/forge/generate',
+            json={'prompt': 'fallback test', 'worker_type': 'forge', 'model': 'cyberrealistic-pony'},
+            headers={'X-CSRF-Token': token},
+        )
+
+    assert resp.status_code == 200
+    req = urlopen.call_args.args[0]
+    assert req.full_url == 'https://api.runpod.ai/v2/forge-endpoint/run'
+    payload = json.loads(req.data.decode())
+    assert payload['input']['model'] == 'juggernaut-xl'
 
 
 def test_generate_returns_502_when_runpod_omits_job_id(admin_client):
@@ -195,6 +284,7 @@ def test_generate_disabled_without_config(admin_client):
     config.SD_ENDPOINT_ID = ''
     config.SDXL_ENDPOINT_ID = ''
     config.FORGE_ENDPOINT_ID = ''
+    config.CYBERREALISTIC_PONY_ENDPOINT_ID = ''
     with admin_client.session_transaction() as sess:
         token = sess['csrf_token']
     resp = admin_client.post('/api/forge/generate',
@@ -365,6 +455,7 @@ def test_status_prefers_forge_endpoint_without_query_param(admin_client):
     config.RUNPOD_API_KEY = 'test-key'
     config.SD_ENDPOINT_ID = 'legacy-endpoint'
     config.SDXL_ENDPOINT_ID = 'sdxl-endpoint'
+    config.CYBERREALISTIC_PONY_ENDPOINT_ID = 'cyber-endpoint'
     config.FORGE_ENDPOINT_ID = 'forge-endpoint'
 
     mock_response = MagicMock()
@@ -378,7 +469,7 @@ def test_status_prefers_forge_endpoint_without_query_param(admin_client):
     data = json.loads(resp.data)
     assert data['status'] == 'FAILED'
     req = urlopen.call_args.args[0]
-    assert req.full_url == 'https://api.runpod.ai/v2/forge-endpoint/status/job-fail'
+    assert req.full_url == 'https://api.runpod.ai/v2/cyber-endpoint/status/job-fail'
 
 
 # ── Delete endpoint ───────────────────────────────────────────────────────────
