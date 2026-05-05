@@ -23,8 +23,13 @@ UPLINK_PASSWORD_HASH = _required_env('UPLINK_PASSWORD_HASH')
 # INFINITY Terminal password hash (required, separate from Uplink Cache)
 CLAUDE_PASSWORD_HASH = _required_env('CLAUDE_PASSWORD_HASH')
 
-# Anthropic API key (required)
-ANTHROPIC_API_KEY = _required_env('ANTHROPIC_API_KEY')
+# AI terminal provider (required)
+MINIMAX_API_KEY = _required_env('MINIMAX_API_KEY')
+MINIMAX_MODEL = os.environ.get('MINIMAX_MODEL', 'MiniMax-M2.5')
+MINIMAX_BASE_URL = os.environ.get('MINIMAX_BASE_URL', 'https://api.minimax.io/v1')
+
+# Anthropic is still optional for the monitor recommendation engine.
+ANTHROPIC_API_KEY = os.environ.get('ANTHROPIC_API_KEY', '')
 
 CESIUM_ION_TOKEN = os.environ.get('CESIUM_ION_TOKEN', '')
 

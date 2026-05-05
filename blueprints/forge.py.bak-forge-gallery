@@ -237,7 +237,6 @@ def _resolve_model(worker_type, requested_model):
 def forge():
     images = database.list_forge_images()
     videos = database.list_forge_videos()
-    media_items = database.list_forge_media()
 
     available_models = _available_models()
     has_sdxl = available_models.get('sdxl', False)
@@ -253,7 +252,6 @@ def forge():
         'forge.html',
         images=images,
         videos=videos,
-        media_items=media_items,
         endpoint_configured=endpoint_configured,
         has_sdxl=has_sdxl,
         has_forge=has_forge,

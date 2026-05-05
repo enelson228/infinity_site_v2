@@ -51,7 +51,7 @@
     <details id="params-details" open style="margin-bottom: var(--spacing-md);">
       <summary style="font-family: var(--font-mono); font-size: 0.65rem; color: rgba(34,211,238,0.4); letter-spacing: 0.1em; cursor: pointer; user-select: none; margin-bottom: 12px;">GENERATION PARAMETERS</summary>
 
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-top: 12px; align-items: start;">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-top: 12px;">
 
         <!-- Compute Backend -->
         <div>
@@ -79,11 +79,11 @@
         </div>
 
         <!-- Preset Selector -->
-        <div style="grid-column: 1 / -1; min-width: 0;">
+        <div style="grid-column: 1 / -1;">
           <label style="font-family: var(--font-mono); font-size: 0.6rem; color: rgba(34,211,238,0.5); letter-spacing: 0.12em; display: block; margin-bottom: 4px;">PRESET</label>
           <div style="font-family: var(--font-mono); font-size: 0.55rem; color: rgba(34,211,238,0.3); margin-bottom: 6px;">Steps, CFG, and dimensions optimized per backend.</div>
           <select id="forge-preset"
-            style="width: 100%; max-width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.4); border: 1px solid rgba(34,211,238,0.2); color: var(--text-primary); font-family: var(--font-mono); font-size: 0.75rem; padding: 7px 10px; outline: none; cursor: pointer;"
+            style="width: 100%; background: rgba(0,0,0,0.4); border: 1px solid rgba(34,211,238,0.2); color: var(--text-primary); font-family: var(--font-mono); font-size: 0.75rem; padding: 7px 10px; outline: none; cursor: pointer;"
             onchange="applyPreset()">
           </select>
         </div>
@@ -94,21 +94,21 @@
         <input type="hidden" id="forge-steps" value="28">
         <input type="hidden" id="forge-guidance" value="7">
 
-        <div id="wan-reference-panel" style="grid-column: 1 / -1; display: none; align-self: start; height: max-content; border: 1px solid rgba(34,211,238,0.12); padding: 10px; background: rgba(0,0,0,0.2);">
-          <label style="font-family: var(--font-mono); font-size: 0.6rem; color: rgba(34,211,238,0.5); letter-spacing: 0.12em; display: block; margin-bottom: 4px;">REFERENCE IMAGE</label>
-          <div style="font-family: var(--font-mono); font-size: 0.55rem; color: rgba(34,211,238,0.3); margin-bottom: 8px;">Upload or use ANIMATE from the gallery.</div>
-          <div style="display: flex; gap: 10px; align-items: flex-start; flex-wrap: wrap;">
+        <div id="wan-reference-panel" style="grid-column: 1 / -1; display: none; border: 1px solid rgba(34,211,238,0.12); padding: 12px; background: rgba(0,0,0,0.2);">
+          <label style="font-family: var(--font-mono); font-size: 0.6rem; color: rgba(34,211,238,0.5); letter-spacing: 0.12em; display: block; margin-bottom: 6px;">REFERENCE IMAGE</label>
+          <div style="font-family: var(--font-mono); font-size: 0.55rem; color: rgba(34,211,238,0.3); margin-bottom: 10px;">Upload an image or use ANIMATE on a generated image below.</div>
+          <div style="display: flex; gap: 12px; align-items: flex-start; flex-wrap: wrap;">
             <div style="flex: 1; min-width: 240px;">
               <input type="file" id="wan-reference-upload" accept="image/png,image/jpeg,image/webp"
-                style="width: 100%; background: rgba(0,0,0,0.4); border: 1px solid rgba(34,211,238,0.2); color: var(--text-primary); font-family: var(--font-mono); font-size: 0.7rem; padding: 6px 8px; box-sizing: border-box;">
-              <div style="display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; align-items: center;">
+                style="width: 100%; background: rgba(0,0,0,0.4); border: 1px solid rgba(34,211,238,0.2); color: var(--text-primary); font-family: var(--font-mono); font-size: 0.75rem; padding: 7px 10px; box-sizing: border-box;">
+              <div style="display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap;">
                 <button id="wan-clear-reference-btn" type="button"
-                  style="font-family: var(--font-mono); font-size: 0.58rem; letter-spacing: 0.1em; padding: 6px 12px; background: transparent; border: 1px solid rgba(34,211,238,0.25); color: rgba(34,211,238,0.5); cursor: pointer;">CLEAR REF</button>
+                  style="font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.1em; padding: 7px 14px; background: transparent; border: 1px solid rgba(34,211,238,0.25); color: rgba(34,211,238,0.5); cursor: pointer;">CLEAR REF</button>
                 <span id="wan-reference-label" style="font-family: var(--font-mono); font-size: 0.6rem; color: rgba(34,211,238,0.4); align-self: center;">NONE SELECTED</span>
               </div>
             </div>
-            <div id="wan-reference-preview-shell" style="width: 84px; display: none;">
-              <img id="wan-reference-preview" src="" alt="Reference preview" style="width: 84px; height: 84px; object-fit: cover; display: block; border: 1px solid rgba(34,211,238,0.2);">
+            <div id="wan-reference-preview-shell" style="width: 120px; display: none;">
+              <img id="wan-reference-preview" src="" alt="Reference preview" style="width: 120px; height: 120px; object-fit: cover; display: block; border: 1px solid rgba(34,211,238,0.2);">
             </div>
           </div>
           <input type="hidden" id="wan-reference-url" value="">
@@ -212,61 +212,90 @@
 
   <!-- Gallery -->
   <div style="margin-bottom: var(--spacing-md);">
-    <h2 style="font-family: var(--font-display); font-size: 1rem; letter-spacing: 0.15em; color: rgba(34,211,238,0.7); margin: 0 0 var(--spacing-md) 0;">FORGE GALLERY</h2>
+    <h2 style="font-family: var(--font-display); font-size: 1rem; letter-spacing: 0.15em; color: rgba(34,211,238,0.7); margin: 0 0 var(--spacing-md) 0;">GENERATED IMAGES</h2>
   </div>
 
-  <div id="forge-gallery" class="forge-gallery">
-    {% for item in media_items %}
-    {% set is_video = item.media_type == 'video' %}
-    {% set media_url = '/static/forge_videos/' ~ item.filename if is_video else '/static/forge_outputs/' ~ item.filename %}
-    {% set model_label = item.model or item.worker_type or ('video' if is_video else 'legacy') %}
-    <div class="forge-media-card {{ 'video-card' if is_video else 'forge-card' }}"
-         data-id="{{ item.id }}"
-         data-type="{{ item.media_type }}"
-         data-url="{{ media_url }}"
-         data-prompt="{{ item.prompt | e }}"
-         data-model="{{ item.model or '' }}"
-         data-worker="{{ item.worker_type or '' }}"
-         data-negative="{{ (item.negative_prompt or '') | e }}"
-         data-steps="{{ item.steps or '' }}"
-         data-guidance="{{ item.guidance_scale or '' }}"
-         data-width="{{ item.width or '' }}"
-         data-height="{{ item.height or '' }}"
-         data-seed="{{ item.seed if item.seed is not none else '' }}"
-         data-created="{{ item.created_at[:16] }}"
-         data-filename="{{ item.filename }}">
-      <div class="forge-media-preview" onclick="openLightbox('{{ media_url }}')">
-        {% if is_video %}
-        <video src="{{ media_url }}" autoplay muted loop playsinline preload="metadata"></video>
-        <span class="forge-model-badge">video</span>
-        {% else %}
-        <img src="{{ media_url }}" alt="Generated image" loading="lazy">
+  <div id="forge-gallery" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--spacing-md);">
+    {% for img in images %}
+    {% set model_label = img.model or img.worker_type or 'legacy' %}
+    <div class="forge-card"
+         data-id="{{ img.id }}"
+         data-url="/static/forge_outputs/{{ img.filename }}"
+         data-prompt="{{ img.prompt | e }}"
+         data-model="{{ img.model or '' }}"
+         data-worker="{{ img.worker_type or '' }}"
+         data-negative="{{ (img.negative_prompt or '') | e }}"
+         data-steps="{{ img.steps or '' }}"
+         data-guidance="{{ img.guidance_scale or '' }}"
+         data-width="{{ img.width or '' }}"
+         data-height="{{ img.height or '' }}"
+         data-seed="{{ img.seed if img.seed is not none else '' }}"
+         data-created="{{ img.created_at[:16] }}"
+         data-filename="{{ img.filename }}"
+         style="background: rgba(21,25,42,0.85); border: 1px solid rgba(34,211,238,0.15); border-radius: 10px; overflow: hidden;">
+      <div style="position: relative; cursor: zoom-in;" onclick="openLightbox('/static/forge_outputs/{{ img.filename }}')">
+        <img src="/static/forge_outputs/{{ img.filename }}" alt="Generated image" loading="lazy"
+             style="width: 100%; display: block; aspect-ratio: 1; object-fit: cover;">
         <span class="forge-model-badge">{{ model_label }}</span>
-        {% endif %}
         <div class="forge-zoom-hint">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
         </div>
       </div>
-      <div class="forge-media-meta">
-        <p title="{{ item.prompt }}">{{ item.prompt }}</p>
-        <div class="forge-media-actions">
-          <span>{{ item.created_at[:16] }}</span>
-          <div>
-            <a href="{{ media_url }}" download="{{ item.filename }}">DL</a>
-            {% if not is_video and has_wan %}
-            <button onclick="animateImage('{{ media_url }}', '{{ item.prompt | e }}')">ANIMATE</button>
+      <div style="padding: 10px 12px;">
+        <p style="font-family: var(--font-mono); font-size: 0.65rem; color: rgba(34,211,238,0.5); margin: 0 0 8px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ img.prompt }}">{{ img.prompt }}</p>
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px;">
+          <span style="font-family: var(--font-mono); font-size: 0.55rem; color: rgba(34,211,238,0.3); flex-shrink: 0;">{{ img.created_at[:16] }}</span>
+          <div style="display: flex; gap: 6px; align-items: center;">
+            <a href="/static/forge_outputs/{{ img.filename }}" download="{{ img.filename }}"
+               style="font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.1em; padding: 3px 10px; background: transparent; border: 1px solid rgba(34,211,238,0.3); color: rgba(34,211,238,0.6); cursor: pointer; text-decoration: none; display: inline-block;"
+               onmouseover="this.style.background='rgba(34,211,238,0.08)';this.style.color='var(--reach-cyan)'"
+               onmouseout="this.style.background='transparent';this.style.color='rgba(34,211,238,0.6)'">DL</a>
+            {% if has_wan %}
+            <button
+              onclick="animateImage('/static/forge_outputs/{{ img.filename }}', '{{ img.prompt | e }}')"
+              style="font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.1em; padding: 3px 10px; background: transparent; border: 1px solid rgba(34,211,238,0.3); color: rgba(34,211,238,0.6); cursor: pointer;"
+              onmouseover="this.style.background='rgba(34,211,238,0.08)'"
+              onmouseout="this.style.background='transparent'"
+            >ANIMATE</button>
             {% endif %}
-            {% if is_video %}
-            <button onclick="forgeVideoDelete({{ item.id }}, this)">DEL</button>
-            {% else %}
-            <button onclick="forgeDelete({{ item.id }}, this)">DEL</button>
-            {% endif %}
+            <button
+              onclick="forgeDelete({{ img.id }}, this)"
+              style="font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.1em; padding: 3px 10px; background: transparent; border: 1px solid rgba(234,88,12,0.4); color: var(--reach-orange); cursor: pointer;"
+              onmouseover="this.style.background='rgba(234,88,12,0.1)'"
+              onmouseout="this.style.background='transparent'"
+            >DEL</button>
           </div>
         </div>
       </div>
     </div>
     {% else %}
-    <p id="forge-empty" class="forge-empty">NO MEDIA GENERATED YET.</p>
+    <p id="forge-empty" style="font-family: var(--font-mono); font-size: 0.7rem; color: rgba(34,211,238,0.3); letter-spacing: 0.1em; grid-column: 1 / -1;">NO IMAGES GENERATED YET.</p>
+    {% endfor %}
+  </div>
+
+  <div style="margin: var(--spacing-xl) 0 var(--spacing-md) 0;">
+    <h2 style="font-family: var(--font-display); font-size: 1rem; letter-spacing: 0.15em; color: rgba(34,211,238,0.7); margin: 0 0 var(--spacing-md) 0;">GENERATED VIDEOS</h2>
+  </div>
+
+  <div id="forge-video-gallery" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: var(--spacing-md);">
+    {% for video in videos %}
+    <div class="video-card" data-id="{{ video.id }}" style="background: rgba(21,25,42,0.85); border: 1px solid rgba(34,211,238,0.15); border-radius: 10px; overflow: hidden;">
+      <video src="/static/forge_videos/{{ video.filename }}" controls preload="metadata" style="width: 100%; display: block; aspect-ratio: 16 / 9; background: #000;"></video>
+      <div style="padding: 10px 12px;">
+        <p style="font-family: var(--font-mono); font-size: 0.65rem; color: rgba(34,211,238,0.5); margin: 0 0 8px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ video.prompt }}">{{ video.prompt }}</p>
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px;">
+          <span style="font-family: var(--font-mono); font-size: 0.55rem; color: rgba(34,211,238,0.3); flex-shrink: 0;">{{ video.created_at[:16] }}</span>
+          <div style="display: flex; gap: 6px; align-items: center;">
+            <a href="/static/forge_videos/{{ video.filename }}" download="{{ video.filename }}"
+               style="font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.1em; padding: 3px 10px; background: transparent; border: 1px solid rgba(34,211,238,0.3); color: rgba(34,211,238,0.6); cursor: pointer; text-decoration: none; display: inline-block;">DL</a>
+            <button onclick="forgeVideoDelete({{ video.id }}, this)"
+              style="font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.1em; padding: 3px 10px; background: transparent; border: 1px solid rgba(234,88,12,0.4); color: var(--reach-orange); cursor: pointer;">DEL</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% else %}
+    <p id="forge-video-empty" style="font-family: var(--font-mono); font-size: 0.7rem; color: rgba(34,211,238,0.3); letter-spacing: 0.1em; grid-column: 1 / -1;">NO VIDEOS GENERATED YET.</p>
     {% endfor %}
   </div>
 
@@ -284,7 +313,6 @@
     style="position:absolute; right:20px; top:50%; transform:translateY(-50%); background:transparent; border:1px solid rgba(34,211,238,0.3); color:rgba(34,211,238,0.7); font-family:var(--font-mono); font-size:1.2rem; padding:12px 16px; cursor:pointer; z-index:9010; line-height:1;"
     onmouseover="this.style.background='rgba(34,211,238,0.08)'" onmouseout="this.style.background='transparent'">›</button>
   <img id="lb-img" src="" alt="Preview" style="max-width:90vw; max-height:82vh; object-fit:contain; border:1px solid rgba(34,211,238,0.15); box-shadow:0 0 60px rgba(34,211,238,0.06);">
-  <video id="lb-video" src="" controls muted loop playsinline style="display:none; max-width:90vw; max-height:82vh; object-fit:contain; border:1px solid rgba(34,211,238,0.15); box-shadow:0 0 60px rgba(34,211,238,0.06); background:#000;"></video>
   <div style="display:flex; gap:14px; align-items:flex-start; max-width:78vw;">
     <span id="lb-counter" style="font-family:var(--font-mono); font-size:0.6rem; color:rgba(34,211,238,0.35); letter-spacing:0.1em;"></span>
     <div style="display:flex; flex-direction:column; gap:6px; min-width:0;">
@@ -300,90 +328,6 @@
 </div>
 
 <style>
-.forge-gallery {
-  column-count: 3;
-  column-gap: var(--spacing-md);
-}
-.forge-media-card {
-  display: inline-block;
-  width: 100%;
-  margin: 0 0 var(--spacing-md);
-  background: rgba(21,25,42,0.85);
-  border: 1px solid rgba(34,211,238,0.15);
-  border-radius: 8px;
-  overflow: hidden;
-  break-inside: avoid;
-}
-.forge-media-preview {
-  position: relative;
-  cursor: zoom-in;
-  background: #000;
-}
-.forge-media-preview img,
-.forge-media-preview video {
-  width: 100%;
-  display: block;
-  aspect-ratio: 1;
-  object-fit: cover;
-}
-.video-card .forge-media-preview video {
-  aspect-ratio: 16 / 9;
-}
-.forge-media-meta {
-  padding: 10px 12px;
-}
-.forge-media-meta p {
-  font-family: var(--font-mono);
-  font-size: 0.65rem;
-  color: rgba(34,211,238,0.5);
-  margin: 0 0 8px 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.forge-media-actions {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 6px;
-}
-.forge-media-actions span {
-  font-family: var(--font-mono);
-  font-size: 0.55rem;
-  color: rgba(34,211,238,0.3);
-  flex-shrink: 0;
-}
-.forge-media-actions div {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-}
-.forge-media-actions a,
-.forge-media-actions button {
-  font-family: var(--font-mono);
-  font-size: 0.6rem;
-  letter-spacing: 0.1em;
-  padding: 3px 10px;
-  background: transparent;
-  border: 1px solid rgba(34,211,238,0.3);
-  color: rgba(34,211,238,0.6);
-  cursor: pointer;
-  text-decoration: none;
-  display: inline-block;
-}
-.forge-media-actions button:last-child {
-  border-color: rgba(234,88,12,0.4);
-  color: var(--reach-orange);
-}
-.forge-empty {
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
-  color: rgba(34,211,238,0.3);
-  letter-spacing: 0.1em;
-  margin: 0;
-}
 .forge-zoom-hint {
   position: absolute; top: 8px; right: 8px;
   background: rgba(8,10,18,0.65);
@@ -396,14 +340,7 @@
   pointer-events: none;
   line-height: 0;
 }
-.forge-media-card:hover .forge-zoom-hint { opacity: 1; }
-@media (max-width: 980px) {
-  .forge-gallery { column-count: 2; }
-}
-@media (max-width: 620px) {
-  .forge-gallery { column-count: 1; }
-  .forge-media-actions { align-items: flex-start; flex-direction: column; }
-}
+.forge-card:hover .forge-zoom-hint { opacity: 1; }
 </style>
 
 {% endblock %}
@@ -471,9 +408,9 @@ const fullPresets = {
     { value: '16x9-hd',       label: '16:9 HD — 32stp / CFG 5 / 1280×720',              steps: 32, guidance: 5.0, width: 1280, height: 720  },
   ],
   'wan22-i2v': [
-    { value: 'portrait-anim', label: 'Portrait — 480×832 / 81f', steps: 10, guidance: 2.0, width: 480, height: 832, length: 81, contextOverlap: 48 },
-    { value: 'landscape-anim', label: 'Landscape — 832×480 / 81f', steps: 10, guidance: 2.0, width: 832, height: 480, length: 81, contextOverlap: 48 },
-    { value: 'detail-anim', label: 'Detail — 480×832 / 81f', steps: 14, guidance: 2.5, width: 480, height: 832, length: 81, contextOverlap: 48 },
+    { value: 'portrait-anim', label: 'Portrait Animate — 10stp / CFG 2 / 480×832 / 81f', steps: 10, guidance: 2.0, width: 480, height: 832, length: 81, contextOverlap: 48 },
+    { value: 'landscape-anim', label: 'Landscape Animate — 10stp / CFG 2 / 832×480 / 81f', steps: 10, guidance: 2.0, width: 832, height: 480, length: 81, contextOverlap: 48 },
+    { value: 'detail-anim', label: 'Detail Animate — 14stp / CFG 2.5 / 480×832 / 81f', steps: 14, guidance: 2.5, width: 480, height: 832, length: 81, contextOverlap: 48 },
   ],
 };
 
@@ -758,6 +695,21 @@ function pollVideoStatus(jobId, endpointId, prompt) {
         showStatus('');
         setGenerating(false);
         prependVideoCard(data.video_id, data.video_url, prompt);
+        setTimeout(() => {
+          const gallery = document.getElementById('forge-video-gallery');
+          if (gallery) {
+            gallery.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            const newCard = gallery.firstElementChild;
+            if (newCard) {
+              newCard.style.border = '2px solid var(--reach-cyan)';
+              newCard.style.boxShadow = '0 0 20px rgba(34,211,238,0.3)';
+              setTimeout(() => {
+                newCard.style.border = '1px solid rgba(34,211,238,0.15)';
+                newCard.style.boxShadow = 'none';
+              }, 3000);
+            }
+          }
+        }, 100);
       } else if (data.status === 'FAILED') {
         showError(data.error || 'Video generation failed.');
         showStatus('');
@@ -780,21 +732,10 @@ function displayModelLabel(model, workerType) {
   return 'legacy';
 }
 
-function clearGalleryEmpty() {
-  document.getElementById('forge-empty')?.remove();
-}
-
-function showGalleryEmptyIfNeeded() {
-  if (document.querySelector('.forge-media-card')) return;
-  const gallery = document.getElementById('forge-gallery');
-  if (gallery) {
-    gallery.innerHTML = '<p id="forge-empty" class="forge-empty">NO MEDIA GENERATED YET.</p>';
-  }
-}
-
 function prependImageCard(imageId, imageUrl, details, model, workerType) {
   const gallery = document.getElementById('forge-gallery');
-  clearGalleryEmpty();
+  const empty = document.getElementById('forge-empty');
+  if (empty) empty.remove();
 
   const prompt = details.prompt || '';
   const now = new Date().toISOString().slice(0, 16);
@@ -804,9 +745,8 @@ function prependImageCard(imageId, imageUrl, details, model, workerType) {
   const filename = imageUrl.split('/').pop();
 
   const card = document.createElement('div');
-  card.className = 'forge-media-card forge-card';
+  card.className = 'forge-card';
   card.dataset.id  = imageId;
-  card.dataset.type = 'image';
   card.dataset.url = imageUrl;
   card.dataset.prompt = prompt;
   card.dataset.model = model || '';
@@ -819,22 +759,30 @@ function prependImageCard(imageId, imageUrl, details, model, workerType) {
   card.dataset.seed = details.seed ?? '';
   card.dataset.created = now;
   card.dataset.filename = filename;
+  card.style.cssText = 'background:rgba(21,25,42,0.85);border:1px solid rgba(34,211,238,0.15);border-radius:10px;overflow:hidden;';
   card.innerHTML = `
-    <div class="forge-media-preview" onclick="openLightbox('${imageUrl}')">
-      <img src="${imageUrl}" alt="Generated image">
+    <div style="position:relative;cursor:zoom-in;" onclick="openLightbox('${imageUrl}')">
+      <img src="${imageUrl}" alt="Generated image" style="width:100%;display:block;aspect-ratio:1;object-fit:cover;">
       <span class="forge-model-badge">${modelEsc}</span>
       <div class="forge-zoom-hint">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
       </div>
     </div>
-    <div class="forge-media-meta">
-      <p title="${ep}">${ep}</p>
-      <div class="forge-media-actions">
-        <span>${now}</span>
-        <div>
-          <a href="${imageUrl}" download="${filename}">DL</a>
-          <button onclick="animateImage('${imageUrl}','${ep}')">ANIMATE</button>
-          <button onclick="forgeDelete(${imageId},this)">DEL</button>
+    <div style="padding:10px 12px;">
+      <p style="font-family:var(--font-mono);font-size:0.65rem;color:rgba(34,211,238,0.5);margin:0 0 8px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${ep}">${ep}</p>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;">
+        <span style="font-family:var(--font-mono);font-size:0.55rem;color:rgba(34,211,238,0.3);flex-shrink:0;">${now}</span>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <a href="${imageUrl}" download="${filename}"
+             style="font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.1em;padding:3px 10px;background:transparent;border:1px solid rgba(34,211,238,0.3);color:rgba(34,211,238,0.6);cursor:pointer;text-decoration:none;display:inline-block;"
+             onmouseover="this.style.background='rgba(34,211,238,0.08)';this.style.color='var(--reach-cyan)'"
+             onmouseout="this.style.background='transparent';this.style.color='rgba(34,211,238,0.6)'">DL</a>
+          <button onclick="animateImage('${imageUrl}','${ep}')"
+            style="font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.1em;padding:3px 10px;background:transparent;border:1px solid rgba(34,211,238,0.3);color:rgba(34,211,238,0.6);cursor:pointer;"
+            onmouseover="this.style.background='rgba(34,211,238,0.08)'" onmouseout="this.style.background='transparent'">ANIMATE</button>
+          <button onclick="forgeDelete(${imageId},this)"
+            style="font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.1em;padding:3px 10px;background:transparent;border:1px solid rgba(234,88,12,0.4);color:var(--reach-orange);cursor:pointer;"
+            onmouseover="this.style.background='rgba(234,88,12,0.1)'" onmouseout="this.style.background='transparent'">DEL</button>
         </div>
       </div>
     </div>`;
@@ -842,42 +790,25 @@ function prependImageCard(imageId, imageUrl, details, model, workerType) {
 }
 
 function prependVideoCard(videoId, videoUrl, prompt) {
-  const gallery = document.getElementById('forge-gallery');
-  clearGalleryEmpty();
+  const gallery = document.getElementById('forge-video-gallery');
+  const empty = document.getElementById('forge-video-empty');
+  if (empty) empty.remove();
   const now = new Date().toISOString().slice(0, 16);
   const ep = escapeHtml(prompt);
   const filename = videoUrl.split('/').pop();
   const card = document.createElement('div');
-  card.className = 'forge-media-card video-card';
+  card.className = 'video-card';
   card.dataset.id = videoId;
-  card.dataset.type = 'video';
-  card.dataset.url = videoUrl;
-  card.dataset.prompt = prompt;
-  card.dataset.model = '';
-  card.dataset.worker = '';
-  card.dataset.negative = '';
-  card.dataset.steps = '';
-  card.dataset.guidance = '';
-  card.dataset.width = '';
-  card.dataset.height = '';
-  card.dataset.seed = '';
-  card.dataset.created = now;
-  card.dataset.filename = filename;
+  card.style.cssText = 'background:rgba(21,25,42,0.85);border:1px solid rgba(34,211,238,0.15);border-radius:10px;overflow:hidden;';
   card.innerHTML = `
-    <div class="forge-media-preview" onclick="openLightbox('${videoUrl}')">
-      <video src="${videoUrl}" autoplay muted loop playsinline preload="metadata"></video>
-      <span class="forge-model-badge">video</span>
-      <div class="forge-zoom-hint">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
-      </div>
-    </div>
-    <div class="forge-media-meta">
-      <p title="${ep}">${ep}</p>
-      <div class="forge-media-actions">
-        <span>${now}</span>
-        <div>
-          <a href="${videoUrl}" download="${filename}">DL</a>
-          <button onclick="forgeVideoDelete(${videoId},this)">DEL</button>
+    <video src="${videoUrl}" controls preload="metadata" style="width:100%;display:block;aspect-ratio:16/9;background:#000;"></video>
+    <div style="padding:10px 12px;">
+      <p style="font-family:var(--font-mono);font-size:0.65rem;color:rgba(34,211,238,0.5);margin:0 0 8px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${ep}">${ep}</p>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;">
+        <span style="font-family:var(--font-mono);font-size:0.55rem;color:rgba(34,211,238,0.3);flex-shrink:0;">${now}</span>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <a href="${videoUrl}" download="${filename}" style="font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.1em;padding:3px 10px;background:transparent;border:1px solid rgba(34,211,238,0.3);color:rgba(34,211,238,0.6);cursor:pointer;text-decoration:none;display:inline-block;">DL</a>
+          <button onclick="forgeVideoDelete(${videoId},this)" style="font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.1em;padding:3px 10px;background:transparent;border:1px solid rgba(234,88,12,0.4);color:var(--reach-orange);cursor:pointer;">DEL</button>
         </div>
       </div>
     </div>`;
@@ -894,7 +825,10 @@ async function forgeDelete(imageId, btn) {
     if (resp.ok) {
       const card = document.querySelector(`.forge-card[data-id="${imageId}"]`);
       if (card) card.remove();
-      showGalleryEmptyIfNeeded();
+      if (!document.querySelector('.forge-card')) {
+        document.getElementById('forge-gallery').innerHTML =
+          '<p id="forge-empty" style="font-family:var(--font-mono);font-size:0.7rem;color:rgba(34,211,238,0.3);letter-spacing:0.1em;grid-column:1/-1;">NO IMAGES GENERATED YET.</p>';
+      }
     } else {
       btn.disabled = false;
     }
@@ -913,7 +847,10 @@ async function forgeVideoDelete(videoId, btn) {
     if (resp.ok) {
       const card = document.querySelector(`.video-card[data-id="${videoId}"]`);
       if (card) card.remove();
-      showGalleryEmptyIfNeeded();
+      if (!document.querySelector('.video-card')) {
+        document.getElementById('forge-video-gallery').innerHTML =
+          '<p id="forge-video-empty" style="font-family:var(--font-mono);font-size:0.7rem;color:rgba(34,211,238,0.3);letter-spacing:0.1em;grid-column:1/-1;">NO VIDEOS GENERATED YET.</p>';
+      }
     } else {
       btn.disabled = false;
     }
@@ -923,13 +860,12 @@ async function forgeVideoDelete(videoId, btn) {
 }
 
 // Lightbox with gallery navigation
-let lbMedia = [];
+let lbImages = [];
 let lbIndex = 0;
 
-function getGalleryMedia() {
-  const cards = document.querySelectorAll('.forge-media-card');
-  lbMedia = Array.from(cards).map(card => ({
-    type: card.dataset.type || 'image',
+function getGalleryImages() {
+  const cards = document.querySelectorAll('.forge-card');
+  lbImages = Array.from(cards).map(card => ({
     url: card.dataset.url,
     prompt: card.dataset.prompt,
     model: card.dataset.model,
@@ -946,8 +882,8 @@ function getGalleryMedia() {
 }
 
 function openLightbox(url) {
-  getGalleryMedia();
-  lbIndex = lbMedia.findIndex(item => item.url === url);
+  getGalleryImages();
+  lbIndex = lbImages.findIndex(img => img.url === url);
   if (lbIndex === -1) lbIndex = 0;
   updateLightboxImage();
   const lb = document.getElementById('forge-lightbox');
@@ -956,59 +892,44 @@ function openLightbox(url) {
 }
 
 function updateLightboxImage() {
-  const item = lbMedia[lbIndex];
-  if (!item) return;
-  const image = document.getElementById('lb-img');
-  const video = document.getElementById('lb-video');
-  if (item.type === 'video') {
-    image.style.display = 'none';
-    image.src = '';
-    video.style.display = 'block';
-    video.src = item.url;
-    video.play().catch(() => {});
-  } else {
-    video.pause();
-    video.style.display = 'none';
-    video.src = '';
-    image.style.display = 'block';
-    image.src = item.url;
-  }
-  document.getElementById('lb-prompt').textContent = item.prompt;
+  const img = lbImages[lbIndex];
+  if (!img) return;
+  document.getElementById('lb-img').src = img.url;
+  document.getElementById('lb-prompt').textContent = img.prompt;
   const negative = document.getElementById('lb-negative');
-  if (item.negative) {
+  if (img.negative) {
     negative.style.display = 'block';
-    negative.textContent = `NEGATIVE: ${item.negative}`;
+    negative.textContent = `NEGATIVE: ${img.negative}`;
   } else {
     negative.style.display = 'none';
     negative.textContent = '';
   }
   document.getElementById('lb-details').textContent = [
-    `TYPE ${(item.type || 'image').toUpperCase()}`,
-    item.type === 'image' ? `MODEL ${displayModelLabel(item.model, item.worker)}` : '',
-    item.worker ? `BACKEND ${item.worker}` : '',
-    item.width && item.height ? `SIZE ${item.width}x${item.height}` : '',
-    item.steps ? `STEPS ${item.steps}` : '',
-    item.guidance ? `CFG ${item.guidance}` : '',
-    item.seed !== '' ? `SEED ${item.seed}` : '',
-    item.created ? `CREATED ${item.created}` : '',
-    item.filename ? `FILE ${item.filename}` : '',
+    `MODEL ${displayModelLabel(img.model, img.worker)}`,
+    img.worker ? `BACKEND ${img.worker}` : '',
+    img.width && img.height ? `SIZE ${img.width}x${img.height}` : '',
+    img.steps ? `STEPS ${img.steps}` : '',
+    img.guidance ? `CFG ${img.guidance}` : '',
+    img.seed !== '' ? `SEED ${img.seed}` : '',
+    img.created ? `CREATED ${img.created}` : '',
+    img.filename ? `FILE ${img.filename}` : '',
   ].filter(Boolean).join('  //  ');
   const dl = document.getElementById('lb-download');
-  dl.href = item.url;
-  dl.download = item.url.split('/').pop();
+  dl.href = img.url;
+  dl.download = img.url.split('/').pop();
   const counter = document.getElementById('lb-counter');
-  counter.textContent = lbMedia.length > 1 ? `${lbIndex + 1} / ${lbMedia.length}` : '';
-  document.getElementById('lb-prev').style.display = lbMedia.length > 1 ? 'block' : 'none';
-  document.getElementById('lb-next').style.display = lbMedia.length > 1 ? 'block' : 'none';
+  counter.textContent = lbImages.length > 1 ? `${lbIndex + 1} / ${lbImages.length}` : '';
+  document.getElementById('lb-prev').style.display = lbImages.length > 1 ? 'block' : 'none';
+  document.getElementById('lb-next').style.display = lbImages.length > 1 ? 'block' : 'none';
 }
 
 function lbPrev() {
-  lbIndex = (lbIndex - 1 + lbMedia.length) % lbMedia.length;
+  lbIndex = (lbIndex - 1 + lbImages.length) % lbImages.length;
   updateLightboxImage();
 }
 
 function lbNext() {
-  lbIndex = (lbIndex + 1) % lbMedia.length;
+  lbIndex = (lbIndex + 1) % lbImages.length;
   updateLightboxImage();
 }
 
@@ -1016,9 +937,6 @@ function closeLightbox() {
   document.getElementById('forge-lightbox').style.display = 'none';
   document.body.style.overflow = '';
   document.getElementById('lb-img').src = '';
-  const video = document.getElementById('lb-video');
-  video.pause();
-  video.src = '';
 }
 document.getElementById('forge-lightbox')?.addEventListener('click', e => {
   if (e.target === document.getElementById('forge-lightbox')) closeLightbox();

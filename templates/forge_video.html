@@ -157,10 +157,10 @@ document.getElementById('video-generate-btn')?.addEventListener('click', async (
         prompt,
         negative_prompt: document.getElementById('video-negative')?.value.trim() || '',
         size: document.getElementById('video-size')?.value || '1280*720',
-        duration: parseInt(document.getElementById('video-duration')?.value || 5),
-        num_inference_steps: parseInt(document.getElementById('video-steps')?.value || 30),
-        guidance: parseFloat(document.getElementById('video-guidance')?.value || 5),
-        flow_shift: parseInt(document.getElementById('video-flow-shift')?.value || 5),
+        length: parseInt(document.getElementById('video-duration')?.value || 5),
+        steps: parseInt(document.getElementById('video-steps')?.value || 30),
+        cfg: parseFloat(document.getElementById('video-guidance')?.value || 5),
+        context_overlap: parseInt(document.getElementById('video-flow-shift')?.value || 5),
         seed: parseInt(document.getElementById('video-seed')?.value ?? -1),
         advanced_input: advancedInput,
       }),
@@ -194,6 +194,21 @@ function pollVideoStatus(jobId, endpointId, prompt) {
         showVideoStatus('');
         setVideoGenerating(false);
         prependVideoCard(data.video_id, data.video_url, prompt);
+        setTimeout(() => {
+          const gallery = document.getElementById('video-gallery');
+          if (gallery) {
+            gallery.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            const newCard = gallery.firstElementChild;
+            if (newCard) {
+              newCard.style.border = '2px solid var(--reach-cyan)';
+              newCard.style.boxShadow = '0 0 20px rgba(34,211,238,0.3)';
+              setTimeout(() => {
+                newCard.style.border = '1px solid rgba(34,211,238,0.15)';
+                newCard.style.boxShadow = 'none';
+              }, 3000);
+            }
+          }
+        }, 100);
       } else if (data.status === 'FAILED') {
         showVideoError(data.error || 'Generation failed.');
         showVideoStatus('');

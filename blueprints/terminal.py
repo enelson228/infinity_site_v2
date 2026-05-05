@@ -1,7 +1,9 @@
 import time
+import json
 import psutil
+import urllib.error
+import urllib.request
 from flask import Blueprint, render_template, request, jsonify, session
-import anthropic
 import config
 import database
 from auth import login_required
@@ -16,7 +18,7 @@ TERMINAL_SYSTEM_PROMPT = (
     "(e.g., 'Targeting parameters updated', 'Uplink established', 'Node synchronized')."
 )
 
-_anthropic_client = anthropic.Anthropic(api_key=config.ANTHROPIC_API_KEY)
+_MINIMAX_TIMEOUT_SECONDS = 90
 
 def get_system_context():
     """Gather current system state for AI context."""
@@ -69,9 +71,48 @@ def api_memory_add():
 _CHAT_MAX_MESSAGES = 40
 _CHAT_MAX_MESSAGE_CHARS = 8000
 
+
+def _minimax_chat(messages, system_prompt):
+    payload = {
+        'model': config.MINIMAX_MODEL,
+        'messages': [{'role': 'system', 'content': system_prompt}] + messages,
+        'max_completion_tokens': 2048,
+        'reasoning_split': True,
+    }
+    url = config.MINIMAX_BASE_URL.rstrip('/') + '/chat/completions'
+    req = urllib.request.Request(
+        url,
+        data=json.dumps(payload).encode('utf-8'),
+        headers={
+            'Authorization': f'Bearer {config.MINIMAX_API_KEY}',
+            'Content-Type': 'application/json',
+        },
+        method='POST',
+    )
+
+    try:
+        with urllib.request.urlopen(req, timeout=_MINIMAX_TIMEOUT_SECONDS) as resp:
+            data = json.loads(resp.read().decode('utf-8'))
+    except urllib.error.HTTPError as e:
+        detail = e.read().decode('utf-8', errors='replace')
+        raise RuntimeError(f'MiniMax API error {e.code}: {detail[:500]}') from e
+    except urllib.error.URLError as e:
+        raise RuntimeError(f'MiniMax connection error: {e.reason}') from e
+
+    choices = data.get('choices') if isinstance(data, dict) else None
+    if not choices:
+        raise RuntimeError('Unexpected response format from MiniMax')
+    message = choices[0].get('message') or {}
+    content = message.get('content')
+    if not isinstance(content, str):
+        raise RuntimeError('Unexpected response format from MiniMax')
+    return content
+
+
+@terminal_bp.route('/api/minimax/chat', methods=['POST'])
 @terminal_bp.route('/api/claude/chat', methods=['POST'])
 @login_required
-def api_claude_chat():
+def api_minimax_chat():
     data = request.get_json(silent=True)
     if not data:
         return jsonify({'error': 'Invalid request body'}), 400
@@ -148,17 +189,8 @@ def api_claude_chat():
                     mem_lines
                 )
         
-        response = _anthropic_client.messages.create(
-            model='claude-3-5-sonnet-20241022',
-            max_tokens=8096,
-            system=system_prompt,
-            messages=sanitized,
-        )
-        content_blocks = response.content
-        if not content_blocks or not hasattr(content_blocks[0], 'text'):
-            return jsonify({'error': 'Unexpected response format from AI'}), 502
-        return jsonify({'content': content_blocks[0].text})
-    except anthropic.APIStatusError as e:
+        return jsonify({'content': _minimax_chat(sanitized, system_prompt)})
+    except RuntimeError as e:
         return jsonify({'error': f'AI service error: {e}'}), 502
     except Exception as e:
         return jsonify({'error': f'Internal error: {e}'}), 500

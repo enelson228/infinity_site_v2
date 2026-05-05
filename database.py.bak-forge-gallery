@@ -581,48 +581,6 @@ def list_forge_images() -> list:
         )
         return [dict(row) for row in cur.fetchall()]
 
-def list_forge_media() -> list:
-    with _db_conn() as conn:
-        cur = conn.execute(
-            """
-            SELECT
-                id,
-                job_id,
-                prompt,
-                filename,
-                created_at,
-                model,
-                worker_type,
-                negative_prompt,
-                steps,
-                guidance_scale,
-                width,
-                height,
-                seed,
-                'image' AS media_type
-            FROM forge_images
-            UNION ALL
-            SELECT
-                id,
-                job_id,
-                prompt,
-                filename,
-                created_at,
-                NULL AS model,
-                NULL AS worker_type,
-                NULL AS negative_prompt,
-                NULL AS steps,
-                NULL AS guidance_scale,
-                NULL AS width,
-                NULL AS height,
-                NULL AS seed,
-                'video' AS media_type
-            FROM forge_videos
-            ORDER BY created_at DESC, id DESC
-            """
-        )
-        return [dict(row) for row in cur.fetchall()]
-
 def get_forge_image(image_id: int) -> dict:
     with _db_conn() as conn:
         cur = conn.execute("SELECT * FROM forge_images WHERE id = ?", (image_id,))

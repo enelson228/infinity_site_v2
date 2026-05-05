@@ -210,7 +210,7 @@
         }
 
         try {
-            const res = await fetch('/api/claude/chat', {
+            const res = await fetch('/api/minimax/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ messages, include_memory: includeMemory }),
