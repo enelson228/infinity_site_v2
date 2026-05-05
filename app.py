@@ -19,6 +19,7 @@ from blueprints.terminal import terminal_bp
 from blueprints.projects import projects_bp
 from blueprints.monitor import monitor_bp
 from blueprints.forge import forge_bp
+from blueprints.storytell_proxy import storytell_proxy_bp
 from blueprints.coms_uplink import coms_uplink_bp
 try:
     from blueprints.osint import osint_bp
@@ -51,6 +52,7 @@ app.register_blueprint(terminal_bp)
 app.register_blueprint(projects_bp)
 app.register_blueprint(monitor_bp)
 app.register_blueprint(forge_bp)
+app.register_blueprint(storytell_proxy_bp)
 app.register_blueprint(coms_uplink_bp)
 if osint_bp is not None:
     app.register_blueprint(osint_bp)

@@ -259,6 +259,7 @@ def forge():
         has_forge=has_forge,
         has_wan=has_wan,
         available_models=available_models,
+        storytell_api_base=getattr(config, 'STORYTELL_API_BASE', '/storytell-api'),
     )
 
 
