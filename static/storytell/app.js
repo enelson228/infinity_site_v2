@@ -1,6 +1,7 @@
 const API_BASE = window.STORYTELL_API_BASE || 'http://localhost:8000';
 let currentProjectId = null;
 let currentProjectDetail = null;
+let autoSyncTimer = null;
 
 const TEXT_STAGE_ORDER = ['story_bible', 'characters', 'scenes', 'script', 'shotlist', 'prompts'];
 const STAGE_LABELS = {
@@ -223,6 +224,8 @@ function enableProjectControls(enabled) {
   $('refreshProject').disabled = !enabled;
   $('cancelLatestJob').disabled = !enabled;
   $('createExport').disabled = !enabled;
+  $('syncLatestJob').disabled = !enabled;
+  $('toggleAutoSync').disabled = !enabled;
   $('mockCompleteImage').disabled = true;
   $('mockCompleteVideo').disabled = true;
 }
@@ -286,6 +289,43 @@ function latestActiveVideoJob(detail) {
   return (detail?.jobs || []).find((job) => job.job_type === 'video.i2v' && ['queued', 'running'].includes(job.status));
 }
 
+function latestActiveRunpodJob(detail) {
+  return (detail?.jobs || []).find((job) => job.runpod_job_id && ['queued', 'running'].includes(job.status));
+}
+
+async function syncLatestRunpodJob() {
+  await refreshProject();
+  const job = latestActiveRunpodJob(currentProjectDetail);
+  if (!job) throw new Error('No queued or running RunPod job found');
+  const synced = await post(`/api/jobs/${job.id}/sync`, {});
+  await refreshProject();
+  return synced;
+}
+
+function stopAutoSync() {
+  if (autoSyncTimer) clearInterval(autoSyncTimer);
+  autoSyncTimer = null;
+  if ($('toggleAutoSync')) $('toggleAutoSync').textContent = 'Enable auto-sync';
+}
+
+function startAutoSync() {
+  stopAutoSync();
+  autoSyncTimer = setInterval(async () => {
+    try {
+      if (!currentProjectId) return stopAutoSync();
+      const job = latestActiveRunpodJob(currentProjectDetail);
+      if (!job) return stopAutoSync();
+      const synced = await post(`/api/jobs/${job.id}/sync`, {});
+      await refreshProject();
+      show({ auto_synced: synced, project: currentProjectDetail });
+    } catch (err) {
+      show({ auto_sync_error: String(err) });
+      stopAutoSync();
+    }
+  }, 6000);
+  $('toggleAutoSync').textContent = 'Disable auto-sync';
+}
+
 $('createProject').addEventListener('click', async () => {
   try {
     const project = await post('/api/projects', {
@@ -336,6 +376,7 @@ $('sendRunpod').addEventListener('click', async () => {
       num_outputs: 1,
     });
     await refreshProject();
+    startAutoSync();
     show(result);
   } catch (err) { show({ error: String(err) }); }
 });
@@ -388,6 +429,7 @@ $('sendVideo').addEventListener('click', async () => {
       quality_tier: 'production',
     });
     await refreshProject();
+    startAutoSync();
     show(result);
   } catch (err) { show({ error: String(err) }); }
 });
@@ -455,6 +497,23 @@ $('refreshProject').addEventListener('click', async () => {
   catch (err) { show({ error: String(err) }); }
 });
 
+$('syncLatestJob').addEventListener('click', async () => {
+  try {
+    const synced = await syncLatestRunpodJob();
+    show({ synced, project: currentProjectDetail });
+  } catch (err) { show({ error: String(err) }); }
+});
+
+$('toggleAutoSync').addEventListener('click', async () => {
+  try {
+    if (autoSyncTimer) return stopAutoSync();
+    await refreshProject();
+    if (!latestActiveRunpodJob(currentProjectDetail)) throw new Error('No queued or running RunPod job found');
+    startAutoSync();
+    show({ auto_sync: 'enabled' });
+  } catch (err) { show({ error: String(err) }); }
+});
+
 $('createExport').addEventListener('click', async () => {
   try {
     const result = await post(`/api/projects/${currentProjectId}/export`, {});
@@ -491,6 +550,8 @@ async function refreshProject() {
   currentProjectDetail = data;
   $('approveActivePrompts').disabled = !data.stages.some((s) => s.stage_type === 'prompts' && s.is_active === 1 && s.status === 'needs_review');
   $('cancelLatestJob').disabled = !data.jobs.some((j) => ['queued', 'running'].includes(j.status));
+  $('syncLatestJob').disabled = !latestActiveRunpodJob(data);
+  $('toggleAutoSync').disabled = !latestActiveRunpodJob(data);
   $('mockCompleteImage').disabled = !latestActiveImageJob(data);
   $('mockCompleteVideo').disabled = !latestActiveVideoJob(data);
   renderPipelineSummary(data);
