@@ -58,7 +58,9 @@ CYBERREALISTIC_PONY_ENDPOINT_ID = os.environ.get('CYBERREALISTIC_PONY_ENDPOINT_I
 WAN_VIDEO_ENDPOINT_ID = os.environ.get('WAN_VIDEO_ENDPOINT_ID', '')
 
 # StoryTell orchestrator API used by the Forge replacement page.
-STORYTELL_API_BASE = os.environ.get('STORYTELL_API_BASE', 'http://localhost:8000')
+# The browser uses the same-origin proxy by default; the Flask proxy forwards to STORYTELL_UPSTREAM_URL.
+STORYTELL_API_BASE = os.environ.get('STORYTELL_API_BASE', '/storytell-api')
+STORYTELL_UPSTREAM_URL = os.environ.get('STORYTELL_UPSTREAM_URL', 'http://127.0.0.1:8000')
 
 
 # AI model for monitor recommendations (optional override)
