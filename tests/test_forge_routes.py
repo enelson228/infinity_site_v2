@@ -24,15 +24,10 @@ def test_forge_page_renders_when_logged_in(admin_client):
     resp = admin_client.get('/forge')
 
     assert resp.status_code == 200
-    assert b'FORGE' in resp.data
-    assert b'FORGE GALLERY' in resp.data
-    assert b'CyberRealistic Pony' in resp.data
-    assert b'WAN 2.2 Animate' in resp.data
-    assert b'route image prompt' in resp.data
-    assert b'route video prompt' in resp.data
-    assert b'class="forge-media-card video-card"' in resp.data
-    assert b'autoplay muted loop playsinline preload="metadata"' in resp.data
-    assert b'ANIMATE' in resp.data
+    assert b'StoryTell MVP' in resp.data
+    assert b'Create editor export package' in resp.data
+    assert b'window.STORYTELL_API_BASE' in resp.data
+    assert b'/static/storytell/app.js' in resp.data
 
 
 # ── Generate endpoint ─────────────────────────────────────────────────────────

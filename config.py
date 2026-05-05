@@ -57,6 +57,9 @@ FORGE_ENDPOINT_ID = os.environ.get('FORGE_ENDPOINT_ID', '')
 CYBERREALISTIC_PONY_ENDPOINT_ID = os.environ.get('CYBERREALISTIC_PONY_ENDPOINT_ID', '')
 WAN_VIDEO_ENDPOINT_ID = os.environ.get('WAN_VIDEO_ENDPOINT_ID', '')
 
+# StoryTell orchestrator API used by the Forge replacement page.
+STORYTELL_API_BASE = os.environ.get('STORYTELL_API_BASE', 'http://localhost:8000')
+
 
 # AI model for monitor recommendations (optional override)
 AI_MODEL = os.environ.get('AI_MODEL', 'claude-haiku-4-5-20251001')

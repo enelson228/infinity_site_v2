@@ -231,6 +231,7 @@ def forge():
         has_wan=has_wan,
         available_models=available_models,
         video_url_for=_video_public_url,
+        storytell_api_base=getattr(config, 'STORYTELL_API_BASE', 'http://localhost:8000'),
     )
 
 
