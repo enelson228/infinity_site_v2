@@ -480,8 +480,9 @@ $('sendVideo').addEventListener('click', async () => {
       negative_prompt: selectedPrompt?.negative_prompt,
       duration_seconds: Number($('videoDuration').value),
       fps: Number($('videoFps').value),
-      width: 1280,
-      height: 720,
+      // LTX-Video produces better motion/detail at its native documented size.
+      width: 704,
+      height: 480,
       seed: Number($('videoSeed').value),
       quality_tier: 'production',
     });
