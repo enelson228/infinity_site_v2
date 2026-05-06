@@ -213,13 +213,13 @@ function renderMediaGallery(detail) {
 
   target.className = 'media-gallery';
   target.innerHTML = assets.slice(0, 12).map((asset, index) => {
-    const url = asset.url || '';
+    const url = `${API_BASE}/api/assets/${encodeURIComponent(asset.id)}/content`;
     const safeUrl = escapeHtml(url);
     const title = escapeHtml(assetLabel(asset, index));
     const storage = escapeHtml(asset.storage_key);
     const preview = asset.asset_type === 'image'
-      ? (url ? `<img src="${safeUrl}" alt="${title}" loading="lazy" />` : '<div class="media-missing">No preview URL yet. Click Sync latest RunPod job.</div>')
-      : (url ? `<video src="${safeUrl}" controls preload="metadata"></video>` : '<div class="media-missing">No preview URL yet. Click Sync latest RunPod job.</div>');
+      ? `<img src="${safeUrl}" alt="${title}" loading="lazy" />`
+      : `<video src="${safeUrl}" controls preload="metadata"></video>`;
     const useButton = asset.asset_type === 'image'
       ? `<button type="button" class="use-keyframe" data-storage-key="${storage}">Use as video keyframe</button>`
       : '';
@@ -230,7 +230,7 @@ function renderMediaGallery(detail) {
           <strong>${title}</strong>
           <p title="${storage}">${storage}</p>
           <div class="media-actions">
-            ${url ? `<a href="${safeUrl}" target="_blank" rel="noopener">Open full preview</a>` : ''}
+            <a href="${safeUrl}" target="_blank" rel="noopener">Open full preview</a>
             ${useButton}
           </div>
         </div>

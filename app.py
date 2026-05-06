@@ -68,6 +68,8 @@ def add_security_headers(response):
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
         "font-src 'self' https://fonts.gstatic.com; "
         "img-src 'self' data: https:; "
+        "video-src 'self' data: blob:; "
+        "media-src 'self' data: blob:; "
         "connect-src 'self' https://api.cesium.com https://ion.cesium.com "
         "https://assets.cesium.com https://opensky-network.org; "
         "frame-ancestors 'none';"
