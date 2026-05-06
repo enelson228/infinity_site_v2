@@ -191,9 +191,52 @@ function renderJobsAndAssets(detail) {
           <span>${escapeHtml(asset.shot_id || 'manual')}</span>
         </div>
         <p title="${escapeHtml(asset.storage_key)}">${escapeHtml(asset.storage_key)}</p>
+        ${asset.url ? `<p><a href="${escapeHtml(asset.url)}" target="_blank" rel="noopener">Open preview</a></p>` : ''}
       </article>
     `).join('');
   }
+}
+
+function assetLabel(asset, index) {
+  return [asset.asset_type, asset.shot_id || 'manual', shortId(asset.id) || `asset-${index + 1}`].filter(Boolean).join(' · ');
+}
+
+function renderMediaGallery(detail) {
+  const target = $('mediaGallery');
+  if (!target) return;
+  const assets = (detail?.assets || []).filter((asset) => ['image', 'video'].includes(asset.asset_type));
+  if (!assets.length) {
+    target.className = 'media-gallery empty';
+    target.textContent = 'Generated images and videos will appear here with previews.';
+    return;
+  }
+
+  target.className = 'media-gallery';
+  target.innerHTML = assets.slice(0, 12).map((asset, index) => {
+    const url = asset.url || '';
+    const safeUrl = escapeHtml(url);
+    const title = escapeHtml(assetLabel(asset, index));
+    const storage = escapeHtml(asset.storage_key);
+    const preview = asset.asset_type === 'image'
+      ? (url ? `<img src="${safeUrl}" alt="${title}" loading="lazy" />` : '<div class="media-missing">No preview URL yet. Click Sync latest RunPod job.</div>')
+      : (url ? `<video src="${safeUrl}" controls preload="metadata"></video>` : '<div class="media-missing">No preview URL yet. Click Sync latest RunPod job.</div>');
+    const useButton = asset.asset_type === 'image'
+      ? `<button type="button" class="use-keyframe" data-storage-key="${storage}">Use as video keyframe</button>`
+      : '';
+    return `
+      <article class="media-card media-${escapeHtml(asset.asset_type)}">
+        <div class="media-preview">${preview}</div>
+        <div class="media-card__body">
+          <strong>${title}</strong>
+          <p title="${storage}">${storage}</p>
+          <div class="media-actions">
+            ${url ? `<a href="${safeUrl}" target="_blank" rel="noopener">Open full preview</a>` : ''}
+            ${useButton}
+          </div>
+        </div>
+      </article>
+    `;
+  }).join('');
 }
 
 function renderExportHistory(exports) {
@@ -219,6 +262,7 @@ function renderExportHistory(exports) {
 function enableProjectControls(enabled) {
   $('mockStory').disabled = !enabled;
   $('sendRunpod').disabled = !enabled;
+  $('regenerateImage').disabled = !enabled;
   $('sendVideo').disabled = !enabled;
   $('generateTextPipeline').disabled = !enabled;
   $('refreshProject').disabled = !enabled;
@@ -362,22 +406,35 @@ $('mockStory').addEventListener('click', async () => {
   catch (err) { show({ error: String(err) }); }
 });
 
+async function submitImageJob({ randomizeSeed = false } = {}) {
+  const selectedPrompt = selectedGeneratedPrompt();
+  if (randomizeSeed) $('seed').value = Math.floor(Math.random() * 2147483647);
+  const result = await post('/api/runpod/image', {
+    project_id: currentProjectId,
+    shot_id: selectedPrompt?.shot_id,
+    prompt: $('imagePrompt').value,
+    negative_prompt: selectedPrompt?.negative_prompt,
+    width: Number($('width').value),
+    height: Number($('height').value),
+    seed: Number($('seed').value),
+    num_outputs: 1,
+  });
+  await refreshProject();
+  startAutoSync();
+  return result;
+}
+
 $('sendRunpod').addEventListener('click', async () => {
   try {
-    const selectedPrompt = selectedGeneratedPrompt();
-    const result = await post('/api/runpod/image', {
-      project_id: currentProjectId,
-      shot_id: selectedPrompt?.shot_id,
-      prompt: $('imagePrompt').value,
-      negative_prompt: selectedPrompt?.negative_prompt,
-      width: Number($('width').value),
-      height: Number($('height').value),
-      seed: Number($('seed').value),
-      num_outputs: 1,
-    });
-    await refreshProject();
-    startAutoSync();
+    const result = await submitImageJob();
     show(result);
+  } catch (err) { show({ error: String(err) }); }
+});
+
+$('regenerateImage').addEventListener('click', async () => {
+  try {
+    const result = await submitImageJob({ randomizeSeed: true });
+    show({ regenerated_with_new_seed: Number($('seed').value), job: result });
   } catch (err) { show({ error: String(err) }); }
 });
 
@@ -474,6 +531,17 @@ $('keyframeAssetSelect').addEventListener('change', () => {
   } catch (err) { show({ error: String(err) }); }
 });
 
+$('mediaGallery')?.addEventListener('click', (event) => {
+  const button = event.target.closest('.use-keyframe');
+  if (!button) return;
+  const storageKey = button.dataset.storageKey;
+  $('keyframeKey').value = storageKey;
+  const assets = imageAssets(currentProjectDetail);
+  const index = assets.findIndex((asset) => asset.storage_key === storageKey);
+  if (index >= 0) $('keyframeAssetSelect').value = String(index);
+  show({ selected_keyframe_storage_key: storageKey });
+});
+
 $('promptSelect').addEventListener('change', () => {
   try {
     const prompts = activePrompts(currentProjectDetail);
@@ -558,6 +626,7 @@ async function refreshProject() {
   renderPromptSelector(data);
   renderKeyframeAssetSelector(data);
   renderJobsAndAssets(data);
+  renderMediaGallery(data);
   renderExportHistory(exportList);
   return data;
 }
