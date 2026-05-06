@@ -480,8 +480,8 @@ $('sendVideo').addEventListener('click', async () => {
       negative_prompt: selectedPrompt?.negative_prompt,
       duration_seconds: Number($('videoDuration').value),
       fps: Number($('videoFps').value),
-      // LTX-Video produces better motion/detail at its native documented size.
-      width: 704,
+      // Wan2.1 I2V 480P native target.
+      width: 832,
       height: 480,
       seed: Number($('videoSeed').value),
       quality_tier: 'production',
