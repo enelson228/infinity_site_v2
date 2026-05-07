@@ -2,6 +2,7 @@ const API_BASE = window.STORYTELL_API_BASE || 'http://localhost:8000';
 let currentProjectId = null;
 let currentProjectDetail = null;
 let autoSyncTimer = null;
+let activeRefreshToken = 0;
 
 const TEXT_STAGE_ORDER = ['story_bible', 'characters', 'scenes', 'script', 'shotlist', 'prompts'];
 const STAGE_LABELS = {
@@ -68,7 +69,21 @@ function renderPipelineSummary(detail) {
   }).join('');
 }
 
+function detailProjectId(detail) {
+  return detail?.project?.id || null;
+}
+
+function isCurrentDetail(detail = currentProjectDetail) {
+  return Boolean(currentProjectId && detailProjectId(detail) === currentProjectId);
+}
+
+function assertCurrentProjectLoaded() {
+  if (!currentProjectId) throw new Error('Create or load a project first');
+  if (!isCurrentDetail()) throw new Error('Project is still loading. Refresh or wait before submitting a job.');
+}
+
 function activePrompts(detail) {
+  if (!detail || !isCurrentDetail(detail)) return [];
   return activeStage(detail, 'prompts')?.content?.prompts || [];
 }
 
@@ -93,13 +108,16 @@ function renderPromptSelector(detail) {
   const select = $('promptSelect');
   if (!select) return;
   const prompts = detail ? activePrompts(detail) : [];
+  const sameProject = select.dataset.projectId === detailProjectId(detail);
+  const previousValue = sameProject ? select.value : '';
+  select.dataset.projectId = detailProjectId(detail) || '';
   if (!prompts.length) {
     select.disabled = true;
     select.innerHTML = '<option value="">Generate the text pipeline to load prompts</option>';
+    select.value = '';
     return;
   }
 
-  const previousValue = select.value;
   select.disabled = false;
   select.innerHTML = [
     '<option value="">Select a generated shot prompt</option>',
@@ -114,8 +132,20 @@ function renderPromptSelector(detail) {
   }
 }
 
+function projectScopedAssets(detail) {
+  const projectId = detailProjectId(detail) || currentProjectId;
+  if (!projectId) return [];
+  const projectPrefix = `projects/${projectId}/`;
+  return (detail?.assets || []).filter((asset) => {
+    if (!asset.storage_key) return false;
+    if (asset.project_id && asset.project_id !== projectId) return false;
+    if (asset.storage_key.startsWith('projects/') && !asset.storage_key.startsWith(projectPrefix)) return false;
+    return true;
+  });
+}
+
 function imageAssets(detail) {
-  return (detail?.assets || []).filter((asset) => asset.asset_type === 'image' && asset.storage_key);
+  return projectScopedAssets(detail).filter((asset) => asset.asset_type === 'image');
 }
 
 function selectedKeyframeAsset() {
@@ -130,13 +160,16 @@ function renderKeyframeAssetSelector(detail) {
   const select = $('keyframeAssetSelect');
   if (!select) return;
   const assets = imageAssets(detail);
+  const sameProject = select.dataset.projectId === detailProjectId(detail);
+  const previousValue = sameProject ? select.value : '';
+  select.dataset.projectId = detailProjectId(detail) || '';
   if (!assets.length) {
     select.disabled = true;
     select.innerHTML = '<option value="">Complete an image job to load keyframes</option>';
+    select.value = '';
     return;
   }
 
-  const previousValue = select.value;
   select.disabled = false;
   select.innerHTML = [
     '<option value="">Select a generated keyframe asset</option>',
@@ -178,7 +211,7 @@ function renderJobsAndAssets(detail) {
     `).join('');
   }
 
-  const assets = detail?.assets || [];
+  const assets = projectScopedAssets(detail);
   if (!assets.length) {
     assetsTarget.className = 'list empty';
     assetsTarget.textContent = 'No assets yet. Completed worker callbacks will create image/video assets here.';
@@ -204,7 +237,7 @@ function assetLabel(asset, index) {
 function renderMediaGallery(detail) {
   const target = $('mediaGallery');
   if (!target) return;
-  const assets = (detail?.assets || []).filter((asset) => ['image', 'video'].includes(asset.asset_type));
+  const assets = projectScopedAssets(detail).filter((asset) => ['image', 'video'].includes(asset.asset_type));
   if (!assets.length) {
     target.className = 'media-gallery empty';
     target.textContent = 'Generated images and videos will appear here with previews.';
@@ -257,6 +290,23 @@ function renderExportHistory(exports) {
       <p title="${escapeHtml(item.export_path)}">${escapeHtml(item.asset_count)} assets · ${escapeHtml(item.shot_count)} shots · ${escapeHtml(item.export_path)}</p>
     </article>
   `).join('');
+}
+
+function resetProjectScopedUi(message = 'Loading project…') {
+  currentProjectDetail = null;
+  activeRefreshToken += 1;
+  $('imagePrompt').value = '';
+  $('videoPrompt').value = '';
+  $('keyframeKey').value = '';
+  $('promptSelect').dataset.projectId = '';
+  $('keyframeAssetSelect').dataset.projectId = '';
+  renderPipelineSummary(null);
+  renderPromptSelector(null);
+  renderKeyframeAssetSelector(null);
+  renderJobsAndAssets(null);
+  renderMediaGallery(null);
+  renderExportHistory([]);
+  show({ status: message });
 }
 
 function enableProjectControls(enabled) {
@@ -354,9 +404,10 @@ function stopAutoSync() {
 
 function startAutoSync() {
   stopAutoSync();
+  const syncProjectId = currentProjectId;
   autoSyncTimer = setInterval(async () => {
     try {
-      if (!currentProjectId) return stopAutoSync();
+      if (!currentProjectId || currentProjectId !== syncProjectId || !isCurrentDetail()) return stopAutoSync();
       const job = latestActiveRunpodJob(currentProjectDetail);
       if (!job) return stopAutoSync();
       const synced = await post(`/api/jobs/${job.id}/sync`, {});
@@ -378,7 +429,9 @@ $('createProject').addEventListener('click', async () => {
       tone: $('tone').value,
       target_minutes: Number($('minutes').value),
     });
+    stopAutoSync();
     currentProjectId = project.id;
+    resetProjectScopedUi('Created project. Loading empty project workspace…');
     enableProjectControls(true);
     await refreshProjectList(project.id);
     await refreshProject();
@@ -390,7 +443,9 @@ $('loadProject').addEventListener('click', async () => {
   try {
     const projectId = $('projectSelect').value;
     if (!projectId) throw new Error('Select a project to load');
+    stopAutoSync();
     currentProjectId = projectId;
+    resetProjectScopedUi('Switching projects. Clearing previous project media…');
     enableProjectControls(true);
     await refreshProject();
     show({ loaded_project: currentProjectDetail });
@@ -407,6 +462,7 @@ $('mockStory').addEventListener('click', async () => {
 });
 
 async function submitImageJob({ randomizeSeed = false } = {}) {
+  assertCurrentProjectLoaded();
   const selectedPrompt = selectedGeneratedPrompt();
   if (randomizeSeed) $('seed').value = Math.floor(Math.random() * 2147483647);
   const result = await post('/api/runpod/image', {
@@ -470,12 +526,16 @@ $('mockCompleteImage').addEventListener('click', async () => {
 
 $('sendVideo').addEventListener('click', async () => {
   try {
+    assertCurrentProjectLoaded();
     const selectedPrompt = selectedGeneratedPrompt();
     const selectedAsset = selectedKeyframeAsset();
+    const keyframeKey = selectedAsset?.storage_key || $('keyframeKey').value;
+    const projectPrefix = `projects/${currentProjectId}/`;
+    if (!keyframeKey.startsWith(projectPrefix)) throw new Error('Select an image from the currently loaded project before generating video');
     const result = await post('/api/runpod/video', {
       project_id: currentProjectId,
       shot_id: selectedAsset?.shot_id || selectedPrompt?.shot_id || 'manual-shot',
-      image_storage_key: selectedAsset?.storage_key || $('keyframeKey').value,
+      image_storage_key: keyframeKey,
       prompt: $('videoPrompt').value,
       negative_prompt: selectedPrompt?.negative_prompt,
       duration_seconds: Number($('videoDuration').value),
@@ -614,8 +674,13 @@ $('cancelLatestJob').addEventListener('click', async () => {
 });
 
 async function refreshProject() {
-  const data = await get(`/api/projects/${currentProjectId}`);
-  const exportList = await get(`/api/projects/${currentProjectId}/exports`);
+  const requestedProjectId = currentProjectId;
+  const refreshToken = activeRefreshToken;
+  if (!requestedProjectId) throw new Error('Create or load a project first');
+  const data = await get(`/api/projects/${requestedProjectId}`);
+  const exportList = await get(`/api/projects/${requestedProjectId}/exports`);
+  if (currentProjectId !== requestedProjectId || activeRefreshToken !== refreshToken) return null;
+  if (detailProjectId(data) !== requestedProjectId) throw new Error('API returned a different project than requested');
   currentProjectDetail = data;
   $('approveActivePrompts').disabled = !data.stages.some((s) => s.stage_type === 'prompts' && s.is_active === 1 && s.status === 'needs_review');
   $('cancelLatestJob').disabled = !data.jobs.some((j) => ['queued', 'running'].includes(j.status));
